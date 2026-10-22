@@ -1,7 +1,6 @@
 import { Hono } from "hono";
+import { registerAuth, type Env } from "./auth.ts";
 import { STATUSES, daysLeft, inScope, progressPct, studyDaysLeft, todayIST, type Status } from "./logic.ts";
-
-export type Env = { Bindings: { DB: D1Database; APP_TOKEN?: string } };
 
 export const EXAMS = [{ id: "pb1", name: "Pre-Boards 1", start: "2026-11-19", end: "2026-12-02" }];
 // PTM only. Diwali (8-11 Nov) is deliberately absent: those are free study days.
@@ -20,19 +19,10 @@ const TABLES: Record<string, string[]> = {
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const validDate = (d: string) => ISO.test(d) && !Number.isNaN(Date.parse(d));
 
-/** Hash both sides first so the comparison is constant-time whatever the lengths. */
-async function sameToken(a: string, b: string) {
-  const enc = new TextEncoder();
-  const [x, y] = await Promise.all([crypto.subtle.digest("SHA-256", enc.encode(a)), crypto.subtle.digest("SHA-256", enc.encode(b))]);
-  const p = new Uint8Array(x), q = new Uint8Array(y);
-  let diff = 0;
-  for (let i = 0; i < p.length; i++) diff |= p[i] ^ q[i]; // no early exit, so timing doesn't leak the match length
-  return diff === 0;
-}
-
 export function createApp(opts: { now?: () => number } = {}) {
   const app = new Hono<Env>();
-  const today = () => todayIST(opts.now?.());
+  const now = () => opts.now?.() ?? Date.now();
+  const today = () => todayIST(now());
   const body = async <T>(c: { req: { json: () => Promise<unknown> } }) => ((await c.req.json().catch(() => ({}))) ?? {}) as T;
 
   app.onError((err, c) => {
@@ -40,15 +30,7 @@ export function createApp(opts: { now?: () => number } = {}) {
     return c.json({ error: "Unexpected server error." }, 500);
   });
 
-  // Fail closed: with no APP_TOKEN configured the API refuses everything instead of being open.
-  app.use("/api/*", async (c, next) => {
-    const token = c.env.APP_TOKEN;
-    if (!token) return c.json({ error: "Server has no APP_TOKEN set." }, 500);
-    if (!(await sameToken(c.req.header("authorization") ?? "", `Bearer ${token}`))) {
-      return c.json({ error: "Missing or wrong access token." }, 401);
-    }
-    await next();
-  });
+  registerAuth(app, now);
 
   app.get("/api/state", async (c) => {
     const t = today();

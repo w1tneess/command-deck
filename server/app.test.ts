@@ -74,7 +74,7 @@ describe("access control", () => {
   });
 
   it("fails closed when the server has no APP_TOKEN", async () => {
-    const open = await setup({ token: null });
+    const open = await setup({ token: null, secret: null });
     try {
       expect((await open.inject("/api/state")).status).toBe(500);
     } finally {

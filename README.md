@@ -24,11 +24,27 @@ Manual deploy:
 
     npx wrangler login
     npm run db:remote                        # apply migrations to the cloud database
-    npx wrangler secret put APP_TOKEN        # the access token you type on each device
+    npx wrangler secret put STUDY_PASSCODE   # your 6-digit PIN (see Sign-in)
     npm run deploy                           # builds, then publishes
 
 The domain is set in `wrangler.jsonc` (`routes`); its DNS record and certificate are created on deploy.
-The API refuses every request when `APP_TOKEN` is not set, so a deploy without it is closed, not open.
+The API refuses every request when neither `APP_TOKEN` nor `SESSION_SECRET` is set, so a deploy without secrets is closed, not open.
+
+## Sign-in
+
+The app opens on a 6-digit PIN keypad. A correct PIN sets a signed, `HttpOnly`, `SameSite=Strict` cookie (90 days with "Remember this device", otherwise 24 hours).
+Five wrong tries lock that device for 15 minutes, and 20 wrong tries across all devices lock everyone out for up to an hour.
+Backup tab: "Sign out" and "Sign out of all devices".
+
+Worker secrets (set once with `npx wrangler secret put <NAME>`):
+
+| Secret | Purpose |
+|---|---|
+| `STUDY_PASSCODE` | your 6-digit PIN |
+| `SESSION_SECRET` | long random string that signs session cookies |
+| `APP_TOKEN` | recovery and automation bearer token (`Authorization: Bearer ...`) |
+
+Locally, `.dev.vars` holds test values (see `.dev.vars.example`).
 
 ## Backup
 

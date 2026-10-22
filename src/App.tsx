@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { STATUSES, daysLeft, inScope, rankNext, type Status } from "../server/logic.ts";
-import { AuthError, call, getToken, setToken, type Chapter, type State, type Subject } from "./api.ts";
+import { AuthError, call, type Chapter, type State, type Subject } from "./api.ts";
 
 const STATUS_LABEL: Record<Status, string> = { not_started: "Not started", learning: "Learning", revised: "Revised", mastered: "Mastered" };
 const TABS = ["Today", "Subjects", "Projects", "Week", "Backup"] as const;
@@ -13,14 +13,14 @@ export function App() {
   const [state, setState] = useState<State | null>(null);
   const [tab, setTab] = useState<Tab>("Today");
   const [error, setError] = useState("");
-  const [needsToken, setNeedsToken] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(false);
 
   const load = useCallback(async () => {
     try {
       setState(await call<State>("GET", "/api/state"));
-      setNeedsToken(false);
+      setNeedsLogin(false);
     } catch (e) {
-      if (e instanceof AuthError) setNeedsToken(true);
+      if (e instanceof AuthError) setNeedsLogin(true);
       else setError("Can't reach the server. Start it with npm start, then reload.");
     }
   }, []);
@@ -37,13 +37,13 @@ export function App() {
     }
   }, [load]);
 
-  if (needsToken) return <TokenGate onDone={load} />;
+  if (needsLogin) return <PinGate onDone={load} />;
   if (!state) return <main className="shell"><p className="muted">{error || "Loading…"}</p></main>;
 
   return (
     <main className="shell">
       <header className="top">
-        <h1>Exam Tracker</h1>
+        <h1>Study Dashboard</h1>
         <nav aria-label="Sections">
           {TABS.map((t) => (
             <button key={t} className={t === tab ? "tab on" : "tab"} aria-current={t === tab} onClick={() => setTab(t)}>{t}</button>
@@ -62,17 +62,92 @@ export function App() {
 
 type Act = (method: string, url: string, body?: unknown) => Promise<void>;
 
-function TokenGate({ onDone }: { onDone: () => void }) {
-  const [v, setV] = useState("");
+const PIN_LENGTH = 6;
+const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "back"];
+
+function PinGate({ onDone }: { onDone: () => void }) {
+  const [pin, setPin] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  const [, tick] = useState(0);
+  const locked = lockedUntil > Date.now();
+
+  // Re-render each second while locked so the countdown (and the unlock) updates.
+  useEffect(() => {
+    if (!locked) return;
+    const id = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [locked]);
+
+  const submit = useCallback(async (value: string) => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pin: value, remember }) });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; attemptsLeft?: number; retryAfter?: number };
+      if (res.ok) return onDone();
+      navigator.vibrate?.(80);
+      setPin("");
+      if (res.status === 429) {
+        setLockedUntil(Date.now() + (data.retryAfter ?? 900) * 1000);
+        setMsg("");
+      } else if (res.status === 401) {
+        const left = data.attemptsLeft ?? 0;
+        setMsg(`Wrong PIN. ${left} ${left === 1 ? "try" : "tries"} left.`);
+      } else {
+        setMsg(data.error ?? "Couldn't sign in. Try again.");
+      }
+    } catch {
+      setMsg("Can't reach the server. Check your connection.");
+    } finally {
+      setBusy(false);
+    }
+  }, [remember, onDone]);
+
+  const press = useCallback((k: string) => {
+    if (busy || locked) return;
+    setMsg("");
+    if (k === "back") return setPin((p) => p.slice(0, -1));
+    setPin((p) => {
+      if (p.length >= PIN_LENGTH) return p;
+      const next = p + k;
+      if (next.length === PIN_LENGTH) void submit(next);
+      return next;
+    });
+  }, [busy, locked, submit]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (/^\d$/.test(e.key)) press(e.key);
+      else if (e.key === "Backspace") press("back");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [press]);
+
+  const wait = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
   return (
-    <main className="shell narrow">
-      <h1>Exam Tracker</h1>
-      <p>This app is private. Enter your access token to continue.</p>
-      {getToken() && <p role="alert" className="alert">That token was rejected. Check it and try again.</p>}
-      <form onSubmit={(e) => { e.preventDefault(); setToken(v.trim()); onDone(); }} className="row">
-        <input aria-label="Access token" type="password" value={v} onChange={(e) => setV(e.target.value)} />
-        <button className="primary">Unlock</button>
-      </form>
+    <main className="shell narrow gate">
+      <h1>Study Dashboard</h1>
+      <p className="muted">Enter your PIN.</p>
+      <div className="dots" role="img" aria-label={`${pin.length} of ${PIN_LENGTH} digits entered`}>
+        {Array.from({ length: PIN_LENGTH }, (_, i) => <span key={i} className={i < pin.length ? "dot-pin on" : "dot-pin"} />)}
+      </div>
+      <p role="alert" className="gate-msg">
+        {locked ? `Too many wrong tries. Try again in ${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}.` : msg}
+      </p>
+      <div className="keypad">
+        {KEYS.map((k, i) => k === "" ? <span key={i} /> : (
+          <button key={k} className="key" disabled={busy || locked} aria-label={k === "back" ? "Delete last digit" : k} onClick={() => press(k)}>
+            {k === "back" ? "⌫" : k}
+          </button>
+        ))}
+      </div>
+      <label className="check remember">
+        <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+        <span>Remember this device for 90 days</span>
+      </label>
     </main>
   );
 }
@@ -378,6 +453,18 @@ function Backup({ act }: { act: Act }) {
         <label className="filebtn">Restore from file<input type="file" accept="application/json,.json" onChange={(e) => { void restore(e.target.files?.[0]); e.target.value = ""; }} /></label>
       </div>
       {msg && <p role="status" className="muted">{msg}</p>}
+      <h2 className="spaced">This device</h2>
+      <div className="row">
+        <button onClick={() => signOut("/api/logout")}>Sign out</button>
+        <button onClick={() => { if (confirm("Sign out of every phone and computer, including this one?")) void signOut("/api/logout-all"); }}>Sign out of all devices</button>
+      </div>
     </section>
   );
+}
+
+/** Ends the session on the server, then wipes the offline copy so a shared device keeps no study data. */
+async function signOut(url: string) {
+  await call("POST", url).catch(() => undefined);
+  if ("caches" in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+  location.reload();
 }

@@ -68,7 +68,7 @@ function Hero({ state }: { state: State }) {
           <span className="text-[64px] leading-none font-bold tracking-[-0.04em] lg:text-[104px]">{big}</span>
           <span className="text-lg font-medium lg:text-[22px]">{unit}</span>
         </div>
-        <div className="mt-1.5 text-[13px] text-[#3d3809] lg:mt-2.5 lg:text-[14px]">
+        <div className="mt-1.5 text-[13px] text-ink/85 lg:mt-2.5 lg:text-[14px]">
           {fmtShort(phase.startsOn)} to {fmtLong(phase.endsOn)}
           {!phase.confirmed && " · dates approximate"}
           {!over && !subjectDates && <span className="hidden lg:inline"> · subject dates not set yet</span>}
@@ -76,9 +76,9 @@ function Hero({ state }: { state: State }) {
       </div>
       <ol className="m-0 hidden min-w-[260px] flex-[0_1_340px] list-none flex-col gap-1.5 p-0 lg:flex">
         {state.phases.map((p: Phase) => (
-          <li key={p.id} aria-current={p.id === phase.id ? "true" : undefined} className={`flex items-baseline justify-between gap-3 rounded-[10px] px-3 py-2 ${p.id === phase.id ? "bg-[rgba(20,23,28,0.16)]" : "bg-[rgba(20,23,28,0.06)]"}`}>
+          <li key={p.id} aria-current={p.id === phase.id ? "true" : undefined} className={`flex items-baseline justify-between gap-3 rounded-[10px] px-3 py-2 ${p.id === phase.id ? "bg-ink/20" : "bg-ink/10"}`}>
             <span className="text-[14px] font-semibold">{p.name}</span>
-            <span className="text-[13px] text-[#3d3809]">{whenOf(p)}</span>
+            <span className="text-[13px] text-ink/85">{whenOf(p)}</span>
           </li>
         ))}
       </ol>

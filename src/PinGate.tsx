@@ -74,7 +74,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
       <div className="flex gap-3.5" role="img" aria-label={`${pin.length} of ${PIN_LENGTH} digits entered`}>
         {Array.from({ length: PIN_LENGTH }, (_, i) => <span key={i} className={`size-4 rounded-full border-2 ${i < pin.length ? "border-accent-text bg-accent-text" : "border-muted"}`} />)}
       </div>
-      <p role="alert" className="my-4 min-h-6 text-[14px] font-medium text-accent-text">
+      <p role="alert" className="my-4 min-h-6 text-[14px] font-medium text-warn">
         {locked ? `Too many wrong tries. Try again in ${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}.` : msg}
       </p>
       <div className="grid grid-cols-3 gap-3">

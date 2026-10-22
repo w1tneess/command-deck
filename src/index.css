@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from the Study Dashboard design. Dark is the default; a light device gets the light set
+ * unless the user has picked a theme (data-theme on <html>, set from the Backup page).
+ */
+:root {
+  color-scheme: dark;
+  --bg: #12151a;
+  --surface: #1a1e25;
+  --surface2: #222831;
+  --line: #2c333e;
+  --text: #e8ebf0;
+  --muted: #a0a9b6;
+  --blue: #8db0ff;
+  --good: #7cd6a0;
+  --accent: #f2d94e;
+  --ink: #14171c; /* text on the yellow accent, in both themes */
+  --heat-0: #222831;
+  --heat-1: #33405a;
+  --heat-2: #4c6397;
+  --heat-3: #6f8fd6;
+  --heat-4: #8db0ff;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --surface2: #eceef2;
+    --line: #d9dde4;
+    --text: #15181d;
+    --muted: #5a6473;
+    --blue: #2c4fae;
+    --good: #1f7a4d;
+    --heat-0: #eceef2;
+    --heat-1: #c9d5f2;
+    --heat-2: #9db3e6;
+    --heat-3: #6585d0;
+    --heat-4: #2c4fae;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface2: #eceef2;
+  --line: #d9dde4;
+  --text: #15181d;
+  --muted: #5a6473;
+  --blue: #2c4fae;
+  --good: #1f7a4d;
+  --heat-0: #eceef2;
+  --heat-1: #c9d5f2;
+  --heat-2: #9db3e6;
+  --heat-3: #6585d0;
+  --heat-4: #2c4fae;
+}
+
+/* `inline` makes utilities read the variables above directly, so a theme switch needs no rebuild. */
+@theme inline {
+  --font-sans: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-line: var(--line);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-blue: var(--blue);
+  --color-good: var(--good);
+  --color-accent: var(--accent);
+  --color-ink: var(--ink);
+}
+
+@layer base {
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; color: inherit; }
+  button:disabled { cursor: not-allowed; opacity: 0.5; }
+  input, select { font: inherit; color: inherit; }
+  a { text-decoration: none; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ::selection { background: var(--accent); color: var(--ink); }
+}
+
+/* The browser draws date pickers dark or light from color-scheme, so the icon stays readable in both. */
+input[type="date"] { min-height: 44px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

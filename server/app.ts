@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { registerAuth, type Env } from "./auth.ts";
-import { SCOPES, STATUSES, activePhase, daysLeft, inScope, progressPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
+import { SCOPES, STATUSES, activePhase, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
 import { ENERGIES, studyQueue, type Energy } from "./planner.ts";
 import { IDLE, settleTimer, startFocus, stopTimer, type SessionLog, type Timer } from "./timer.ts";
 
@@ -8,7 +8,7 @@ import { IDLE, settleTimer, startFocus, stopTimer, type SessionLog, type Timer }
 export const NON_STUDY = ["2026-10-31"];
 
 type Row = Record<string, any>;
-const KINDS = ["task", "project", "viva", "practical"];
+const DELIVERABLE_STATUSES = ["not_started", "in_progress", "done"];
 const PASSES = 3; // 1 Concept, 2 PYQs and Exemplar, 3 Sample papers
 // Insert order matters (foreign keys); delete runs in reverse.
 const TABLES: Record<string, string[]> = {
@@ -18,7 +18,7 @@ const TABLES: Record<string, string[]> = {
   progress: ["chapter_id", "status", "confidence", "last_revised", "practice_done"],
   passes: ["chapter_id", "pass_no", "done_at"],
   subject_exams: ["subject_id", "phase_id", "date"],
-  tasks: ["id", "title", "subject_id", "kind", "due", "done"],
+  deliverables: ["id", "name", "subject", "detail", "phase_id", "status", "done_count", "total_count", "due", "viva_prep"],
   sessions: ["id", "subject_id", "day", "minutes"],
   daily_targets: ["id", "day", "chapter_id", "title", "done"],
   checkins: ["day", "energy"],
@@ -29,6 +29,7 @@ const validDate = (d: unknown): d is string => typeof d === "string" && ISO.test
 const validScope = (s: unknown): s is Scope => SCOPES.includes(s as Scope);
 const TARGETS_PER_DAY = 3;
 const MAX_TARGETS = 8;
+const DAY_MS = 86_400_000;
 
 /** Everything the planner needs: phases, the active one, and subjects with chapters, passes and exam dates. */
 async function loadModel(db: D1Database, t: string) {
@@ -63,7 +64,7 @@ async function loadModel(db: D1Database, t: string) {
       .map((ch) => ({ ...ch, confirmed: !!ch.confirmed, passes: passesOf(ch.id) }));
     const scoped = active ? own.filter((ch) => inScope(ch.scope, active.scope as Scope)) : own;
     const examDates = Object.fromEntries(examRes.results.filter((e) => e.subjectId === s.id).map((e) => [e.phaseId, e.date])) as Record<string, string>;
-    return { ...(s as { id: string; name: string; grp: string; priority: number }), examDates, chapters: own, progressPct: progressPct(scoped.map((ch) => ch.status as Status)) };
+    return { ...(s as { id: string; name: string; grp: string; priority: number }), examDates, chapters: own, progressPct: startedPct(scoped.map((ch) => (ch.passes as (string | null)[]).some(Boolean))) };
   });
   return { phases, active, autoPhase: !phases.some((p) => p.id === override), subjects };
 }
@@ -144,15 +145,17 @@ export function createApp(opts: { now?: () => number } = {}) {
     const claim = await db.prepare("INSERT INTO settings (key, value) VALUES ('targets_day', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value WHERE settings.value != excluded.value").bind(t).run();
     if (claim.meta.changes === 1) await addChapterTargets(db, suggest(model, t, await energyOn(db, t), TARGETS_PER_DAY, []), t);
 
-    const [taskRes, sessionRes, targetRes, checkinRes] = await db.batch<Row>([
-      db.prepare("SELECT id, title, subject_id AS subjectId, kind, due, done FROM tasks ORDER BY done, due IS NULL, due, id"),
+    const since90 = new Date(Date.parse(t + "T00:00:00Z") - 90 * DAY_MS).toISOString().slice(0, 10);
+    const [deliverableRes, sessionRes, targetRes, checkinRes, heatRes] = await db.batch<Row>([
+      db.prepare("SELECT id, name, subject, detail, phase_id AS phaseId, status, done_count AS doneCount, total_count AS totalCount, due, viva_prep AS vivaPrep FROM deliverables ORDER BY id"),
       db.prepare("SELECT day, subject_id AS subjectId, SUM(minutes) AS minutes FROM sessions WHERE day >= ? GROUP BY day, subject_id ORDER BY day").bind(since),
       db.prepare("SELECT t.id, t.title, t.chapter_id AS chapterId, c.subject_id AS subjectId, t.done FROM daily_targets t LEFT JOIN chapters c ON c.id = t.chapter_id WHERE t.day = ? ORDER BY t.id").bind(t),
       db.prepare("SELECT day, energy FROM checkins WHERE day >= ? ORDER BY day").bind(since14),
+      db.prepare("SELECT day, SUM(minutes) AS minutes FROM sessions WHERE day >= ? GROUP BY day ORDER BY day").bind(since90),
     ]);
     return c.json({
       today: t, phases: model.phases, activePhaseId: model.active?.id ?? null, autoPhase: model.autoPhase, subjects: model.subjects,
-      tasks: taskRes.results.map((r) => ({ ...r, done: !!r.done })), sessions: sessionRes.results,
+      deliverables: deliverableRes.results.map((r) => ({ ...r, vivaPrep: !!r.vivaPrep })), sessions: sessionRes.results, heat: heatRes.results,
       targets: targetRes.results.map((r) => ({ ...r, done: !!r.done })),
       checkin: (checkinRes.results.find((r) => r.day === t)?.energy as Energy | undefined) ?? null,
       checkins: checkinRes.results,
@@ -281,7 +284,7 @@ export function createApp(opts: { now?: () => number } = {}) {
   app.patch("/api/chapters/:id/meta", async (c) => {
     const { name, scope } = await body<{ name?: string; scope?: string }>(c);
     if (name !== undefined && !name.trim()) return c.json({ error: "Chapter needs a name." }, 400);
-    if (scope !== undefined && !validScope(scope)) return c.json({ error: "Scope must be term1, pb1, pb2 or board." }, 400);
+    if (scope !== undefined && !validScope(scope)) return c.json({ error: "Scope must be unit1, unit2, pb1, pb2 or board." }, 400);
     const r = await c.env.DB.prepare("UPDATE chapters SET name = COALESCE(?, name), scope = COALESCE(?, scope) WHERE id = ?")
       .bind(name?.trim() ?? null, scope ?? null, c.req.param("id")).run();
     return r.meta.changes ? c.json({ ok: true }) : c.json({ error: "No such chapter." }, 404);
@@ -295,21 +298,24 @@ export function createApp(opts: { now?: () => number } = {}) {
     const db = c.env.DB;
     const id = c.req.param("id");
     if (!(await db.prepare("SELECT 1 AS ok FROM chapters WHERE id = ?").bind(id).first())) return c.json({ error: "No such chapter." }, 404);
+    // status follows the passes: none = not started, all three = mastered (leaves the study queue), otherwise learning.
+    const syncStatus = db.prepare("UPDATE progress SET status = CASE (SELECT COUNT(*) FROM passes WHERE chapter_id = ?) WHEN 0 THEN 'not_started' WHEN ? THEN 'mastered' ELSE 'learning' END WHERE chapter_id = ?").bind(id, PASSES, id);
     if (done === false) {
-      await db.prepare("DELETE FROM passes WHERE chapter_id = ? AND pass_no = ?").bind(id, n).run();
+      await db.batch([db.prepare("DELETE FROM passes WHERE chapter_id = ? AND pass_no = ?").bind(id, n), syncStatus]);
     } else {
       await db.batch([
         db.prepare("INSERT INTO passes (chapter_id, pass_no, done_at) VALUES (?, ?, ?) ON CONFLICT(chapter_id, pass_no) DO UPDATE SET done_at = excluded.done_at").bind(id, n, today()),
         db.prepare("UPDATE progress SET last_revised = ? WHERE chapter_id = ?").bind(today(), id),
+        syncStatus,
       ]);
     }
     return c.json({ ok: true });
   });
 
   app.post("/api/chapters", async (c) => {
-    const { subjectId, name, scope = "term1" } = await body<{ subjectId?: string; name?: string; scope?: string }>(c);
+    const { subjectId, name, scope = "unit1" } = await body<{ subjectId?: string; name?: string; scope?: string }>(c);
     if (!name?.trim()) return c.json({ error: "Chapter needs a name." }, 400);
-    if (!validScope(scope)) return c.json({ error: "Scope must be term1, pb1, pb2 or board." }, 400);
+    if (!validScope(scope)) return c.json({ error: "Scope must be unit1, unit2, pb1, pb2 or board." }, 400);
     const db = c.env.DB;
     if (!(await db.prepare("SELECT 1 AS ok FROM subjects WHERE id = ?").bind(subjectId ?? "").first())) return c.json({ error: "No such subject." }, 404);
     const max = await db.prepare("SELECT MAX(pos) AS m FROM chapters WHERE subject_id = ?").bind(subjectId).first<{ m: number | null }>();
@@ -319,6 +325,41 @@ export function createApp(opts: { now?: () => number } = {}) {
       db.prepare("INSERT INTO progress (chapter_id) VALUES (?)").bind(id),
     ]);
     return c.json({ id }, 201);
+  });
+
+  // Deleting a chapter takes its revision passes and any daily targets with it.
+  app.delete("/api/chapters/:id", async (c) => {
+    const db = c.env.DB;
+    const id = c.req.param("id");
+    if (!(await db.prepare("SELECT 1 AS ok FROM chapters WHERE id = ?").bind(id).first())) return c.json({ error: "No such chapter." }, 404);
+    await db.batch([
+      db.prepare("DELETE FROM daily_targets WHERE chapter_id = ?").bind(id),
+      db.prepare("DELETE FROM passes WHERE chapter_id = ?").bind(id),
+      db.prepare("DELETE FROM progress WHERE chapter_id = ?").bind(id),
+      db.prepare("DELETE FROM chapters WHERE id = ?").bind(id),
+    ]);
+    return c.json({ ok: true });
+  });
+
+  // New order for a subject's chapters: must list exactly its current chapters, once each.
+  app.post("/api/subjects/:id/reorder", async (c) => {
+    const { order } = await body<{ order?: unknown }>(c);
+    const db = c.env.DB;
+    const current = (await db.prepare("SELECT id FROM chapters WHERE subject_id = ?").bind(c.req.param("id")).all<{ id: string }>()).results.map((r) => r.id);
+    if (!Array.isArray(order) || order.length !== current.length || new Set(order).size !== order.length || !order.every((id) => current.includes(id))) {
+      return c.json({ error: "Order must list every chapter of this subject exactly once." }, 400);
+    }
+    await db.batch(order.map((id, i) => db.prepare("UPDATE chapters SET pos = ? WHERE id = ?").bind(i + 1, id)));
+    return c.json({ ok: true });
+  });
+
+  // Marks a subject's whole chapter list as checked against the school PDF (or unchecks it).
+  app.put("/api/subjects/:id/confirmed", async (c) => {
+    const { confirmed = true } = await body<{ confirmed?: boolean }>(c);
+    const db = c.env.DB;
+    if (!(await db.prepare("SELECT 1 AS ok FROM subjects WHERE id = ?").bind(c.req.param("id")).first())) return c.json({ error: "No such subject." }, 404);
+    await db.prepare("UPDATE chapters SET confirmed = ? WHERE subject_id = ?").bind(confirmed ? 1 : 0, c.req.param("id")).run();
+    return c.json({ ok: true });
   });
 
   app.put("/api/subjects/:id/exam-date", async (c) => {
@@ -336,24 +377,48 @@ export function createApp(opts: { now?: () => number } = {}) {
     return c.json({ ok: true });
   });
 
-  app.post("/api/tasks", async (c) => {
-    const { title, subjectId = null, kind = "task", due = null } = await body<{ title?: string; subjectId?: string | null; kind?: string; due?: string | null }>(c);
-    if (!title?.trim()) return c.json({ error: "Task needs a title." }, 400);
-    if (!KINDS.includes(kind)) return c.json({ error: "Unknown task kind." }, 400);
+  app.post("/api/deliverables", async (c) => {
+    const { name, subject, detail = "", phaseId = null, totalCount = null, due = null } =
+      await body<{ name?: string; subject?: string; detail?: string; phaseId?: string | null; totalCount?: number | null; due?: string | null }>(c);
+    if (!name?.trim()) return c.json({ error: "Deliverable needs a name." }, 400);
+    if (!subject?.trim()) return c.json({ error: "Deliverable needs a subject." }, 400);
     if (due !== null && !validDate(due)) return c.json({ error: "Use a date like 2026-11-24." }, 400);
-    const r = await c.env.DB.prepare("INSERT INTO tasks (title, subject_id, kind, due) VALUES (?,?,?,?)").bind(title.trim(), subjectId, kind, due).run();
+    if (totalCount !== null && !(Number.isInteger(totalCount) && totalCount >= 1 && totalCount <= 100)) return c.json({ error: "Total must be a whole number from 1 to 100." }, 400);
+    const db = c.env.DB;
+    if (phaseId !== null && !(await db.prepare("SELECT 1 AS ok FROM phases WHERE id = ?").bind(phaseId).first())) return c.json({ error: "No such phase." }, 404);
+    const r = await db.prepare("INSERT INTO deliverables (name, subject, detail, phase_id, done_count, total_count, due) VALUES (?,?,?,?,?,?,?)")
+      .bind(name.trim(), subject.trim(), detail.trim(), phaseId, totalCount === null ? null : 0, totalCount, due).run();
     return c.json({ id: r.meta.last_row_id }, 201);
   });
 
-  app.patch("/api/tasks/:id", async (c) => {
-    const { done } = await body<{ done?: boolean }>(c);
-    const r = await c.env.DB.prepare("UPDATE tasks SET done = ? WHERE id = ?").bind(done ? 1 : 0, c.req.param("id")).run();
-    return r.meta.changes ? c.json({ ok: true }) : c.json({ error: "No such task." }, 404);
+  // Changing the done count also moves the status (none = not started, all = done), unless a status is sent too.
+  app.patch("/api/deliverables/:id", async (c) => {
+    const b = await body<{ name?: string; subject?: string; detail?: string; due?: string | null; vivaPrep?: boolean; status?: string; doneCount?: number }>(c);
+    const db = c.env.DB;
+    const cur = await db.prepare("SELECT status, done_count AS doneCount, total_count AS totalCount FROM deliverables WHERE id = ?").bind(c.req.param("id")).first<{ status: string; doneCount: number | null; totalCount: number | null }>();
+    if (!cur) return c.json({ error: "No such deliverable." }, 404);
+    if (b.name !== undefined && !b.name.trim()) return c.json({ error: "Deliverable needs a name." }, 400);
+    if (b.subject !== undefined && !b.subject.trim()) return c.json({ error: "Deliverable needs a subject." }, 400);
+    if (b.due !== undefined && b.due !== null && !validDate(b.due)) return c.json({ error: "Use a date like 2026-11-24." }, 400);
+    if (b.status !== undefined && !DELIVERABLE_STATUSES.includes(b.status)) return c.json({ error: "Status must be not_started, in_progress or done." }, 400);
+    let status = b.status;
+    if (b.doneCount !== undefined) {
+      if (cur.totalCount === null) return c.json({ error: "This deliverable has no steps to count." }, 400);
+      if (!(Number.isInteger(b.doneCount) && b.doneCount >= 0 && b.doneCount <= cur.totalCount)) return c.json({ error: `Done must be 0 to ${cur.totalCount}.` }, 400);
+      status ??= b.doneCount === 0 ? "not_started" : b.doneCount === cur.totalCount ? "done" : "in_progress";
+    }
+    await db.prepare(
+      `UPDATE deliverables SET name = COALESCE(?, name), subject = COALESCE(?, subject), detail = COALESCE(?, detail),
+         due = CASE WHEN ? THEN ? ELSE due END, viva_prep = COALESCE(?, viva_prep), status = COALESCE(?, status), done_count = COALESCE(?, done_count)
+       WHERE id = ?`,
+    ).bind(b.name?.trim() ?? null, b.subject?.trim() ?? null, b.detail?.trim() ?? null, b.due === undefined ? 0 : 1, b.due ?? null,
+      b.vivaPrep === undefined ? null : b.vivaPrep ? 1 : 0, status ?? null, b.doneCount ?? null, c.req.param("id")).run();
+    return c.json({ ok: true });
   });
 
-  app.delete("/api/tasks/:id", async (c) => {
-    const r = await c.env.DB.prepare("DELETE FROM tasks WHERE id = ?").bind(c.req.param("id")).run();
-    return r.meta.changes ? c.json({ ok: true }) : c.json({ error: "No such task." }, 404);
+  app.delete("/api/deliverables/:id", async (c) => {
+    const r = await c.env.DB.prepare("DELETE FROM deliverables WHERE id = ?").bind(c.req.param("id")).run();
+    return r.meta.changes ? c.json({ ok: true }) : c.json({ error: "No such deliverable." }, 404);
   });
 
   app.post("/api/sessions", async (c) => {
@@ -371,7 +436,7 @@ export function createApp(opts: { now?: () => number } = {}) {
     const db = c.env.DB;
     const names = Object.keys(TABLES);
     const res = await db.batch<Row>(names.map((t) => db.prepare(`SELECT * FROM ${t}`)));
-    return c.json({ version: 3, ...Object.fromEntries(names.map((t, i) => [t, res[i].results])) });
+    return c.json({ version: 4, ...Object.fromEntries(names.map((t, i) => [t, res[i].results])) });
   });
 
   // Restore replaces everything in one atomic batch. A bad file is rejected before the write, or
@@ -381,7 +446,7 @@ export function createApp(opts: { now?: () => number } = {}) {
     let b = await body<Row>(c);
     const fail = (msg: string) => c.json({ error: msg }, 400);
     const db = c.env.DB;
-    if (b.version !== 1 && b.version !== 2 && b.version !== 3) return fail("This isn't an Exam Tracker backup (wrong or missing version).");
+    if (![1, 2, 3, 4].includes(b.version)) return fail("This isn't an Exam Tracker backup (wrong or missing version).");
     if (b.version === 1) {
       for (const t of ["subjects", "chapters", "progress", "tasks", "sessions"]) {
         if (!Array.isArray(b[t])) return fail(`Backup is missing the ${t} list.`);
@@ -397,6 +462,23 @@ export function createApp(opts: { now?: () => number } = {}) {
     }
     // Version 1 and 2 files predate daily targets and check-ins.
     if (b.version < 3) { b.daily_targets ??= []; b.checkins ??= []; }
+    // Before version 4: "term1" became unit1, and tasks became deliverables. The current deliverables are kept
+    // (an old file never had the school submissions list), with the file's own tasks added after them.
+    if (b.version < 4) {
+      if (!Array.isArray(b.tasks) || !Array.isArray(b.subjects) || !Array.isArray(b.chapters)) return fail("Backup is missing the tasks, subjects or chapters list.");
+      const current = (await db.prepare("SELECT id, name, subject, detail, phase_id, status, done_count, total_count, due, viva_prep FROM deliverables ORDER BY id").all<Row>()).results;
+      let nextId = current.reduce((m, r) => Math.max(m, r.id), 0);
+      const subjectName = (id: string | null) => b.subjects.find((s: Row) => s.id === id)?.name ?? "General";
+      b.deliverables = [
+        ...current,
+        ...b.tasks.map((t: Row) => ({
+          id: ++nextId, name: t.title, subject: subjectName(t.subject_id), detail: t.kind, phase_id: null,
+          status: t.done ? "done" : "not_started", done_count: null, total_count: null, due: t.due, viva_prep: 0,
+        })),
+      ];
+      delete b.tasks;
+      b.chapters = b.chapters.map((ch: Row) => (ch.scope === "term1" ? { ...ch, scope: "unit1" } : ch));
+    }
     for (const [table, cols] of Object.entries(TABLES)) {
       if (!Array.isArray(b[table])) return fail(`Backup is missing the ${table} list.`);
       for (const row of b[table]) {
@@ -410,6 +492,7 @@ export function createApp(opts: { now?: () => number } = {}) {
       return fail("Backup has an invalid status or confidence.");
     }
     if (b.chapters.some((ch: Row) => !validScope(ch.scope)) || b.phases.some((p: Row) => !validScope(p.scope))) return fail("Backup has an invalid scope.");
+    if (b.deliverables.some((d: Row) => !DELIVERABLE_STATUSES.includes(d.status))) return fail("Backup has an invalid deliverable status.");
     const deletes = Object.keys(TABLES).reverse().map((t) => db.prepare(`DELETE FROM ${t}`));
     const inserts = Object.entries(TABLES).flatMap(([t, cols]) => {
       const sql = `INSERT INTO ${t} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`;

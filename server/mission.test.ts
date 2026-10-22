@@ -215,11 +215,11 @@ describe("energy check-in", () => {
 });
 
 describe("backup with targets and check-ins", () => {
-  it("exports version 3 and round-trips targets and check-ins", async () => {
+  it("exports version 4 and round-trips targets and check-ins", async () => {
     await state();
     await send("POST", "/api/checkin", { energy: "low" });
     const backup = (await (await t.inject("/api/export")).json()) as any;
-    expect(backup.version).toBe(3);
+    expect(backup.version).toBe(4);
     expect(backup.daily_targets).toHaveLength(3);
     expect(backup.checkins).toEqual([{ day: "2026-10-22", energy: "low" }]);
     await send("POST", "/api/checkin", { energy: "high" });
@@ -232,7 +232,7 @@ describe("backup with targets and check-ins", () => {
   it("still restores a version 2 backup, with no targets or check-ins in it", async () => {
     const v3 = (await (await t.inject("/api/export")).json()) as any;
     const { daily_targets, checkins, ...rest } = v3;
-    expect((await send("POST", "/api/import", { ...rest, version: 2 })).status).toBe(200);
+    expect((await send("POST", "/api/import", { ...rest, tasks: [], version: 2 })).status).toBe(200);
     expect((await state()).subjects).toHaveLength(12);
   });
 });

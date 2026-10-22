@@ -22,7 +22,7 @@ describe("api", () => {
     await send("PATCH", "/api/chapters/maths-1", { status: "revised", confidence: 4 });
     const m = maths(await state());
     expect(m.chapters[0]).toMatchObject({ status: "revised", confidence: 4, lastRevised: "2026-10-22" });
-    expect(m.progressPct).toBe(Math.round((1 / 14) * 100));
+    expect(m.progressPct).toBe(0); // progress follows revision passes, not the status
   });
 
   it("changing only confidence leaves status and the revision date alone", async () => {
@@ -38,24 +38,15 @@ describe("api", () => {
     expect((await send("PUT", "/api/subjects/maths/exam-date", { phaseId: "pb1", date: "tomorrow" })).status).toBe(400);
     expect((await send("POST", "/api/sessions", { subjectId: "maths", minutes: 0 })).status).toBe(400);
     expect((await send("POST", "/api/sessions", { subjectId: "ghost", minutes: 10 })).status).toBe(404);
-    expect((await t.inject({ method: "POST", url: "/api/tasks", headers: { "content-type": "application/json" }, payload: undefined })).status).toBe(400);
+    expect((await t.inject({ method: "POST", url: "/api/deliverables", headers: { "content-type": "application/json" }, payload: undefined })).status).toBe(400);
   });
 
-  it("adds chapters, tasks and sessions", async () => {
+  it("adds chapters and sessions", async () => {
     await send("POST", "/api/chapters", { subjectId: "physics", name: "Electricity" });
-    const created = (await send("POST", "/api/tasks", { title: "Maths portfolio", kind: "project", due: "2026-11-10" })).json() as any;
-    await send("PATCH", `/api/tasks/${(await created).id}`, { done: true });
     await send("POST", "/api/sessions", { subjectId: "maths", minutes: 45 });
     const s = await state();
     expect(s.subjects.find((x: any) => x.id === "physics").chapters[0].name).toBe("Electricity");
-    expect(s.tasks[0]).toMatchObject({ title: "Maths portfolio", done: true });
     expect(s.sessions).toEqual([{ day: "2026-10-22", subjectId: "maths", minutes: 45 }]);
-  });
-
-  it("deletes a task", async () => {
-    const { id } = (await (await send("POST", "/api/tasks", { title: "x" })).json()) as any;
-    expect((await t.inject({ method: "DELETE", url: `/api/tasks/${id}` })).status).toBe(200);
-    expect((await t.inject({ method: "DELETE", url: `/api/tasks/${id}` })).status).toBe(404);
   });
 });
 
@@ -90,7 +81,7 @@ describe("backup and restore", () => {
     const backup = (await (await t.inject("/api/export")).json()) as any;
     const cases = [
       { version: 99 },
-      { ...backup, tasks: "nope" },
+      { ...backup, deliverables: "nope" },
       { ...backup, progress: backup.progress.map((p: any) => ({ ...p, status: "bogus" })) },
       // passes the shape check, then fails a foreign key partway through the atomic write
       { ...backup, chapters: backup.chapters.map((c: any, i: number) => (i === 0 ? { ...c, subject_id: "ghost" } : c)) },

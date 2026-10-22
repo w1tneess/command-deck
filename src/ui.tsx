@@ -10,6 +10,9 @@ export const ICONS = {
   edit: "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
   trash: "M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v5 M14 11v5",
   check: "M5 12l5 5L20 7",
+  habits: "M22 12h-4l-3 9L9 3l-3 9H2",
+  projects: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+  more: "M12 12h.01 M19 12h.01 M5 12h.01",
 } as const;
 
 export function Icon({ d, size = 20, stroke = 2 }: { d: string; size?: number; stroke?: number }) {
@@ -87,7 +90,7 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
 
 /** 22px on a phone, 24px on a wide screen, as in the design. */
 export const Check = ({ on }: { on: boolean }) => (
-  <span className={`flex size-[22px] items-center justify-center rounded-[7px] border-2 text-ink lg:size-6 lg:rounded-lg ${on ? "border-accent bg-accent" : "border-muted"}`}>
+  <span className={`flex size-[22px] items-center justify-center rounded-[7px] border-2 text-good-ink lg:size-6 lg:rounded-lg ${on ? "border-good bg-good" : "border-muted"}`}>
     {on && <Icon d={ICONS.check} size={14} stroke={3} />}
   </span>
 );

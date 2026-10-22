@@ -32,7 +32,7 @@ export function Deliverables({ state, act }: { state: State; act: Act; embedded?
         <span className="text-[13px] text-muted">Submitted with {phase.name}</span>
       </div>
       {overdue.length > 0 ? (
-        <div role="alert" className="mt-3.5 mb-1.5 rounded-xl border border-accent bg-surface2 px-3.5 py-2.5 text-[13px] font-medium">
+        <div role="alert" className="mt-3.5 mb-1.5 rounded-xl border border-warn bg-surface2 px-3.5 py-2.5 text-[13px] font-medium">
           {plural(overdue.length, "deliverable")} overdue: {overdue.map((d) => d.name).join(", ")}.
         </div>
       ) : !anyDue ? (
@@ -61,7 +61,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           <div className="text-[15px] font-medium">{d.name}</div>
           <div className="mt-0.5 text-[13px] text-muted">
             {d.subject}{d.detail ? ` · ${d.detail}` : ""}
-            {d.due && <span className={isOverdue ? "font-medium text-fg" : ""}> · due {fmtShort(d.due)}{left !== null && d.status !== "done" ? (left < 0 ? ` (${plural(-left, "day")} late)` : left === 0 ? " (today)" : ` (in ${plural(left, "day")})`) : ""}</span>}
+            {d.due && <span className={isOverdue ? "font-medium text-warn" : ""}> · due {fmtShort(d.due)}{left !== null && d.status !== "done" ? (left < 0 ? ` (${plural(-left, "day")} late)` : left === 0 ? " (today)" : ` (in ${plural(left, "day")})`) : ""}</span>}
           </div>
         </div>
         <button
@@ -70,14 +70,14 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           onClick={() => patch({ status: NEXT[d.status] })}
           className="-my-2 flex min-h-11 shrink-0 items-center border-0 bg-transparent"
         >
-          <span className={`rounded-full border px-2.5 py-[3px] text-xs ${isOverdue ? "border-accent bg-accent font-semibold text-ink" : d.status === "done" ? "border-good text-good" : d.status === "in_progress" ? "border-accent text-fg" : "border-line text-muted"}`}>
+          <span className={`rounded-full border px-2.5 py-[3px] text-xs ${isOverdue ? "border-warn bg-warn font-semibold text-warn-ink" : d.status === "done" ? "border-good text-good" : d.status === "in_progress" ? "border-accent-text text-accent-text" : "border-line text-muted"}`}>
             {isOverdue ? "Overdue" : d.status === "done" ? "✓ Done" : STATE_LABEL[d.status]}
           </span>
         </button>
       </div>
       {d.totalCount !== null && (
         <div className="flex items-center gap-2.5">
-          <span className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-line"><span className="block h-full bg-accent" style={{ width: `${pct}%` }} /></span>
+          <span className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-line"><span className={`block h-full ${pct === 100 ? "bg-good" : "bg-accent"}`} style={{ width: `${pct}%` }} /></span>
           <span className="font-mono text-xs text-muted" aria-label={`${d.doneCount} of ${d.totalCount} done`}>{d.doneCount} of {d.totalCount}</span>
           <button type="button" aria-label={`One fewer done for ${d.name}`} disabled={!d.doneCount} onClick={() => patch({ doneCount: (d.doneCount ?? 0) - 1 })} className="size-11 rounded-xl border border-line bg-surface2 text-lg">−</button>
           <button type="button" aria-label={`One more done for ${d.name}`} disabled={d.doneCount === d.totalCount} onClick={() => patch({ doneCount: (d.doneCount ?? 0) + 1 })} className="size-11 rounded-xl border border-line bg-surface2 text-lg">+</button>

@@ -1,66 +1,78 @@
 @import "tailwindcss";
 
 /*
- * Design tokens from the Study Dashboard design. Dark is the default; a light device gets the light set
- * unless the user has picked a theme (data-theme on <html>, set from the Backup page).
+ * Design tokens: matte zinc neutrals, one indigo accent for actions and active focus, emerald for done and
+ * mastered, amber for urgent. Dark is the default; a light device gets the light set unless the user has
+ * picked a theme (data-theme on <html>, set from the Backup page). Every text pair below is 4.5:1 or better.
  */
 :root {
   color-scheme: dark;
-  --bg: #12151a;
-  --surface: #1a1e25;
-  --surface2: #222831;
-  --line: #2c333e;
-  --text: #e8ebf0;
-  --muted: #a0a9b6;
-  --blue: #8db0ff;
-  --good: #7cd6a0;
-  --accent: #f2d94e;
-  --ink: #14171c; /* text on the yellow accent, in both themes */
-  --accent-text: #f2d94e; /* yellow used as text or a thin line, so it needs its own darker light-theme value */
-  --focus: #f2d94e;
-  --heat-0: #222831;
-  --heat-1: #33405a;
-  --heat-2: #4c6397;
-  --heat-3: #6f8fd6;
-  --heat-4: #8db0ff;
+  --bg: #09090b;
+  --surface: #111113;
+  --surface2: #18181b;
+  --line: #27272a;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --blue: #a5b4fc; /* confidence dots and other quiet indigo marks */
+  --good: #34d399;
+  --good-ink: #052e1f;
+  --warn: #fbbf24;
+  --warn-ink: #1c1203;
+  --accent: #5558ea;
+  --ink: #ffffff; /* text on the indigo accent, in both themes */
+  --accent-text: #a5b4fc; /* indigo as text or a thin line */
+  --focus: #a5b4fc;
+  --heat-0: #18181b;
+  --heat-1: #2c2e63;
+  --heat-2: #3f44a3;
+  --heat-3: #5b61d8;
+  --heat-4: #a5b4fc;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     color-scheme: light;
-    --bg: #f3f4f6;
+    --bg: #f4f4f5;
     --surface: #ffffff;
-    --surface2: #eceef2;
-    --line: #d9dde4;
-    --text: #15181d;
-    --muted: #5a6473;
-    --blue: #2c4fae;
-    --good: #1f7a4d;
-    --accent-text: #7a5f00;
-    --focus: #2c4fae;
-    --heat-0: #eceef2;
-    --heat-1: #c9d5f2;
-    --heat-2: #9db3e6;
-    --heat-3: #6585d0;
-    --heat-4: #2c4fae;
+    --surface2: #ececee;
+    --line: #d4d4d8;
+    --text: #18181b;
+    --muted: #52525b;
+    --blue: #4338ca;
+    --good: #047857;
+    --good-ink: #ffffff;
+    --warn: #b45309;
+    --warn-ink: #ffffff;
+    --accent: #4f46e5;
+    --accent-text: #4338ca;
+    --focus: #4f46e5;
+    --heat-0: #ececee;
+    --heat-1: #d5d8f7;
+    --heat-2: #a5aaf0;
+    --heat-3: #6f76e3;
+    --heat-4: #4338ca;
   }
 }
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f3f4f6;
+  --bg: #f4f4f5;
   --surface: #ffffff;
-  --surface2: #eceef2;
-  --line: #d9dde4;
-  --text: #15181d;
-  --muted: #5a6473;
-  --blue: #2c4fae;
-  --good: #1f7a4d;
-  --accent-text: #7a5f00;
-  --focus: #2c4fae;
-  --heat-0: #eceef2;
-  --heat-1: #c9d5f2;
-  --heat-2: #9db3e6;
-  --heat-3: #6585d0;
-  --heat-4: #2c4fae;
+  --surface2: #ececee;
+  --line: #d4d4d8;
+  --text: #18181b;
+  --muted: #52525b;
+  --blue: #4338ca;
+  --good: #047857;
+  --good-ink: #ffffff;
+  --warn: #b45309;
+  --warn-ink: #ffffff;
+  --accent: #4f46e5;
+  --accent-text: #4338ca;
+  --focus: #4f46e5;
+  --heat-0: #ececee;
+  --heat-1: #d5d8f7;
+  --heat-2: #a5aaf0;
+  --heat-3: #6f76e3;
+  --heat-4: #4338ca;
 }
 
 /* `inline` makes utilities read the variables above directly, so a theme switch needs no rebuild. */
@@ -75,6 +87,9 @@
   --color-muted: var(--muted);
   --color-blue: var(--blue);
   --color-good: var(--good);
+  --color-good-ink: var(--good-ink);
+  --color-warn: var(--warn);
+  --color-warn-ink: var(--warn-ink);
   --color-accent: var(--accent);
   --color-accent-text: var(--accent-text);
   --color-ink: var(--ink);

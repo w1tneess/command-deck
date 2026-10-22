@@ -4,5 +4,5 @@
     "jsx": "react-jsx", "strict": true, "noEmit": true, "skipLibCheck": true,
     "allowImportingTsExtensions": true, "types": ["vite/client"]
   },
-  "include": ["src", "vite.config.ts", "server/logic.ts"]
+  "include": ["src", "vite.config.ts", "server/logic.ts", "server/planner.ts", "server/timer.ts"]
 }

@@ -38,6 +38,14 @@ Each chapter has three revision passes: Concept, PYQs and Exemplar, Sample paper
 Exam dates are kept per subject per phase, and the study queue ranks against the active phase.
 Backups are version 2; version 1 files are upgraded on restore.
 
+## Mission Control and Focus Hub
+
+- **Daily targets:** on the first load of each day, three chapters from the study queue are suggested. Tick, swap, remove, or add your own (up to eight a day). Deleting them all keeps them deleted for the day.
+- **Energy check-in:** Low, OK or High, once a day. Low puts lighter chapters first, High puts the hardest first. Open targets are re-suggested; finished and custom ones stay.
+- **Focus timer:** 25-minute focus, 5-minute break, a 15-minute break after every fourth round. The timer lives in D1, so you can start it on one device and stop it on another. A finished focus is logged to its subject automatically, even if no tab was open (the server settles it on the next request, using the day the focus ended). Stopping early logs whole minutes so far. A soft chime and vibration play when a round ends, and the tab title shows the countdown.
+- The app refreshes every 20 seconds while visible, and when you switch back to the tab.
+- The Week tab also lists energy and study minutes for each of the last 7 days.
+
 ## Sign-in
 
 The app opens on a 6-digit PIN keypad. A correct PIN sets a signed, `HttpOnly`, `SameSite=Strict` cookie (90 days with "Remember this device", otherwise 24 hours).

@@ -4,5 +4,5 @@
     "lib": ["ES2023"], "strict": true, "noEmit": true, "skipLibCheck": true,
     "allowImportingTsExtensions": true, "types": ["@cloudflare/workers-types"]
   },
-  "include": ["app.ts", "auth.ts", "index.ts", "logic.ts"]
+  "include": ["app.ts", "auth.ts", "index.ts", "logic.ts", "planner.ts", "timer.ts"]
 }

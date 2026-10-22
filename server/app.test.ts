@@ -89,7 +89,7 @@ describe("backup and restore", () => {
     await send("PATCH", "/api/chapters/maths-1", { status: "revised" });
     const backup = (await (await t.inject("/api/export")).json()) as any;
     const cases = [
-      { version: 3 },
+      { version: 99 },
       { ...backup, tasks: "nope" },
       { ...backup, progress: backup.progress.map((p: any) => ({ ...p, status: "bogus" })) },
       // passes the shape check, then fails a foreign key partway through the atomic write

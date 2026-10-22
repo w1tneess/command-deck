@@ -1,18 +1,26 @@
-import type { Status } from "../server/logic.ts";
+import type { Scope, Status } from "../server/logic.ts";
 
 export type Chapter = {
-  id: string; subjectId: string; name: string; introducedIn: "earlier" | "pb1" | "pb2";
+  id: string; subjectId: string; name: string; scope: Scope;
   confirmed: boolean; source: string | null; status: Status; confidence: number;
   lastRevised: string | null; practiceDone: number;
+  /** Date each revision pass was finished, or null: [Concept, PYQs and Exemplar, Sample papers]. */
+  passes: (string | null)[];
 };
 export type Subject = {
-  id: string; name: string; grp: string; priority: number; examDate: string | null;
+  id: string; name: string; grp: string; priority: number;
+  /** Exam date per phase id. */
+  examDates: Record<string, string>;
   chapters: Chapter[]; progressPct: number;
 };
 export type Task = { id: number; title: string; subjectId: string | null; kind: string; due: string | null; done: boolean };
-export type Exam = { id: string; name: string; start: string; end: string; daysLeft: number; studyDaysLeft: number };
+export type Phase = {
+  id: string; name: string; scope: Scope; startsOn: string; endsOn: string;
+  confirmed: boolean; daysLeft: number; studyDaysLeft: number;
+};
 export type State = {
-  today: string; exams: Exam[]; subjects: Subject[]; tasks: Task[];
+  today: string; phases: Phase[]; activePhaseId: string | null; autoPhase: boolean;
+  subjects: Subject[]; tasks: Task[];
   sessions: { day: string; subjectId: string; minutes: number }[];
 };
 

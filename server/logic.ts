@@ -30,9 +30,31 @@ export function progressPct(statuses: Status[]): number {
   return Math.round((done / statuses.length) * 100);
 }
 
-/** Exam scope is cumulative: PB1 covers earlier + pb1 chapters, PB2 covers everything. */
-export function inScope(introducedIn: "earlier" | "pb1" | "pb2", exam: "pb1" | "pb2"): boolean {
-  return exam === "pb2" || introducedIn !== "pb2";
+export type Scope = "term1" | "pb1" | "pb2" | "board";
+export const SCOPES: Scope[] = ["term1", "pb1", "pb2", "board"];
+const RANK: Record<Scope, number> = { term1: 0, pb1: 1, pb2: 2, board: 3 };
+
+/** Scope is cumulative: a phase covers every chapter tagged at or below its own level. */
+export function inScope(chapterScope: Scope, phaseScope: Scope): boolean {
+  return RANK[chapterScope] <= RANK[phaseScope];
+}
+
+export type PhaseDates = { id: string; startsOn: string; endsOn: string };
+
+/**
+ * The phase to focus on: the manual override if set, otherwise the first phase that hasn't ended yet
+ * (phases are given in order), otherwise the last one once everything is over.
+ */
+export function activePhase<T extends PhaseDates>(phases: T[], today: string, override?: string | null): T | undefined {
+  return phases.find((p) => p.id === override) ?? phases.find((p) => p.endsOn >= today) ?? phases[phases.length - 1];
+}
+
+/**
+ * The date a subject without its own exam date is planned against: the phase start while it's ahead,
+ * the phase end once it's under way, so subjects still in play don't drop out of the queue.
+ */
+export function phaseTarget(phase: PhaseDates, today: string): string {
+  return phase.startsOn >= today ? phase.startsOn : phase.endsOn;
 }
 
 /** Weakest first: low confidence, then least recently revised (never revised first). */

@@ -18,23 +18,28 @@ describe("api", () => {
     expect(s.subjects).toHaveLength(12);
   });
 
-  it("persists chapter progress and stamps the revision date", async () => {
-    await send("PATCH", "/api/chapters/maths-1", { status: "revised", confidence: 4 });
+  it("a revision pass stamps the revision date and starts the chapter", async () => {
+    await send("PUT", "/api/chapters/maths-1/passes/1", { done: true });
     const m = maths(await state());
-    expect(m.chapters[0]).toMatchObject({ status: "revised", confidence: 4, lastRevised: "2026-10-22" });
-    expect(m.progressPct).toBe(0); // progress follows revision passes, not the status
+    expect(m.chapters[0]).toMatchObject({ status: "learning", lastRevised: "2026-10-22" });
+    expect(m.progressPct).toBeGreaterThan(0);
   });
 
   it("changing only confidence leaves status and the revision date alone", async () => {
-    await send("PATCH", "/api/chapters/maths-1", { status: "learning" });
+    await send("PUT", "/api/chapters/maths-1/passes/1", { done: true });
     await send("PATCH", "/api/chapters/maths-1", { confidence: 3 });
-    expect(maths(await state()).chapters[0]).toMatchObject({ status: "learning", confidence: 3, lastRevised: null });
+    expect(maths(await state()).chapters[0]).toMatchObject({ status: "learning", confidence: 3, lastRevised: "2026-10-22" });
+  });
+
+  it("ignores a status sent by hand, so status can't drift from the passes", async () => {
+    expect((await send("PATCH", "/api/chapters/maths-1", { status: "mastered" })).status).toBe(400); // confidence is the only field
+    expect((await send("PATCH", "/api/chapters/maths-1", { status: "mastered", confidence: 2 })).status).toBe(200);
+    expect(maths(await state()).chapters[0]).toMatchObject({ status: "not_started", confidence: 2 });
   });
 
   it("rejects bad input", async () => {
     expect((await send("PATCH", "/api/chapters/maths-1", { confidence: 9 })).status).toBe(400);
-    expect((await send("PATCH", "/api/chapters/maths-1", { status: "done" })).status).toBe(400);
-    expect((await send("PATCH", "/api/chapters/nope", { status: "learning" })).status).toBe(404);
+    expect((await send("PATCH", "/api/chapters/nope", { confidence: 3 })).status).toBe(404);
     expect((await send("PUT", "/api/subjects/maths/exam-date", { phaseId: "pb1", date: "tomorrow" })).status).toBe(400);
     expect((await send("POST", "/api/sessions", { subjectId: "maths", minutes: 0 })).status).toBe(400);
     expect((await send("POST", "/api/sessions", { subjectId: "ghost", minutes: 10 })).status).toBe(404);
@@ -69,15 +74,17 @@ describe("access control", () => {
 
 describe("backup and restore", () => {
   it("round-trips: export, change, import restores", async () => {
-    await send("PATCH", "/api/chapters/maths-3", { status: "mastered", confidence: 5 });
+    for (const n of [1, 2, 3]) await send("PUT", `/api/chapters/maths-3/passes/${n}`, { done: true });
+    await send("PATCH", "/api/chapters/maths-3", { confidence: 5 });
     const backup = await (await t.inject("/api/export")).json();
-    await send("PATCH", "/api/chapters/maths-3", { status: "not_started", confidence: 1 });
+    await send("PUT", "/api/chapters/maths-3/passes/3", { done: false });
+    await send("PATCH", "/api/chapters/maths-3", { confidence: 1 });
     expect((await send("POST", "/api/import", backup)).status).toBe(200);
     expect(maths(await state()).chapters[2]).toMatchObject({ status: "mastered", confidence: 5 });
   });
 
   it("rejects a corrupt file without touching existing data", async () => {
-    await send("PATCH", "/api/chapters/maths-1", { status: "revised" });
+    await send("PUT", "/api/chapters/maths-1/passes/1", { done: true });
     const backup = (await (await t.inject("/api/export")).json()) as any;
     const cases = [
       { version: 99 },
@@ -87,7 +94,7 @@ describe("backup and restore", () => {
       { ...backup, chapters: backup.chapters.map((c: any, i: number) => (i === 0 ? { ...c, subject_id: "ghost" } : c)) },
     ];
     for (const payload of cases) expect((await send("POST", "/api/import", payload)).status).toBe(400);
-    expect(maths(await state()).chapters[0].status).toBe("revised");
+    expect(maths(await state()).chapters[0].status).toBe("learning");
     expect(maths(await state()).chapters).toHaveLength(14);
   });
 });

@@ -267,17 +267,10 @@ export function createApp(opts: { now?: () => number } = {}) {
   });
 
   app.patch("/api/chapters/:id", async (c) => {
-    const { status, confidence, practiceDone } = await body<{ status?: string; confidence?: number; practiceDone?: number }>(c);
-    if (status !== undefined && !STATUSES.includes(status as Status)) return c.json({ error: "Unknown status." }, 400);
-    if (confidence !== undefined && !(Number.isInteger(confidence) && confidence >= 1 && confidence <= 5)) return c.json({ error: "Confidence must be 1 to 5." }, 400);
-    if (practiceDone !== undefined && !(Number.isInteger(practiceDone) && practiceDone >= 0)) return c.json({ error: "Practice count must be 0 or more." }, 400);
-    // Revising (or mastering) a chapter stamps today, so the stale list stays honest.
-    const stamp = status === "revised" || status === "mastered" ? 1 : 0;
-    const r = await c.env.DB.prepare(
-      `UPDATE progress SET status = COALESCE(?, status), confidence = COALESCE(?, confidence),
-         practice_done = COALESCE(?, practice_done), last_revised = CASE WHEN ? THEN ? ELSE last_revised END
-       WHERE chapter_id = ?`,
-    ).bind(status ?? null, confidence ?? null, practiceDone ?? null, stamp, today(), c.req.param("id")).run();
+    // Status follows the revision passes (PUT .../passes/:n), so only confidence is set by hand.
+    const { confidence } = await body<{ confidence?: number }>(c);
+    if (!(Number.isInteger(confidence) && confidence! >= 1 && confidence! <= 5)) return c.json({ error: "Confidence must be 1 to 5." }, 400);
+    const r = await c.env.DB.prepare("UPDATE progress SET confidence = ? WHERE chapter_id = ?").bind(confidence, c.req.param("id")).run();
     return r.meta.changes ? c.json({ ok: true }) : c.json({ error: "No such chapter." }, 404);
   });
 

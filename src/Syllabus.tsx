@@ -146,7 +146,7 @@ function SubjectCard({ subject, title, state, level, act }: { subject: Subject; 
         </div>
       )}
 
-      {adding && <ChapterForm subject={subject} initial={{ name: "", scope: level === "board" ? "board" : level, confidence: 1 }} saveLabel="Add chapter" onCancel={() => setAdding(false)} onSave={async (v) => { await act("POST", "/api/chapters", { subjectId: subject.id, name: v.name, scope: v.scope }); setAdding(false); }} />}
+      {adding && <ChapterForm subject={subject} initial={{ name: "", scope: level === "board" ? "board" : level, confidence: 1 }} saveLabel="Add chapter" onCancel={() => setAdding(false)} onSave={async (v) => { if (await act("POST", "/api/chapters", { subjectId: subject.id, name: v.name, scope: v.scope })) setAdding(false); }} />}
 
       {subject.chapters.length === 0 && !adding && <p className="m-0 border-t border-line py-4 text-[14px] text-muted">No chapters yet. Add them from the school syllabus.</p>}
       {subject.chapters.length > 0 && visible.length === 0 && <p className="m-0 border-t border-line py-4 text-[14px] text-muted">No chapters at this level. Pick a higher level above.</p>}
@@ -158,8 +158,8 @@ function SubjectCard({ subject, title, state, level, act }: { subject: Subject; 
             return (
               <li key={c.id} className="border-t border-line">
                 <ChapterForm subject={subject} initial={{ name: c.name, scope: c.scope, confidence: c.confidence }} saveLabel="Save" onCancel={() => setEditing(null)} onSave={async (v) => {
-                  await act("PATCH", `/api/chapters/${c.id}/meta`, { name: v.name, scope: v.scope });
-                  if (v.confidence !== c.confidence) await act("PATCH", `/api/chapters/${c.id}`, { confidence: v.confidence });
+                  if (!(await act("PATCH", `/api/chapters/${c.id}/meta`, { name: v.name, scope: v.scope }))) return;
+                  if (v.confidence !== c.confidence && !(await act("PATCH", `/api/chapters/${c.id}`, { confidence: v.confidence }))) return;
                   setEditing(null);
                 }} />
               </li>
@@ -210,7 +210,7 @@ function SubjectCard({ subject, title, state, level, act }: { subject: Subject; 
                   <span className="text-[14px]">Delete {c.name}? Its daily targets and revision passes go with it.</span>
                   <div className="flex gap-2">
                     <Btn kind="outline" className="px-[18px]" onClick={() => setDeleting(null)}>Cancel</Btn>
-                    <Btn className="border-0 bg-fg px-[18px] font-semibold text-bg" onClick={async () => { await act("DELETE", `/api/chapters/${c.id}`); setDeleting(null); }}>Delete chapter</Btn>
+                    <Btn className="border-0 bg-fg px-[18px] font-semibold text-bg" onClick={async () => { if (await act("DELETE", `/api/chapters/${c.id}`)) setDeleting(null); }}>Delete chapter</Btn>
                   </div>
                 </div>
               )}

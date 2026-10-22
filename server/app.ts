@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { registerAuth, type Env } from "./auth.ts";
 import { SCOPES, STATUSES, activePhase, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
+import { lifeState, registerLife } from "./life.ts";
 import { ENERGIES, studyQueue, type Energy } from "./planner.ts";
 import { IDLE, settleTimer, startFocus, stopTimer, type SessionLog, type Timer } from "./timer.ts";
 
@@ -23,7 +24,16 @@ const TABLES: Record<string, string[]> = {
   daily_targets: ["id", "day", "chapter_id", "title", "done"],
   checkins: ["day", "energy"],
   settings: ["key", "value"],
+  habits: ["id", "name", "kind", "goal", "pos"],
+  habit_log: ["habit_id", "day", "value"],
+  projects: ["id", "name", "detail", "pos"],
+  milestones: ["id", "project_id", "title", "done", "pos"],
+  captures: ["id", "text", "kind", "done", "created_at"],
+  routine: ["day", "sleep", "kickoff_at", "wins", "tomorrow", "shutdown_at"],
+  reviews: ["week_start", "note"],
 };
+/** Tables added in backup version 5. An older file doesn't have them, so restoring one leaves them as they are. */
+const LIFE_TABLES = ["habits", "habit_log", "projects", "milestones", "captures", "routine", "reviews"];
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const validDate = (d: unknown): d is string => typeof d === "string" && ISO.test(d) && !Number.isNaN(Date.parse(d));
 const validScope = (s: unknown): s is Scope => SCOPES.includes(s as Scope);
@@ -130,6 +140,7 @@ export function createApp(opts: { now?: () => number } = {}) {
   });
 
   registerAuth(app, now);
+  registerLife(app, today, () => new Date(now()).toISOString());
 
   app.get("/api/state", async (c) => {
     const t = today();
@@ -160,6 +171,7 @@ export function createApp(opts: { now?: () => number } = {}) {
       checkin: (checkinRes.results.find((r) => r.day === t)?.energy as Energy | undefined) ?? null,
       checkins: checkinRes.results,
       timer: timerView(timer, nowMs),
+      ...(await lifeState(db, t)),
     });
   });
 
@@ -429,7 +441,7 @@ export function createApp(opts: { now?: () => number } = {}) {
     const db = c.env.DB;
     const names = Object.keys(TABLES);
     const res = await db.batch<Row>(names.map((t) => db.prepare(`SELECT * FROM ${t}`)));
-    return c.json({ version: 4, ...Object.fromEntries(names.map((t, i) => [t, res[i].results])) });
+    return c.json({ version: 5, ...Object.fromEntries(names.map((t, i) => [t, res[i].results])) });
   });
 
   // Restore replaces everything in one atomic batch. A bad file is rejected before the write, or
@@ -439,7 +451,7 @@ export function createApp(opts: { now?: () => number } = {}) {
     let b = await body<Row>(c);
     const fail = (msg: string) => c.json({ error: msg }, 400);
     const db = c.env.DB;
-    if (![1, 2, 3, 4].includes(b.version)) return fail("This isn't an Exam Tracker backup (wrong or missing version).");
+    if (![1, 2, 3, 4, 5].includes(b.version)) return fail("This isn't an Exam Tracker backup (wrong or missing version).");
     if (b.version === 1) {
       for (const t of ["subjects", "chapters", "progress", "tasks", "sessions"]) {
         if (!Array.isArray(b[t])) return fail(`Backup is missing the ${t} list.`);
@@ -472,7 +484,8 @@ export function createApp(opts: { now?: () => number } = {}) {
       delete b.tasks;
       b.chapters = b.chapters.map((ch: Row) => (ch.scope === "term1" ? { ...ch, scope: "unit1" } : ch));
     }
-    for (const [table, cols] of Object.entries(TABLES)) {
+    const tables = Object.entries(TABLES).filter(([t]) => b.version >= 5 || !LIFE_TABLES.includes(t));
+    for (const [table, cols] of tables) {
       if (!Array.isArray(b[table])) return fail(`Backup is missing the ${table} list.`);
       for (const row of b[table]) {
         if (!row || typeof row !== "object") return fail(`Backup has a bad row in ${table}.`);
@@ -486,8 +499,8 @@ export function createApp(opts: { now?: () => number } = {}) {
     }
     if (b.chapters.some((ch: Row) => !validScope(ch.scope)) || b.phases.some((p: Row) => !validScope(p.scope))) return fail("Backup has an invalid scope.");
     if (b.deliverables.some((d: Row) => !DELIVERABLE_STATUSES.includes(d.status))) return fail("Backup has an invalid deliverable status.");
-    const deletes = Object.keys(TABLES).reverse().map((t) => db.prepare(`DELETE FROM ${t}`));
-    const inserts = Object.entries(TABLES).flatMap(([t, cols]) => {
+    const deletes = tables.map(([t]) => t).reverse().map((t) => db.prepare(`DELETE FROM ${t}`));
+    const inserts = tables.flatMap(([t, cols]) => {
       const sql = `INSERT INTO ${t} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`;
       return (b[t] as Row[]).map((row) => db.prepare(sql).bind(...cols.map((col) => row[col])));
     });

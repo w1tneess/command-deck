@@ -1,78 +1,79 @@
 @import "tailwindcss";
 
 /*
- * Design tokens: matte zinc neutrals, one indigo accent for actions and active focus, emerald for done and
- * mastered, amber for urgent. Dark is the default; a light device gets the light set unless the user has
- * picked a theme (data-theme on <html>, set from the Backup page). Every text pair below is 4.5:1 or better.
+ * Apple Cupertino & OLED Pro Color Palette
+ * Obsidian pitch-black base, ceramic light mode, Apple System Indigo accent,
+ * Apple Activity System Green for completed items, Apple System Orange for urgent notices.
+ * Every declared pair strictly passes WCAG 2.2 AA (4.5:1 text, 3:1 non-text).
  */
 :root {
   color-scheme: dark;
-  --bg: #09090b;
-  --surface: #111113;
-  --surface2: #18181b;
-  --line: #27272a;
-  --text: #f4f4f5;
-  --muted: #a1a1aa;
-  --blue: #a5b4fc; /* confidence dots and other quiet indigo marks */
-  --good: #34d399;
-  --good-ink: #052e1f;
-  --warn: #fbbf24;
-  --warn-ink: #1c1203;
-  --accent: #5558ea;
+  --bg: #000000;
+  --surface: #121214;
+  --surface2: #1c1c1e;
+  --line: #2c2c2e;
+  --text: #f5f5f7;
+  --muted: #8e8e93;
+  --blue: #60a5fa; /* confidence dots and quiet blue indicators */
+  --good: #30d158;
+  --good-ink: #003814;
+  --warn: #ff9f0a;
+  --warn-ink: #331b00;
+  --accent: #5e5ce6;
   --ink: #ffffff; /* text on the indigo accent, in both themes */
-  --accent-text: #a5b4fc; /* indigo as text or a thin line */
-  --focus: #a5b4fc;
-  --heat-0: #18181b;
-  --heat-1: #2c2e63;
-  --heat-2: #3f44a3;
-  --heat-3: #5b61d8;
-  --heat-4: #a5b4fc;
+  --accent-text: #818cf8; /* vibrant indigo as text or accent edge */
+  --focus: #5e5ce6;
+  --heat-0: #1c1c1e;
+  --heat-1: #242252;
+  --heat-2: #373385;
+  --heat-3: #504cb8;
+  --heat-4: #7c77f2;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     color-scheme: light;
-    --bg: #f4f4f5;
+    --bg: #f5f5f7;
     --surface: #ffffff;
-    --surface2: #ececee;
-    --line: #d4d4d8;
-    --text: #18181b;
-    --muted: #52525b;
-    --blue: #4338ca;
-    --good: #047857;
+    --surface2: #e5e5ea;
+    --line: #d1d1d6;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --blue: #2563eb;
+    --good: #15803d;
     --good-ink: #ffffff;
-    --warn: #b45309;
+    --warn: #c2410c;
     --warn-ink: #ffffff;
-    --accent: #4f46e5;
+    --accent: #5856d6;
     --accent-text: #4338ca;
-    --focus: #4f46e5;
-    --heat-0: #ececee;
-    --heat-1: #d5d8f7;
-    --heat-2: #a5aaf0;
-    --heat-3: #6f76e3;
-    --heat-4: #4338ca;
+    --focus: #5856d6;
+    --heat-0: #e5e5ea;
+    --heat-1: #deddf8;
+    --heat-2: #b9b7f1;
+    --heat-3: #8a85e6;
+    --heat-4: #5856d6;
   }
 }
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f4f4f5;
+  --bg: #f5f5f7;
   --surface: #ffffff;
-  --surface2: #ececee;
-  --line: #d4d4d8;
-  --text: #18181b;
-  --muted: #52525b;
-  --blue: #4338ca;
-  --good: #047857;
+  --surface2: #e5e5ea;
+  --line: #d1d1d6;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --blue: #2563eb;
+  --good: #15803d;
   --good-ink: #ffffff;
-  --warn: #b45309;
+  --warn: #c2410c;
   --warn-ink: #ffffff;
-  --accent: #4f46e5;
+  --accent: #5856d6;
   --accent-text: #4338ca;
-  --focus: #4f46e5;
-  --heat-0: #ececee;
-  --heat-1: #d5d8f7;
-  --heat-2: #a5aaf0;
-  --heat-3: #6f76e3;
-  --heat-4: #4338ca;
+  --focus: #5856d6;
+  --heat-0: #e5e5ea;
+  --heat-1: #deddf8;
+  --heat-2: #b9b7f1;
+  --heat-3: #8a85e6;
+  --heat-4: #5856d6;
 }
 
 /* `inline` makes utilities read the variables above directly, so a theme switch needs no rebuild. */
@@ -110,8 +111,36 @@
   button:disabled { cursor: not-allowed; opacity: 0.5; }
   input, select { font: inherit; color: inherit; }
   a { text-decoration: none; color: inherit; }
-  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 3px rgba(85, 88, 234, 0.22); }
   ::selection { background: var(--accent); color: var(--ink); }
+}
+
+/*
+ * Apple Design: Translucent materials with light-catching top bevel & optical hierarchy.
+ * Uses backdrop-filter with saturation boost, falling back cleanly under reduced-transparency.
+ */
+.apple-glass {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+:root[data-theme="light"] .apple-glass {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border-top: 1px solid rgba(255, 255, 255, 0.65);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .apple-glass {
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    border-top: 1px solid rgba(255, 255, 255, 0.65);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .apple-glass {
+    background: var(--surface) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 /*
@@ -123,7 +152,7 @@ body { font-variant-numeric: tabular-nums; } /* digits line up in timers, counts
 button, a, input, select, summary {
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, filter 150ms ease, transform 150ms ease;
 }
-button:not(:disabled):active { transform: scale(0.97); }
+button:not(:disabled):active { transform: scale(0.96); }
 @media (hover: hover) {
   button:not(:disabled):hover { filter: brightness(1.12); }
   nav a:not([aria-current]):hover { background: var(--surface2); color: var(--text); }
@@ -134,6 +163,19 @@ button:not(:disabled):active { transform: scale(0.97); }
   :root:not([data-theme="dark"]) button:not(:disabled):hover { filter: brightness(0.95); }
 }
 @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes drawer-up { from { transform: translateY(100%); opacity: 0.85; } to { transform: translateY(0); opacity: 1; } }
+@keyframes drawer-right { from { transform: translateX(100%); opacity: 0.85; } to { transform: translateX(0); opacity: 1; } }
+
+.animate-fade-in { animation: fade-in 180ms ease-out forwards; }
+.animate-drawer-mobile { animation: drawer-up 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@media (min-width: 1024px) {
+  .animate-drawer-desktop { animation: drawer-right 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+}
+
+.timer-ring {
+  transition: stroke-dasharray 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
 
 /* The browser draws date pickers dark or light from color-scheme, so the icon stays readable in both. */
 input[type="date"] { min-height: 44px; }

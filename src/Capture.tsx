@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { Act, Capture, State } from "./api.ts";
 import { Btn, Check } from "./ui.tsx";
 
@@ -9,6 +9,10 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
   const [text, setText] = useState("");
   const [kind, setKind] = useState<Capture["kind"]>("note");
   const input = useRef<HTMLTextAreaElement>(null);
+  const busy = useRef(false);
+  const textId = useId();
+
+  const [saving, setSaving] = useState(false);
 
   // Focus the box on open, and hand focus back to whatever opened the drawer when it closes.
   useEffect(() => {
@@ -18,29 +22,41 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
   }, []);
 
   const save = async () => {
-    if (!text.trim()) return;
-    if (await act("POST", "/api/captures", { text, kind })) { setText(""); input.current?.focus(); }
+    const toSave = text.trim();
+    if (!toSave || busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    try {
+      if (await act("POST", "/api/captures", { text: toSave, kind })) {
+        setText((cur) => (cur.trim() === toSave ? "" : cur));
+        input.current?.focus();
+      }
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
   };
 
   return (
     <>
-      <div aria-hidden="true" className="fixed inset-0 z-40 bg-bg/60" onClick={onClose} />
+      <div aria-hidden="true" className="fixed inset-0 z-40 bg-bg/60 backdrop-blur-sm" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="capture-h"
         onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col gap-3 overflow-y-auto rounded-t-2xl border border-line bg-surface p-4 shadow-lg lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[420px] lg:rounded-none lg:rounded-l-2xl lg:p-6"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col gap-3 overflow-y-auto rounded-t-[24px] border border-line/80 bg-surface/95 backdrop-blur-2xl p-4 shadow-[0_-8px_32px_rgba(0,0,0,0.3)] animate-drawer-mobile lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[420px] lg:rounded-none lg:rounded-l-[24px] lg:p-6 lg:animate-drawer-desktop"
       >
+        <div className="mx-auto -mt-1 mb-1 h-1 w-9 shrink-0 rounded-full bg-line lg:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3">
-          <h2 id="capture-h" className="m-0 text-[17px] font-semibold">Quick capture</h2>
+          <h2 id="capture-h" className="m-0 text-[17px] font-semibold tracking-[-0.015em]">Quick capture</h2>
           <span className="hidden text-xs text-muted lg:inline"><kbd className="font-mono">Ctrl/⌘ K</kbd> to toggle</span>
           <Btn kind="ghost" aria-label="Close quick capture" onClick={onClose}>Close</Btn>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); void save(); }} className="flex flex-col gap-2.5">
-          <label htmlFor="capture-text" className="sr-only">What is on your mind?</label>
+          <label htmlFor={textId} className="sr-only">What is on your mind?</label>
           <textarea
-            id="capture-text"
+            id={textId}
             ref={input}
             rows={3}
             maxLength={500}
@@ -56,7 +72,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                 <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)} className={`h-11 rounded-xl border px-4 text-[14px] font-medium ${kind === k ? "border-accent bg-accent text-ink" : "border-line bg-transparent text-muted"}`}>{k === "note" ? "Note" : "To-do"}</button>
               ))}
             </div>
-            <Btn type="submit" kind="primary" disabled={!text.trim()}>Save</Btn>
+            <Btn type="submit" kind="primary" disabled={!text.trim() || saving}>{saving ? "Saving…" : "Save"}</Btn>
           </div>
         </form>
         <ul className="m-0 flex list-none flex-col p-0">

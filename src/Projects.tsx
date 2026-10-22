@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import type { Act, Project, State } from "./api.ts";
 import { Btn, Card, Check, H2, plural } from "./ui.tsx";
 
@@ -30,9 +30,29 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [title, setTitle] = useState("");
+  const busy = useRef(false);
   const done = p.milestones.filter((m) => m.done).length;
   const pct = p.milestones.length ? Math.round((done / p.milestones.length) * 100) : 0;
-  const id = `project-${p.id}`;
+  const id = useId();
+
+  const [savingMilestone, setSavingMilestone] = useState(false);
+
+  const addMilestone = async (e: FormEvent) => {
+    e.preventDefault();
+    const toSave = title.trim();
+    if (!toSave || busy.current) return;
+    busy.current = true;
+    setSavingMilestone(true);
+    try {
+      if (await act("POST", `/api/projects/${p.id}/milestones`, { title: toSave })) {
+        setTitle((cur) => (cur.trim() === toSave ? "" : cur));
+      }
+    } finally {
+      busy.current = false;
+      setSavingMilestone(false);
+    }
+  };
+
   return (
     <Card labelledBy={`${id}-h`}>
       {editing ? (
@@ -60,7 +80,7 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
       )}
       {p.milestones.length > 0 && (
         <div className="mt-3 flex items-center gap-2.5">
-          <span className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-line"><span className={`block h-full ${pct === 100 ? "bg-good" : "bg-accent"}`} style={{ width: `${pct}%` }} /></span>
+          <span className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-line"><span className={`block h-full transition-all duration-300 ease-out ${pct === 100 ? "bg-good" : "bg-gradient-to-r from-accent to-accent-text"}`} style={{ width: `${pct}%` }} /></span>
           <span className="font-mono text-xs text-muted">{done} of {p.milestones.length}</span>
         </div>
       )}
@@ -73,10 +93,10 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
           </li>
         ))}
       </ul>
-      <form className="mt-2 flex gap-2 border-t border-line pt-3" onSubmit={async (e) => { e.preventDefault(); if (title.trim() && (await act("POST", `/api/projects/${p.id}/milestones`, { title }))) setTitle(""); }}>
+      <form className="mt-2 flex gap-2 border-t border-line pt-3" onSubmit={addMilestone}>
         <label htmlFor={`${id}-new`} className="sr-only">New milestone for {p.name}</label>
         <input id={`${id}-new`} maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a milestone" className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-bg px-3.5 text-[15px] text-fg" />
-        <Btn type="submit" disabled={!title.trim()}>Add</Btn>
+        <Btn type="submit" disabled={!title.trim() || savingMilestone}>{savingMilestone ? "Adding…" : "Add"}</Btn>
       </form>
     </Card>
   );
@@ -84,20 +104,41 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
 
 function ProjectForm({ initial, saveLabel, onSave, onCancel }: { initial: { name: string; detail: string }; saveLabel: string; onSave: (v: { name: string; detail: string }) => Promise<void>; onCancel: () => void }) {
   const [v, setV] = useState(initial);
+  const [saving, setSaving] = useState(false);
+  const busy = useRef(false);
+  const uid = useId();
+  const nameId = `${uid}-name`;
+  const detailId = `${uid}-detail`;
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    const name = v.name.trim();
+    if (!name || busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    try {
+      await onSave({ ...v, name });
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
+  };
+
   return (
-    <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); if (v.name.trim()) void onSave({ ...v, name: v.name.trim() }); }}>
+    <form className="flex flex-col gap-3" onSubmit={submit}>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="project-name" className="text-[13px] text-muted">Project name</label>
-        <input id="project-name" autoFocus maxLength={80} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-11 rounded-xl border border-accent bg-bg px-3.5 text-[15px] text-fg" />
+        <label htmlFor={nameId} className="text-[13px] text-muted">Project name</label>
+        <input id={nameId} autoFocus maxLength={80} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-11 rounded-xl border border-accent bg-bg px-3.5 text-[15px] text-fg" />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="project-detail" className="text-[13px] text-muted">What is it for? (optional)</label>
-        <input id="project-detail" maxLength={500} value={v.detail} onChange={(e) => setV({ ...v, detail: e.target.value })} className="h-11 rounded-xl border border-line bg-bg px-3.5 text-[15px] text-fg" />
+        <label htmlFor={detailId} className="text-[13px] text-muted">What is it for? (optional)</label>
+        <input id={detailId} maxLength={500} value={v.detail} onChange={(e) => setV({ ...v, detail: e.target.value })} className="h-11 rounded-xl border border-line bg-bg px-3.5 text-[15px] text-fg" />
       </div>
       <div className="flex gap-2">
-        <Btn type="submit" kind="primary" className="px-[18px]">{saveLabel}</Btn>
+        <Btn type="submit" kind="primary" disabled={saving} className="px-[18px]">{saving ? "Saving…" : saveLabel}</Btn>
         <Btn kind="outline" className="px-[18px]" onClick={onCancel}>Cancel</Btn>
       </div>
     </form>
   );
 }
+

@@ -84,34 +84,56 @@ export function FocusCard({ focus, state }: { focus: FocusModel; state: State })
   const f = focus;
   const shown = f.running ? f.remaining : FOCUS_S;
   const arc = f.running ? (f.remaining / f.total) * RING : 0;
+  const isFocusMode = f.timer.mode === "focus";
+
   return (
     <Card labelledBy="focus-h" className="flex flex-col items-center gap-4">
       <div className="flex items-baseline justify-between self-stretch">
         <H2 id="focus-h">Focus</H2>
-        <span className="text-[13px] text-muted">{f.roundText}{f.running && f.timer.mode === "focus" ? ` · ${f.subjectName}` : ""}</span>
+        <span className="text-[13px] text-muted">{f.roundText}{f.running && isFocusMode ? ` · ${f.subjectName}` : ""}</span>
       </div>
       <div className="relative size-[200px]">
         <svg width="200" height="200" viewBox="0 0 200 200" role="img" aria-label={f.running ? `${mmss(f.remaining)} left in this ${f.label.toLowerCase()}` : "Ready for a 25 minute focus round"} className="-rotate-90">
-          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--line)" strokeWidth="10" />
+          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--line)" strokeWidth="10" opacity="0.6" />
           {f.running && (
-            <circle cx="100" cy="100" r="88" fill="none" stroke={f.timer.mode === "focus" ? "var(--accent)" : "var(--good)"} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${arc} ${RING}`} />
+            <circle
+              cx="100"
+              cy="100"
+              r="88"
+              fill="none"
+              stroke={isFocusMode ? "var(--accent)" : "var(--good)"}
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={`${arc} ${RING}`}
+              className={`timer-ring transition-all duration-300 ease-linear ${isFocusMode ? "[filter:drop-shadow(0_0_8px_rgba(94,92,230,0.5))]" : "[filter:drop-shadow(0_0_8px_rgba(48,209,88,0.5))]"}`}
+            />
           )}
         </svg>
         <div role="timer" aria-live="off" className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-[46px] font-medium tracking-[-0.02em]">{mmss(shown)}</span>
+          {f.running ? (
+            <span className="mb-0.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider bg-accent/15 text-accent-text border border-accent/30">
+              <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+              {f.label}
+            </span>
+          ) : (
+            <span className="mb-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-muted bg-surface2/60 border border-line/60">
+              Ready
+            </span>
+          )}
+          <span className="font-mono tabular-nums text-[46px] font-bold tracking-tight">{mmss(shown)}</span>
           <span className="text-[13px] text-muted">{f.next}</span>
         </div>
       </div>
       <div className="flex gap-3 self-stretch">
         {f.running ? (
-          <Btn className="h-12 flex-1 text-[15px] font-medium" onClick={f.stop}>{f.timer.mode === "focus" ? "Stop" : "Skip break"}</Btn>
+          <Btn className="h-12 flex-1 text-[15px] font-medium" onClick={f.stop}>{isFocusMode ? "Stop" : "Skip break"}</Btn>
         ) : (
           <>
             <select
               aria-label="Subject"
               value={f.subject}
               onChange={(e) => f.setSubject(e.target.value)}
-              className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-transparent px-3 text-[15px] text-fg"
+              className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-[15px] text-fg"
             >
               {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -131,11 +153,11 @@ export function FocusBar({ focus, state, onToday }: { focus: FocusModel; state: 
   if (!f.running && !onToday) return null;
   return (
     <div className="fixed inset-x-0 bottom-[76px] z-10 px-4 lg:hidden">
-      <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface2 py-2.5 pr-2.5 pl-4 shadow-lg">
+      <div className="flex items-center gap-3 rounded-[22px] border border-line/75 bg-surface/85 backdrop-blur-xl py-2.5 pr-2.5 pl-4 shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
         {f.running ? (
           <>
             <div className="flex-1">
-              <div role="timer" aria-live="off" className="font-mono text-2xl font-medium tracking-[-0.02em]">{mmss(f.remaining)}</div>
+              <div role="timer" aria-live="off" className="font-mono tabular-nums text-2xl font-semibold tracking-[-0.02em]">{mmss(f.remaining)}</div>
               <div className="text-xs text-muted">{f.timer.mode === "focus" ? `${f.subjectName} · ${f.roundText.toLowerCase()}` : f.label}</div>
             </div>
             <Btn kind="primary" className="h-11 px-5 text-[15px]" onClick={f.stop}>{f.timer.mode === "focus" ? "Stop" : "Skip"}</Btn>

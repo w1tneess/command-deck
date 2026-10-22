@@ -38,26 +38,26 @@ export const daysBetween = (from: string, to: string) => Math.round((dayOf(to).g
 
 export function Card({ children, className = "", labelledBy }: { children: ReactNode; className?: string; labelledBy?: string }) {
   return (
-    <section aria-labelledby={labelledBy} className={`min-w-0 rounded-2xl border border-line bg-surface px-4 py-4 lg:px-6 lg:py-5 ${className}`}>
+    <section aria-labelledby={labelledBy} className={`min-w-0 rounded-[20px] border border-line/75 bg-surface/90 shadow-[0_2px_12px_rgba(0,0,0,0.14)] lg:rounded-[22px] lg:px-6 lg:py-5 ${className}`}>
       {children}
     </section>
   );
 }
 
 export const H2 = ({ id, children, big = false }: { id?: string; children: ReactNode; big?: boolean }) => (
-  <h2 id={id} className={`m-0 font-semibold ${big ? "text-xl" : "text-[17px]"}`}>{children}</h2>
+  <h2 id={id} className={`m-0 font-semibold tracking-[-0.015em] ${big ? "text-xl" : "text-[17px]"}`}>{children}</h2>
 );
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "secondary" | "ghost" | "outline" };
 const BTN = {
-  primary: "bg-accent text-ink font-semibold border-0",
-  secondary: "bg-surface2 text-fg border border-line",
+  primary: "bg-accent text-ink font-semibold border-0 shadow-[0_1px_3px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.22)]",
+  secondary: "bg-surface2/85 text-fg border border-line/80",
   outline: "bg-transparent text-fg border border-line",
   ghost: "bg-transparent text-muted border-0",
 };
 /** 44px minimum touch target, as in the design. */
 export function Btn({ kind = "secondary", className = "", type = "button", ...rest }: BtnProps) {
-  return <button type={type} className={`h-11 shrink-0 rounded-xl px-4 text-[14px] ${BTN[kind]} ${className}`} {...rest} />;
+  return <button type={type} className={`h-11 shrink-0 rounded-xl px-4 text-[14px] transition-transform duration-150 ease-out enabled:active:scale-[0.96] ${BTN[kind]} ${className}`} {...rest} />;
 }
 
 export function Pill({ children, accent = false, className = "" }: { children: ReactNode; accent?: boolean; className?: string }) {
@@ -82,7 +82,7 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {PASS_NAMES.map((name, i) => (
-        <span key={name} className={`rounded-full border px-2.5 py-[3px] text-xs ${passes[i] ? "border-good text-good" : "border-line text-muted"}`}>{passes[i] ? "✓ " : ""}{name}</span>
+        <span key={name} className={`rounded-full border px-2.5 py-[3px] text-xs transition-colors duration-150 ${passes[i] ? "border-good bg-good/15 font-medium text-good" : "border-line text-muted"}`}>{passes[i] ? "✓ " : ""}{name}</span>
       ))}
     </div>
   );
@@ -90,7 +90,7 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
 
 /** 22px on a phone, 24px on a wide screen, as in the design. */
 export const Check = ({ on }: { on: boolean }) => (
-  <span className={`flex size-[22px] items-center justify-center rounded-[7px] border-2 text-good-ink lg:size-6 lg:rounded-lg ${on ? "border-good bg-good" : "border-muted"}`}>
+  <span className={`flex size-[22px] items-center justify-center rounded-[7px] border-2 text-good-ink transition-colors duration-150 lg:size-6 lg:rounded-lg ${on ? "border-good bg-good" : "border-muted"}`}>
     {on && <Icon d={ICONS.check} size={14} stroke={3} />}
   </span>
 );

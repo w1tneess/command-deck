@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { Act, State } from "./api.ts";
 import { Deliverables } from "./Deliverables.tsx";
 import { Card, H2, fmtShort } from "./ui.tsx";
@@ -42,7 +42,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
               {week.map((w) => (
                 <div key={w.day} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
                   <span className="font-mono text-xs text-muted">{hm(w.min)}</span>
-                  <div className={`w-full max-w-11 rounded-t-lg rounded-b ${w.min === 0 ? "bg-line" : "bg-accent"}`} style={{ height: Math.max(4, Math.round((w.min / 180) * 150)) }} />
+                  <div className={`w-full max-w-11 rounded-t-lg rounded-b transition-all duration-300 ease-out ${w.min === 0 ? "bg-line" : "bg-gradient-to-t from-accent to-accent-text"}`} style={{ height: Math.max(4, Math.round((w.min / 180) * 150)) }} />
                   <span className="text-[13px] font-medium">{weekday(w.day)}</span>
                   <span className="rounded-full border border-line bg-surface2 px-2 py-0.5 text-xs text-muted">{w.energy ? ENERGY[w.energy] : "–"}</span>
                 </div>
@@ -67,7 +67,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
                     <th scope="row" className="py-2.5 pr-3 text-[13px] font-medium">{weekday(w.day)}</th>
                     <td className="py-2.5 pr-3">
                       <div className="flex items-center gap-2.5">
-                        <span className="h-1.5 w-full max-w-[160px] min-w-12 overflow-hidden rounded-[3px] bg-line"><span className="block h-full bg-accent" style={{ width: `${Math.min(100, (w.min / 180) * 100)}%` }} /></span>
+                        <span className="h-1.5 w-full max-w-[160px] min-w-12 overflow-hidden rounded-[3px] bg-line"><span className="block h-full transition-all duration-300 ease-out bg-gradient-to-r from-accent to-accent-text" style={{ width: `${Math.min(100, (w.min / 180) * 100)}%` }} /></span>
                         <span className="font-mono text-xs text-muted">{hm(w.min)}</span>
                       </div>
                     </td>
@@ -92,14 +92,34 @@ export function Week({ state, act }: { state: State; act: Act }) {
 /** One note per week, saved when you click away. */
 function Reflection({ state, act }: { state: State; act: Act }) {
   const [note, setNote] = useState(state.review.note);
+  const [saving, setSaving] = useState(false);
+  const busy = useRef(false);
+  const uid = useId();
+  const inputId = `${uid}-input`;
+  const headId = `${uid}-h`;
+
+  const save = async () => {
+    if (note.trim() === state.review.note || busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    try {
+      await act("PUT", "/api/review", { note });
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
+  };
+
   return (
-    <Card labelledBy="reflect-h">
+    <Card labelledBy={headId}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <H2 id="reflect-h">Reflection</H2>
-        <span className="text-[13px] text-muted">Week of {fmtShort(state.review.weekStart)}</span>
+        <H2 id={headId}>Reflection</H2>
+        <span className="text-[13px] text-muted">
+          {saving ? "Saving…" : `Week of ${fmtShort(state.review.weekStart)}`}
+        </span>
       </div>
-      <label htmlFor="reflection" className="mt-3 mb-1.5 block text-[13px] text-muted">What went well, what to change next week?</label>
-      <textarea id="reflection" rows={4} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} onBlur={() => { if (note.trim() !== state.review.note) void act("PUT", "/api/review", { note }); }} className="w-full resize-y rounded-xl border border-line bg-bg px-3.5 py-2.5 text-[15px] text-fg" />
+      <label htmlFor={inputId} className="mt-3 mb-1.5 block text-[13px] text-muted">What went well, what to change next week?</label>
+      <textarea id={inputId} rows={4} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} onBlur={() => void save()} className="w-full resize-y rounded-xl border border-line bg-bg px-3.5 py-2.5 text-[15px] text-fg" />
     </Card>
   );
 }

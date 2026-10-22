@@ -67,9 +67,9 @@ export function Backup({ reload, theme, setTheme }: { reload: () => Promise<void
 
         <Card labelledBy="theme-h">
           <H2 id="theme-h">Appearance</H2>
-          <div className="mt-3 flex gap-2" role="group" aria-label="Theme">
+          <div className="mt-3 inline-flex rounded-xl bg-surface2/60 p-1 border border-line/60" role="group" aria-label="Theme">
             {THEMES.map((t) => (
-              <button key={t.id} type="button" aria-pressed={theme === t.id} onClick={() => setTheme(t.id)} className={`h-11 rounded-xl border px-5 text-[14px] font-medium ${theme === t.id ? "border-accent bg-accent text-ink" : "border-line bg-surface2 text-fg"}`}>
+              <button key={t.id} type="button" aria-pressed={theme === t.id} onClick={() => setTheme(t.id)} className={`h-9 rounded-[9px] px-5 text-[14px] font-medium transition-all duration-150 ${theme === t.id ? "bg-accent text-ink shadow-[0_1px_3px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)]" : "text-muted hover:text-fg"}`}>
                 {t.label}
               </button>
             ))}

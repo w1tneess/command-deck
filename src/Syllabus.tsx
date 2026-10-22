@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { SCOPES, inScope, type Scope } from "../server/logic.ts";
 import type { Act, State, Subject } from "./api.ts";
 import { activeOf, chaptersLabel, startedCount } from "./model.ts";
@@ -61,7 +61,7 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
                     <span className="text-[15px] font-medium">{members.length > 1 ? s.name : g.label}</span>
                     <span className="text-[13px] text-muted">{chaptersLabel(s)}</span>
                     {s.chapters.length > 0 && (
-                      <span className="mt-1 block h-1.5 overflow-hidden rounded-[3px] bg-line"><span className="block h-full bg-accent" style={{ width: `${s.progressPct}%` }} /></span>
+                      <span className="mt-1 block h-1.5 overflow-hidden rounded-[3px] bg-line"><span className="block h-full transition-all duration-300 ease-out bg-gradient-to-r from-accent to-accent-text" style={{ width: `${s.progressPct}%` }} /></span>
                     )}
                   </button>
                 ))}
@@ -195,7 +195,7 @@ function SubjectCard({ subject, title, state, level, act }: { subject: Subject; 
                       onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${i + 1}`, { done: !c.passes[i] })}
                       className="h-11 border-0 bg-transparent px-[3px]"
                     >
-                      <span className={`block rounded-full border px-2.5 py-1 text-xs ${c.passes[i] ? "border-good text-good" : "border-line text-muted"}`}>{c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}</span>
+                      <span className={`block rounded-full border px-2.5 py-1 text-xs transition-colors duration-150 ${c.passes[i] ? "border-good bg-good/15 font-medium text-good" : "border-line text-muted"}`}>{c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}</span>
                     </button>
                   ))}
                 </div>
@@ -225,12 +225,29 @@ function SubjectCard({ subject, title, state, level, act }: { subject: Subject; 
 type ChapterValues = { name: string; scope: Scope; confidence: number };
 
 /** Add and edit share one form, as in the design: name and scope, plus confidence when editing. */
-function ChapterForm({ subject, initial, saveLabel, onSave, onCancel }: { subject: Subject; initial: ChapterValues; saveLabel: string; onSave: (v: ChapterValues) => Promise<void>; onCancel: () => void }) {
+function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subject; initial: ChapterValues; saveLabel: string; onSave: (v: ChapterValues) => Promise<void>; onCancel: () => void }) {
   const [v, setV] = useState(initial);
+  const [saving, setSaving] = useState(false);
+  const busy = useRef(false);
+  const id = useId();
   const editing = saveLabel === "Save";
-  const id = `ch-${subject.id}-${editing ? "edit" : "add"}`;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = v.name.trim();
+    if (!name || busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    try {
+      await onSave({ ...v, name });
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
+  };
+
   return (
-    <form className="flex flex-wrap items-end gap-3 py-4" onSubmit={(e) => { e.preventDefault(); if (v.name.trim()) void onSave({ ...v, name: v.name.trim() }); }}>
+    <form className="flex flex-wrap items-end gap-3 py-4" onSubmit={submit}>
       <div className="flex flex-[1_1_240px] flex-col gap-1.5">
         <label htmlFor={`${id}-name`} className="text-[13px] text-muted">Chapter name</label>
         <input id={`${id}-name`} autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-11 rounded-xl border border-accent bg-bg px-3.5 text-[15px] text-fg" />
@@ -252,7 +269,7 @@ function ChapterForm({ subject, initial, saveLabel, onSave, onCancel }: { subjec
         </div>
       )}
       <div className="flex gap-2">
-        <Btn type="submit" kind="primary" className="px-[18px]">{saveLabel}</Btn>
+        <Btn type="submit" kind="primary" disabled={saving} className="px-[18px]">{saving ? "Saving…" : saveLabel}</Btn>
         <Btn kind="outline" className="px-[18px]" onClick={onCancel}>Cancel</Btn>
       </div>
     </form>

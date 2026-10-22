@@ -14,8 +14,21 @@ const read = (): Theme => {
 
 /** "system" leaves data-theme off, so the page follows the device; dark and light force a set. */
 export function applyTheme(t: Theme) {
+  const style = document.createElement("style");
+  style.append(document.createTextNode("*,*::before,*::after{transition:none !important}"));
+  document.head.append(style);
+
   if (t === "system") delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
+
+  // Force synchronous style flush so the new theme paints without transition
+  void document.body?.offsetHeight;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      style.remove();
+    });
+  });
 }
 
 export function useTheme() {

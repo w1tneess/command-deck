@@ -7,6 +7,7 @@
     "dev:web": "vite",
     "build": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p server/tsconfig.json && vite build",
     "test": "vitest run",
+    "audit": "node --experimental-strip-types audit/run-audit.ts",
     "db:local": "wrangler d1 migrations apply DB --local",
     "db:remote": "wrangler d1 migrations apply DB --remote",
     "deploy": "npm run build && wrangler deploy"

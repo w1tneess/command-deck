@@ -109,9 +109,14 @@ async function loadTimer(db: D1Database): Promise<Timer> {
  * applies if the timer is still in the state we read. Two devices racing therefore log a session once.
  */
 async function commitTimer(db: D1Database, before: Timer, after: Timer, logs: SessionLog[]) {
-  const guard = "EXISTS (SELECT 1 FROM timer WHERE id = 1 AND mode = ? AND started_at IS ?)";
   const res = await db.batch([
-    ...logs.map((l) => db.prepare(`INSERT INTO sessions (subject_id, day, minutes) SELECT ?, ?, ? WHERE ${guard}`).bind(l.subjectId, l.day, l.minutes, before.mode, before.startedAt)),
+    ...logs.map((l) =>
+      db
+        .prepare(
+          "INSERT INTO sessions (subject_id, day, minutes) SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM timer WHERE id = 1 AND mode = ? AND started_at IS ?)",
+        )
+        .bind(l.subjectId, l.day, l.minutes, before.mode, before.startedAt),
+    ),
     db.prepare("UPDATE timer SET mode = ?, subject_id = ?, started_at = ?, duration_s = ?, round = ?, cycle_day = ? WHERE id = 1 AND mode = ? AND started_at IS ?")
       .bind(after.mode, after.subjectId, after.startedAt, after.durationS, after.round, after.cycleDay, before.mode, before.startedAt),
   ]);

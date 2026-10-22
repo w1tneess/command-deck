@@ -78,7 +78,7 @@ function Heatmap({ today, minutes }: { today: string; minutes: Map<string, numbe
             <span
               key={c.day}
               title={c.future ? undefined : `${c.day}: ${c.min ? hm(c.min) : "no study"}`}
-              className={`size-7 rounded-md ${c.future ? "box-border border border-dashed border-line" : ""} ${c.today ? "outline-2 outline-offset-1 outline-accent" : ""}`}
+              className={`size-7 rounded-md ${c.future ? "box-border border border-dashed border-line" : ""} ${c.today ? "outline-2 outline-offset-1 outline-accent-text" : ""}`}
               style={c.future ? undefined : { background: `var(--heat-${level(c.min)})` }}
             />
           ))}

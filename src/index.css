@@ -16,6 +16,8 @@
   --good: #7cd6a0;
   --accent: #f2d94e;
   --ink: #14171c; /* text on the yellow accent, in both themes */
+  --accent-text: #f2d94e; /* yellow used as text or a thin line, so it needs its own darker light-theme value */
+  --focus: #f2d94e;
   --heat-0: #222831;
   --heat-1: #33405a;
   --heat-2: #4c6397;
@@ -33,6 +35,8 @@
     --muted: #5a6473;
     --blue: #2c4fae;
     --good: #1f7a4d;
+    --accent-text: #7a5f00;
+    --focus: #2c4fae;
     --heat-0: #eceef2;
     --heat-1: #c9d5f2;
     --heat-2: #9db3e6;
@@ -50,6 +54,8 @@
   --muted: #5a6473;
   --blue: #2c4fae;
   --good: #1f7a4d;
+  --accent-text: #7a5f00;
+  --focus: #2c4fae;
   --heat-0: #eceef2;
   --heat-1: #c9d5f2;
   --heat-2: #9db3e6;
@@ -70,6 +76,7 @@
   --color-blue: var(--blue);
   --color-good: var(--good);
   --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
   --color-ink: var(--ink);
 }
 
@@ -88,7 +95,7 @@
   button:disabled { cursor: not-allowed; opacity: 0.5; }
   input, select { font: inherit; color: inherit; }
   a { text-decoration: none; color: inherit; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   ::selection { background: var(--accent); color: var(--ink); }
 }
 

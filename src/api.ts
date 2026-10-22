@@ -17,15 +17,10 @@ export type State = {
 };
 
 export class AuthError extends Error {}
-const KEY = "tracker-token";
-export const getToken = () => { try { return localStorage.getItem(KEY) ?? ""; } catch { return ""; } };
-export const setToken = (t: string) => { try { localStorage.setItem(KEY, t); } catch { /* private mode: token lasts until reload */ } };
-
 export async function call<T = unknown>(method: string, url: string, body?: unknown): Promise<T> {
-  const token = getToken();
   const res = await fetch(url, {
     method,
-    headers: { ...(body ? { "content-type": "application/json" } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    headers: body ? { "content-type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined,
   }).catch(() => {
     throw new Error("Can't reach the server, so that change wasn't saved.");

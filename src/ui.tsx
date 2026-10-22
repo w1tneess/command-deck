@@ -99,6 +99,5 @@ export const GROUPS: { label: string; ids: string[] }[] = [
   { label: "Social Science", ids: ["history", "civics", "geography", "economics"] },
   { label: "English", ids: ["english"] },
   { label: "Bengali", ids: ["bengali"] },
-  { label: "Hindi", ids: ["hindi"] },
   { label: "Information Technology", ids: ["it"] },
 ];

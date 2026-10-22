@@ -15,7 +15,12 @@ export type Subject = {
   examDates: Record<string, string>;
   chapters: Chapter[]; progressPct: number;
 };
-export type Task = { id: number; title: string; subjectId: string | null; kind: string; due: string | null; done: boolean };
+export type DeliverableStatus = "not_started" | "in_progress" | "done";
+export type Deliverable = {
+  id: number; name: string; subject: string; detail: string; phaseId: string | null; status: DeliverableStatus;
+  /** Steps finished and total, for a deliverable made of countable steps (the Maths portfolio has 12 activities). */
+  doneCount: number | null; totalCount: number | null; due: string | null; vivaPrep: boolean;
+};
 export type Phase = {
   id: string; name: string; scope: Scope; startsOn: string; endsOn: string;
   confirmed: boolean; daysLeft: number; studyDaysLeft: number;
@@ -28,8 +33,10 @@ export type TimerView = {
 };
 export type State = {
   today: string; phases: Phase[]; activePhaseId: string | null; autoPhase: boolean;
-  subjects: Subject[]; tasks: Task[];
+  subjects: Subject[]; deliverables: Deliverable[];
   sessions: { day: string; subjectId: string; minutes: number }[];
+  /** Study minutes per day for the last 90 days. */
+  heat: { day: string; minutes: number }[];
   targets: Target[]; checkin: Energy | null; checkins: { day: string; energy: Energy }[]; timer: TimerView;
 };
 
@@ -47,3 +54,6 @@ export async function call<T = unknown>(method: string, url: string, body?: unkn
   if (!res.ok) throw new Error((data as { error?: string }).error ?? "Something went wrong.");
   return data as T;
 }
+
+/** Every write goes through one of these: send it, show a clear error if it fails, then refresh. */
+export type Act = (method: string, url: string, body?: unknown) => Promise<void>;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activePhase, daysLeft, inScope, phaseTarget, startedPct, studyDaysLeft, todayIST, weakestFirst } from "./logic.ts";
+import { activePhase, daysLeft, inScope, phaseTarget, startedPct, studyDaysLeft, todayIST } from "./logic.ts";
 
 describe("daysLeft", () => {
   it("counts 28 days from 22 Oct to 19 Nov", () => expect(daysLeft("2026-11-19", "2026-10-22")).toBe(28));
@@ -39,17 +39,6 @@ describe("progress and scope", () => {
     expect(inScope("pb2", "pb2")).toBe(true);
     expect(inScope("board", "pb2")).toBe(false);
     expect(inScope("board", "board")).toBe(true);
-  });
-});
-
-describe("weakestFirst", () => {
-  it("orders by confidence, then oldest revision, never-revised first", () => {
-    const xs = [
-      { n: "a", confidence: 3, lastRevised: "2026-10-01" },
-      { n: "b", confidence: 2, lastRevised: "2026-10-10" },
-      { n: "c", confidence: 2, lastRevised: null },
-    ];
-    expect(weakestFirst(xs).map((x) => x.n)).toEqual(["c", "b", "a"]);
   });
 });
 

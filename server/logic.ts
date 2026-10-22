@@ -56,13 +56,6 @@ export function phaseTarget(phase: PhaseDates, today: string): string {
   return phase.startsOn >= today ? phase.startsOn : phase.endsOn;
 }
 
-/** Weakest first: low confidence, then least recently revised (never revised first). */
-export function weakestFirst<T extends { confidence: number; lastRevised: string | null }>(xs: T[]): T[] {
-  return [...xs].sort(
-    (a, b) => a.confidence - b.confidence || (a.lastRevised ?? "").localeCompare(b.lastRevised ?? ""),
-  );
-}
-
 export type Candidate = {
   chapterId: string; subjectId: string; priority: number; confidence: number;
   lastRevised: string | null; examDate: string | null;

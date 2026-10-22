@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { STATUSES, daysLeft, inScope, rankNext, type Status } from "../server/logic.ts";
-import { AuthError, call, setToken, type Chapter, type State, type Subject } from "./api.ts";
+import { AuthError, call, getToken, setToken, type Chapter, type State, type Subject } from "./api.ts";
 
 const STATUS_LABEL: Record<Status, string> = { not_started: "Not started", learning: "Learning", revised: "Revised", mastered: "Mastered" };
 const TABS = ["Today", "Subjects", "Projects", "Week", "Backup"] as const;
@@ -67,7 +67,8 @@ function TokenGate({ onDone }: { onDone: () => void }) {
   return (
     <main className="shell narrow">
       <h1>Exam Tracker</h1>
-      <p>This server asks for an access token. Paste the APP_TOKEN it was started with.</p>
+      <p>This app is private. Enter your access token to continue.</p>
+      {getToken() && <p role="alert" className="alert">That token was rejected. Check it and try again.</p>}
       <form onSubmit={(e) => { e.preventDefault(); setToken(v.trim()); onDone(); }} className="row">
         <input aria-label="Access token" type="password" value={v} onChange={(e) => setV(e.target.value)} />
         <button className="primary">Unlock</button>

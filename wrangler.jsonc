@@ -1,0 +1,19 @@
+{
+  "name": "exam-tracker",
+  "main": "server/index.ts",
+  "compatibility_date": "2026-09-01",
+  // Static files come from dist/; only /api/* runs the Worker. Unknown paths fall back to the SPA.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "exam-tracker",
+      "database_id": "c3ab950b-26ad-492d-999b-4b801a1e045d",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

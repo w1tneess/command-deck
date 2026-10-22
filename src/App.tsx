@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { STATUSES, daysLeft, inScope, rankNext, type Status } from "../server/logic.ts";
-import { AuthError, call, type Chapter, type State, type Subject } from "./api.ts";
+import { SCOPES, STATUSES, daysLeft, inScope, phaseTarget, rankNext, type Scope, type Status } from "../server/logic.ts";
+import { AuthError, call, type Chapter, type Phase, type State, type Subject } from "./api.ts";
 
 const STATUS_LABEL: Record<Status, string> = { not_started: "Not started", learning: "Learning", revised: "Revised", mastered: "Mastered" };
+const SCOPE_LABEL: Record<Scope, string> = { term1: "Unit 1/2", pb1: "PB1", pb2: "PB2", board: "Boards" };
+const SCOPE_HINT: Record<Scope, string> = { term1: "Unit 1 or 2", pb1: "New in PB1", pb2: "PB2 only", board: "Boards only" };
+const PASS_LABEL = ["Concept", "PYQs", "Samples"];
+const PASS_TITLE = ["Pass 1: concept mastery", "Pass 2: PYQs and NCERT Exemplar", "Pass 3: sample papers"];
 const TABS = ["Today", "Subjects", "Projects", "Week", "Backup"] as const;
 type Tab = (typeof TABS)[number];
 
 const fmt = (d: string) => new Date(d + "T00:00:00Z").toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const activeOf = (state: State): Phase => state.phases.find((p) => p.id === state.activePhaseId) ?? state.phases[0];
 
 export function App() {
   const [state, setState] = useState<State | null>(null);
@@ -152,15 +157,16 @@ function PinGate({ onDone }: { onDone: () => void }) {
   );
 }
 
-/** Study-next order from rankNext: weak chapters in subjects with the nearest exam come first. */
+/** Study-next order from rankNext, for the active phase: its scope, and each subject's date in that phase. */
 function nextUp(state: State, n = 5) {
+  const phase = activeOf(state);
   const subj = new Map(state.subjects.map((s) => [s.id, s]));
   const cands = state.subjects.flatMap((s) =>
     s.chapters
-      .filter((c) => c.status !== "mastered" && inScope(c.introducedIn, "pb1"))
-      .map((c) => ({ chapterId: c.id, subjectId: s.id, priority: s.priority, confidence: c.confidence, lastRevised: c.lastRevised, examDate: s.examDate, c })),
+      .filter((c) => c.status !== "mastered" && inScope(c.scope, phase.scope))
+      .map((c) => ({ chapterId: c.id, subjectId: s.id, priority: s.priority, confidence: c.confidence, lastRevised: c.lastRevised, examDate: s.examDates[phase.id] ?? null, c })),
   );
-  return rankNext(cands, state.today, state.exams[0].start, n).map((r) => ({ s: subj.get(r.subjectId)!, c: r.c, days: r.days, dated: r.examDate !== null }));
+  return rankNext(cands, state.today, phaseTarget(phase, state.today), n).map((r) => ({ s: subj.get(r.subjectId)!, c: r.c, days: r.days, dated: r.examDate !== null }));
 }
 
 function reason(c: Chapter, today: string, days: number, dated: boolean) {
@@ -170,24 +176,29 @@ function reason(c: Chapter, today: string, days: number, dated: boolean) {
 }
 
 function Today({ state, act }: { state: State; act: Act }) {
-  const exam = state.exams[0];
+  const exam = activeOf(state);
   const picks = useMemo(() => nextUp(state), [state]);
   const soon = state.tasks.filter((t) => !t.done && t.due).slice(0, 4);
   const started = exam.daysLeft <= 0;
+  const over = state.today > exam.endsOn;
   return (
     <>
+      <PhaseSwitcher state={state} act={act} />
       <section className="hero" aria-label="Countdown">
         <div className="count" aria-label={`${exam.daysLeft} days left`}>{Math.max(exam.daysLeft, 0)}</div>
         <div>
-          <p className="hero-line">{started ? `${exam.name} is on` : `days to ${exam.name}`}</p>
-          <p className="muted">{fmt(exam.start)} to {fmt(exam.end)}. {plural(exam.studyDaysLeft, "study day")} left after skipping non-study days.</p>
+          <p className="hero-line">{over ? `${exam.name} is over` : started ? `${exam.name} is on` : `days to ${exam.name}`}</p>
+          <p className="muted">
+            {fmt(exam.startsOn)} to {fmt(exam.endsOn)}{!exam.confirmed && <span className="tag warn" title="Placeholder dates. Edit them under Subjects when the school posts the datesheet.">approximate</span>}.
+            {!over && !started && ` ${plural(exam.studyDaysLeft, "study day")} left after skipping non-study days.`}
+          </p>
         </div>
       </section>
 
       <div className="grid">
         <section className="panel">
           <h2>What to study next</h2>
-          {picks.length === 0 && <p className="muted">Nothing left in scope. Add chapters under Subjects.</p>}
+          {picks.length === 0 && <p className="muted">{over ? "This phase is over. Switch phase above to plan the next one." : "Nothing left in scope. Add chapters under Subjects, or switch phase above."}</p>}
           <ol className="plain">
             {picks.map(({ s, c, days, dated }) => (
               <li key={c.id} className="pick">
@@ -211,6 +222,43 @@ function Today({ state, act }: { state: State; act: Act }) {
         </section>
       </div>
     </>
+  );
+}
+
+function PhaseSwitcher({ state, act }: { state: State; act: Act }) {
+  const active = activeOf(state);
+  return (
+    <div className="row phase-switch">
+      <label className="inline">Phase
+        <select value={state.autoPhase ? "auto" : active.id} onChange={(e) => act("PUT", "/api/active-phase", { phaseId: e.target.value === "auto" ? null : e.target.value })}>
+          <option value="auto">Auto: {state.phases.find((p) => state.today <= p.endsOn)?.name ?? active.name}</option>
+          {state.phases.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </label>
+      <span className="muted">{state.autoPhase ? "Follows the calendar." : "Chosen by you. Pick Auto to follow the calendar."}</span>
+    </div>
+  );
+}
+
+function PhaseEditor({ state, act }: { state: State; act: Act }) {
+  return (
+    <section className="panel">
+      <h2>Exam phases</h2>
+      <p className="muted">Pre-Boards 1 dates are from the school calendar. The others are placeholders, so correct them when the datesheets come out and tick Confirmed.</p>
+      <ul className="plain">
+        {state.phases.map((p) => (
+          <li key={p.id} className="phase-row">
+            <strong>{p.name}</strong>
+            <span className="row">
+              <input type="date" aria-label={`${p.name} starts`} value={p.startsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { startsOn: e.target.value })} />
+              <span className="muted">to</span>
+              <input type="date" aria-label={`${p.name} ends`} value={p.endsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { endsOn: e.target.value })} />
+              <label className="check"><input type="checkbox" checked={p.confirmed} onChange={(e) => act("PUT", `/api/phases/${p.id}`, { confirmed: e.target.checked })} /><span>Confirmed</span></label>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -278,6 +326,7 @@ function Subjects({ state, act }: { state: State; act: Act }) {
   const [open, setOpen] = useState<string | null>("maths");
   return (
     <div className="stack">
+      <PhaseEditor state={state} act={act} />
       {state.subjects.map((s) => (
         <section key={s.id} className="panel">
           <button className="subject-head" aria-expanded={open === s.id} onClick={() => setOpen(open === s.id ? null : s.id)}>
@@ -287,20 +336,20 @@ function Subjects({ state, act }: { state: State; act: Act }) {
             </span>
             <span className="pct">{s.progressPct}%</span>
           </button>
-          {open === s.id && <SubjectBody s={s} act={act} />}
+          {open === s.id && <SubjectBody s={s} phase={activeOf(state)} act={act} />}
         </section>
       ))}
     </div>
   );
 }
 
-function SubjectBody({ s, act }: { s: Subject; act: Act }) {
+function SubjectBody({ s, phase, act }: { s: Subject; phase: Phase; act: Act }) {
   const [name, setName] = useState("");
-  const [intro, setIntro] = useState("earlier");
+  const [scope, setScope] = useState<Scope>("term1");
   return (
     <div className="body">
-      <label className="inline">Exam date
-        <input type="date" value={s.examDate ?? ""} onChange={(e) => act("PUT", `/api/subjects/${s.id}/exam-date`, { date: e.target.value || null })} />
+      <label className="inline">Exam date for {phase.name}
+        <input type="date" value={s.examDates[phase.id] ?? ""} onChange={(e) => act("PUT", `/api/subjects/${s.id}/exam-date`, { phaseId: phase.id, date: e.target.value || null })} />
       </label>
       {s.chapters.length === 0 && <p className="muted">No chapters yet. Add them from the school syllabus below.</p>}
       <ul className="plain">
@@ -308,7 +357,6 @@ function SubjectBody({ s, act }: { s: Subject; act: Act }) {
           <li key={c.id} className="chapter">
             <div className="ch-name">
               {c.name}
-              {c.introducedIn !== "earlier" && <span className="tag">{c.introducedIn === "pb1" ? "new in PB1" : "PB2 only"}</span>}
               {!c.confirmed && <span className="tag warn" title={c.source ?? "Not checked against the school syllabus yet"}>unchecked</span>}
             </div>
             <div className="row" role="group" aria-label={`Status of ${c.name}`}>
@@ -316,6 +364,16 @@ function SubjectBody({ s, act }: { s: Subject; act: Act }) {
                 <button key={st} className={`seg ${st} ${c.status === st ? "on" : ""}`} aria-pressed={c.status === st}
                   onClick={() => act("PATCH", `/api/chapters/${c.id}`, { status: st })}>{STATUS_LABEL[st]}</button>
               ))}
+            </div>
+            <div className="row" role="group" aria-label={`Revision passes for ${c.name}`}>
+              <span className="muted">Passes</span>
+              {PASS_LABEL.map((label, i) => (
+                <button key={label} className={c.passes[i] ? "seg on pass" : "seg"} aria-pressed={!!c.passes[i]} title={c.passes[i] ? `${PASS_TITLE[i]}, done ${fmt(c.passes[i]!)}` : PASS_TITLE[i]}
+                  onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${i + 1}`, { done: !c.passes[i] })}>{label}</button>
+              ))}
+              <select className="scope-select" aria-label={`Scope of ${c.name}`} value={c.scope} onChange={(e) => act("PATCH", `/api/chapters/${c.id}/meta`, { scope: e.target.value })}>
+                {SCOPES.map((sc) => <option key={sc} value={sc}>{SCOPE_LABEL[sc]}</option>)}
+              </select>
             </div>
             <div className="row" role="group" aria-label={`Confidence in ${c.name}`}>
               <span className="muted">Confidence</span>
@@ -327,10 +385,10 @@ function SubjectBody({ s, act }: { s: Subject; act: Act }) {
           </li>
         ))}
       </ul>
-      <form className="row" onSubmit={(e) => { e.preventDefault(); if (!name.trim()) return; void act("POST", "/api/chapters", { subjectId: s.id, name, introducedIn: intro }); setName(""); }}>
+      <form className="row" onSubmit={(e) => { e.preventDefault(); if (!name.trim()) return; void act("POST", "/api/chapters", { subjectId: s.id, name, scope }); setName(""); }}>
         <input aria-label={`New ${s.name} chapter`} placeholder="Add a chapter" value={name} onChange={(e) => setName(e.target.value)} />
-        <select aria-label="When it is first tested" value={intro} onChange={(e) => setIntro(e.target.value)}>
-          <option value="earlier">Unit 1 or 2</option><option value="pb1">New in PB1</option><option value="pb2">PB2 only</option>
+        <select aria-label="When it is first tested" value={scope} onChange={(e) => setScope(e.target.value as Scope)}>
+          {SCOPES.map((sc) => <option key={sc} value={sc}>{SCOPE_HINT[sc]}</option>)}
         </select>
         <button>Add chapter</button>
       </form>
@@ -404,15 +462,17 @@ function Week({ state }: { state: State }) {
 }
 
 function ExamDates({ state }: { state: State }) {
-  const dated = state.subjects.filter((s) => s.examDate).sort((a, b) => a.examDate!.localeCompare(b.examDate!));
+  const phase = activeOf(state);
+  const dated = state.subjects.filter((s) => s.examDates[phase.id]).sort((a, b) => a.examDates[phase.id].localeCompare(b.examDates[phase.id]));
   return (
     <section className="panel">
       <h2>Subject exam dates</h2>
-      {dated.length === 0 && <p className="muted">Not set yet. When the school posts the datesheet, enter each date under Subjects and the study list re-orders itself.</p>}
+      {dated.length === 0 && <p className="muted">Not set for {phase.name}. When the school posts the datesheet, enter each date under Subjects and the study list re-orders itself.</p>}
       <ul className="plain">
         {dated.map((s) => {
-          const d = daysLeft(s.examDate!, state.today);
-          return <li key={s.id} className="pick"><span>{s.name}</span><span className={d < 0 ? "tag bad" : d <= 3 ? "tag warn" : "tag"}>{d < 0 ? "done" : d === 0 ? "today" : `${fmt(s.examDate!)}, in ${plural(d, "day")}`}</span></li>;
+          const date = s.examDates[phase.id];
+          const d = daysLeft(date, state.today);
+          return <li key={s.id} className="pick"><span>{s.name}</span><span className={d < 0 ? "tag bad" : d <= 3 ? "tag warn" : "tag"}>{d < 0 ? "done" : d === 0 ? "today" : `${fmt(date)}, in ${plural(d, "day")}`}</span></li>;
         })}
       </ul>
     </section>

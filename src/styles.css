@@ -124,3 +124,11 @@ label.inline input { margin: 0; }
 .key:disabled { opacity: 0.4; cursor: not-allowed; }
 .remember { justify-content: center; margin-top: 24px; }
 .spaced { margin-top: 24px; }
+
+/* Phases */
+.phase-switch { margin: 0 0 12px; }
+.phase-switch .inline { margin: 0; }
+.phase-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }
+.phase-row:first-child { border-top: 0; }
+.seg.pass.on { background: var(--mastered); color: #18215a; }
+.scope-select { margin-left: auto; min-height: 32px; padding: 2px 8px; font-size: 0.88rem; }

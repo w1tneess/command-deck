@@ -30,6 +30,14 @@ Manual deploy:
 The domain is set in `wrangler.jsonc` (`routes`); its DNS record and certificate are created on deploy.
 The API refuses every request when neither `APP_TOKEN` nor `SESSION_SECRET` is set, so a deploy without secrets is closed, not open.
 
+## Phases, scope and revision passes
+
+Four exam phases: Pre-Boards 1, Pre-Boards 2, Practicals and Viva, Board Exams. The app follows the calendar (the first phase that hasn't ended) unless you pick one in the Phase menu on Today. Only Pre-Boards 1 has confirmed dates; edit the others under Subjects when the datesheets are out.
+Each chapter has a scope (Unit 1/2, PB1, PB2, Boards). A phase covers its own level and everything below it, so Pre-Boards 1 skips PB2-only and Boards-only chapters.
+Each chapter has three revision passes: Concept, PYQs and Exemplar, Sample papers. Ticking a pass also stamps the chapter as revised today.
+Exam dates are kept per subject per phase, and the study queue ranks against the active phase.
+Backups are version 2; version 1 files are upgraded on restore.
+
 ## Sign-in
 
 The app opens on a 6-digit PIN keypad. A correct PIN sets a signed, `HttpOnly`, `SameSite=Strict` cookie (90 days with "Remember this device", otherwise 24 hours).

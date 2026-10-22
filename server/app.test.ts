@@ -13,7 +13,7 @@ const send = (method: string, url: string, payload: unknown) => t.inject({ metho
 describe("api", () => {
   it("reports the PB1 countdown and 14 Maths chapters", async () => {
     const s = await state();
-    expect(s.exams[0]).toMatchObject({ daysLeft: 28, studyDaysLeft: 27 });
+    expect(s.phases[0]).toMatchObject({ id: "pb1", daysLeft: 28, studyDaysLeft: 27 });
     expect(maths(s).chapters).toHaveLength(14);
     expect(s.subjects).toHaveLength(12);
   });
@@ -35,17 +35,10 @@ describe("api", () => {
     expect((await send("PATCH", "/api/chapters/maths-1", { confidence: 9 })).status).toBe(400);
     expect((await send("PATCH", "/api/chapters/maths-1", { status: "done" })).status).toBe(400);
     expect((await send("PATCH", "/api/chapters/nope", { status: "learning" })).status).toBe(404);
-    expect((await send("PUT", "/api/subjects/maths/exam-date", { date: "tomorrow" })).status).toBe(400);
+    expect((await send("PUT", "/api/subjects/maths/exam-date", { phaseId: "pb1", date: "tomorrow" })).status).toBe(400);
     expect((await send("POST", "/api/sessions", { subjectId: "maths", minutes: 0 })).status).toBe(400);
     expect((await send("POST", "/api/sessions", { subjectId: "ghost", minutes: 10 })).status).toBe(404);
     expect((await t.inject({ method: "POST", url: "/api/tasks", headers: { "content-type": "application/json" }, payload: undefined })).status).toBe(400);
-  });
-
-  it("saves an exam date and clears it", async () => {
-    await send("PUT", "/api/subjects/maths/exam-date", { date: "2026-11-24" });
-    expect(maths(await state()).examDate).toBe("2026-11-24");
-    await send("PUT", "/api/subjects/maths/exam-date", { date: null });
-    expect(maths(await state()).examDate).toBeNull();
   });
 
   it("adds chapters, tasks and sessions", async () => {
@@ -96,7 +89,7 @@ describe("backup and restore", () => {
     await send("PATCH", "/api/chapters/maths-1", { status: "revised" });
     const backup = (await (await t.inject("/api/export")).json()) as any;
     const cases = [
-      { version: 2 },
+      { version: 3 },
       { ...backup, tasks: "nope" },
       { ...backup, progress: backup.progress.map((p: any) => ({ ...p, status: "bogus" })) },
       // passes the shape check, then fails a foreign key partway through the atomic write

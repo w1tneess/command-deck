@@ -129,7 +129,7 @@ describe("session cookie", () => {
   it("blocks cookie-authenticated writes from another origin", async () => {
     const cookie = cookieOf(await login());
     const write = (origin?: string) =>
-      t.inject({ method: "POST", url: "/api/tasks", payload: { title: "x" }, headers: { cookie, ...(origin ? { origin } : {}) } });
+      t.inject({ method: "POST", url: "/api/targets", payload: { title: "x" }, headers: { cookie, ...(origin ? { origin } : {}) } });
     expect((await write("https://evil.example")).status).toBe(403);
     expect((await write("http://localhost")).status).toBe(201);
     expect((await write()).status).toBe(201);

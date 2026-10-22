@@ -61,7 +61,7 @@ describe("phases", () => {
 
   it("counts progress only for chapters inside the active phase scope", async () => {
     await send("PATCH", "/api/chapters/maths-1/meta", { scope: "board" });
-    await send("PATCH", "/api/chapters/maths-1", { status: "revised" });
+    await send("PUT", "/api/chapters/maths-1/passes/1", { done: true });
     expect(maths(await state()).progressPct).toBe(0); // PB1 does not cover board-only chapters
     await send("PUT", "/api/active-phase", { phaseId: "boards" });
     expect(maths(await state()).progressPct).toBe(Math.round((1 / 14) * 100));
@@ -77,18 +77,18 @@ describe("chapter scope", () => {
     expect((await send("PATCH", "/api/chapters/nope/meta", { name: "x" })).status).toBe(404);
   });
 
-  it("adds a chapter with a scope, defaulting to Unit 1/2", async () => {
+  it("adds a chapter with a scope, defaulting to Unit 1", async () => {
     await send("POST", "/api/chapters", { subjectId: "physics", name: "Light", scope: "board" });
     await send("POST", "/api/chapters", { subjectId: "physics", name: "Electricity" });
     const physics = (await state()).subjects.find((x: any) => x.id === "physics");
-    expect(physics.chapters.map((c: any) => [c.name, c.scope])).toEqual([["Light", "board"], ["Electricity", "term1"]]);
+    expect(physics.chapters.map((c: any) => [c.name, c.scope])).toEqual([["Light", "board"], ["Electricity", "unit1"]]);
     expect((await send("POST", "/api/chapters", { subjectId: "physics", name: "x", scope: "weird" })).status).toBe(400);
   });
 
   it("seeded Maths carries the right scopes", async () => {
     const scopes = maths(await state()).chapters.map((c: any) => c.scope);
-    expect(scopes.slice(0, 12).every((x: string) => x === "term1")).toBe(true);
-    expect(scopes.slice(12)).toEqual(["pb1", "pb1"]);
+    // Triangles, Coordinate Geometry, Circles, Areas Related to Circles and Surface Areas are Unit 2 in the design.
+    expect(scopes).toEqual(["unit1", "unit1", "unit1", "unit1", "unit1", "unit2", "unit2", "unit1", "unit1", "unit2", "unit2", "unit2", "pb1", "pb1"]);
   });
 });
 
@@ -128,7 +128,7 @@ describe("backup v2 and v1 upgrade", () => {
     await send("PUT", "/api/chapters/maths-1/passes/1", { done: true });
     await send("PUT", "/api/active-phase", { phaseId: "boards" });
     const backup = (await (await t.inject("/api/export")).json()) as any;
-    expect(backup.version).toBe(3);
+    expect(backup.version).toBe(4);
     // undo the changes, then restore
     await send("PUT", "/api/active-phase", { phaseId: null });
     await send("PUT", "/api/chapters/maths-1/passes/1", { done: false });
@@ -141,12 +141,12 @@ describe("backup v2 and v1 upgrade", () => {
     expect(maths(s).chapters[0].passes[0]).toBe("2026-10-22");
   });
 
-  it("upgrades a version 1 backup: earlier becomes term1, exam date moves to PB1, phases are kept", async () => {
+  it("upgrades a version 1 backup: earlier becomes unit1, exam date moves to PB1, phases are kept, tasks become deliverables", async () => {
     const v2 = (await (await t.inject("/api/export")).json()) as any;
     const v1 = {
       version: 1,
       subjects: v2.subjects.map((s: any) => ({ ...s, exam_date: s.id === "maths" ? "2026-11-24" : null })),
-      chapters: v2.chapters.map(({ scope, ...c }: any) => ({ ...c, introduced_in: scope === "term1" ? "earlier" : scope })),
+      chapters: v2.chapters.map(({ scope, ...c }: any) => ({ ...c, introduced_in: scope === "unit1" || scope === "unit2" ? "earlier" : scope })),
       progress: v2.progress.map((p: any) => (p.chapter_id === "maths-1" ? { ...p, status: "mastered", confidence: 5 } : p)),
       tasks: [{ id: 1, title: "Old task", subject_id: null, kind: "task", due: null, done: 0 }],
       sessions: [],
@@ -154,11 +154,12 @@ describe("backup v2 and v1 upgrade", () => {
     expect((await send("POST", "/api/import", v1)).status).toBe(200);
     const s = await state();
     const m = maths(s);
-    expect(m.chapters[0]).toMatchObject({ scope: "term1", status: "mastered", confidence: 5 });
+    expect(m.chapters[0]).toMatchObject({ scope: "unit1", status: "mastered", confidence: 5 });
     expect(m.chapters[12].scope).toBe("pb1");
     expect(m.examDates).toEqual({ pb1: "2026-11-24" });
     expect(s.phases).toHaveLength(4);
-    expect(s.tasks[0].title).toBe("Old task");
+    expect(s.deliverables).toHaveLength(9); // the 8 school submissions plus the old task
+    expect(s.deliverables.at(-1)).toMatchObject({ name: "Old task", subject: "General", detail: "task", status: "not_started" });
   });
 
   it("rejects a version 1 file with missing lists, and a file with an invalid scope", async () => {

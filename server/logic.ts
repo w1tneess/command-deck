@@ -23,16 +23,15 @@ export function studyDaysLeft(target: string, today: string, nonStudy: string[])
   return n;
 }
 
-/** Percent of chapters revised or mastered, rounded. */
-export function progressPct(statuses: Status[]): number {
-  if (!statuses.length) return 0;
-  const done = statuses.filter((s) => s === "revised" || s === "mastered").length;
-  return Math.round((done / statuses.length) * 100);
+/** Percent of chapters started (at least one revision pass done), rounded. */
+export function startedPct(started: boolean[]): number {
+  if (!started.length) return 0;
+  return Math.round((started.filter(Boolean).length / started.length) * 100);
 }
 
-export type Scope = "term1" | "pb1" | "pb2" | "board";
-export const SCOPES: Scope[] = ["term1", "pb1", "pb2", "board"];
-const RANK: Record<Scope, number> = { term1: 0, pb1: 1, pb2: 2, board: 3 };
+export type Scope = "unit1" | "unit2" | "pb1" | "pb2" | "board";
+export const SCOPES: Scope[] = ["unit1", "unit2", "pb1", "pb2", "board"];
+const RANK: Record<Scope, number> = { unit1: 0, unit2: 1, pb1: 2, pb2: 3, board: 4 };
 
 /** Scope is cumulative: a phase covers every chapter tagged at or below its own level. */
 export function inScope(chapterScope: Scope, phaseScope: Scope): boolean {

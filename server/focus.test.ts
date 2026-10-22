@@ -70,7 +70,7 @@ describe("startFocus", () => {
 describe("studyQueue", () => {
   const phase = { id: "pb1", startsOn: "2026-11-19", endsOn: "2026-12-02", scope: "pb1" as const };
   const ch = (id: string, over: Partial<QueueChapter> = {}): QueueChapter => ({
-    chapterId: id, subjectId: "maths", priority: 1, confidence: 1, lastRevised: null, status: "not_started", scope: "term1", examDate: null, ...over,
+    chapterId: id, subjectId: "maths", priority: 1, confidence: 1, lastRevised: null, status: "not_started", scope: "unit1", examDate: null, ...over,
   });
   const ids = (xs: { chapterId: string }[]) => xs.map((x) => x.chapterId);
 

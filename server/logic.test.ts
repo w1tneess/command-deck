@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activePhase, daysLeft, inScope, phaseTarget, progressPct, studyDaysLeft, todayIST, weakestFirst } from "./logic.ts";
+import { activePhase, daysLeft, inScope, phaseTarget, startedPct, studyDaysLeft, todayIST, weakestFirst } from "./logic.ts";
 
 describe("daysLeft", () => {
   it("counts 28 days from 22 Oct to 19 Nov", () => expect(daysLeft("2026-11-19", "2026-10-22")).toBe(28));
@@ -24,12 +24,15 @@ describe("studyDaysLeft", () => {
 });
 
 describe("progress and scope", () => {
-  it("counts revised and mastered", () => {
-    expect(progressPct(["not_started", "learning", "revised", "mastered"])).toBe(50);
-    expect(progressPct([])).toBe(0);
+  it("counts chapters with at least one pass done", () => {
+    expect(startedPct([true, false, true, false])).toBe(50);
+    expect(startedPct([true, false, false])).toBe(33);
+    expect(startedPct([])).toBe(0);
   });
   it("makes each phase cover its own level and everything below", () => {
-    expect(inScope("term1", "pb1")).toBe(true);
+    expect(inScope("unit1", "pb1")).toBe(true);
+    expect(inScope("unit2", "pb1")).toBe(true);
+    expect(inScope("unit2", "unit1")).toBe(false);
     expect(inScope("pb1", "pb1")).toBe(true);
     expect(inScope("pb2", "pb1")).toBe(false);
     expect(inScope("board", "pb1")).toBe(false);

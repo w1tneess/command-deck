@@ -3,6 +3,7 @@ import { ENERGIES, type Energy } from "../server/planner.ts";
 import type { Act, Phase, State } from "./api.ts";
 import { FocusCard, type FocusModel } from "./Focus.tsx";
 import { activeOf, chapterIndex, reasonFor, studyQueueFor, whenOf } from "./model.ts";
+import { Evening, Morning } from "./Routine.tsx";
 import { Btn, Card, Check, ConfDots, H2, PassPills, Pill, fmtLong, fmtShort, fmtWeekdayDate } from "./ui.tsx";
 
 const ENERGY_LABEL: Record<Energy, string> = { low: "Low", ok: "OK", high: "High" };
@@ -15,8 +16,10 @@ export function Today({ state, act, focus }: { state: State; act: Act; focus: Fo
       <Hero state={state} />
       <div className="flex flex-wrap items-start gap-4 lg:gap-6">
         <div className="flex min-w-0 flex-[3_1_460px] flex-col gap-4 lg:gap-6">
+          <Morning state={state} act={act} />
           <Targets state={state} act={act} />
           <Queue state={state} />
+          <Evening state={state} act={act} />
         </div>
         {/* On a phone this column holds only the energy row, which sits above the targets. */}
         <div className="order-first flex min-w-0 flex-[2_1_320px] flex-col gap-6 lg:order-none">

@@ -43,7 +43,7 @@ function Header({ state, act }: { state: State; act: Act }) {
           title={state.autoPhase ? "Following the calendar" : "Chosen by you"}
           value={state.autoPhase ? "auto" : (state.activePhaseId ?? "auto")}
           onChange={(e) => act("PUT", "/api/active-phase", { phaseId: e.target.value === "auto" ? null : e.target.value })}
-          className="h-9 rounded-full border border-line bg-surface px-3 text-[13px] text-muted lg:h-11 lg:rounded-xl lg:px-3.5 lg:text-[14px] lg:text-fg"
+          className="h-11 rounded-full border border-line bg-surface px-3 text-[13px] text-muted lg:h-11 lg:rounded-xl lg:px-3.5 lg:text-[14px] lg:text-fg"
         >
           <option value="auto">Auto: {upcoming.name}</option>
           {state.phases.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}

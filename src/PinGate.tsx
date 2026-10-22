@@ -72,9 +72,9 @@ export function PinGate({ onDone }: { onDone: () => void }) {
       <h1 className="m-0 text-[28px] font-semibold tracking-[-0.02em]">Study</h1>
       <p className="mt-1 mb-7 text-[14px] text-muted">Enter your PIN</p>
       <div className="flex gap-3.5" role="img" aria-label={`${pin.length} of ${PIN_LENGTH} digits entered`}>
-        {Array.from({ length: PIN_LENGTH }, (_, i) => <span key={i} className={`size-4 rounded-full border-2 ${i < pin.length ? "border-accent bg-accent" : "border-muted"}`} />)}
+        {Array.from({ length: PIN_LENGTH }, (_, i) => <span key={i} className={`size-4 rounded-full border-2 ${i < pin.length ? "border-accent-text bg-accent-text" : "border-muted"}`} />)}
       </div>
-      <p role="alert" className="my-4 min-h-6 text-[14px] font-medium text-accent">
+      <p role="alert" className="my-4 min-h-6 text-[14px] font-medium text-accent-text">
         {locked ? `Too many wrong tries. Try again in ${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}.` : msg}
       </p>
       <div className="grid grid-cols-3 gap-3">

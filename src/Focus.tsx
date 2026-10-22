@@ -144,7 +144,7 @@ export function FocusBar({ focus, state, onToday }: { focus: FocusModel; state: 
           <>
             <div className="flex-1">
               <div className="text-xs text-muted">Focus · {f.roundText.toLowerCase()}</div>
-              <select aria-label="Subject" value={f.subject} onChange={(e) => f.setSubject(e.target.value)} className="-ml-1 h-8 max-w-full bg-transparent text-[15px] font-medium text-fg">
+              <select aria-label="Subject" value={f.subject} onChange={(e) => f.setSubject(e.target.value)} className="-ml-1 h-11 max-w-full bg-transparent text-[15px] font-medium text-fg">
                 {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>

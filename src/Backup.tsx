@@ -57,7 +57,7 @@ export function Backup({ reload, theme, setTheme }: { reload: () => Promise<void
           <p className="m-0 text-[13px] text-muted">{last ? `Last backup from this browser: ${new Date(last).toLocaleString("en-IN")}.` : "No backup made from this browser yet."}</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Btn kind="primary" onClick={download}>Download backup</Btn>
-            <label className="flex h-11 cursor-pointer items-center rounded-xl border border-line bg-surface2 px-4 text-[14px] focus-within:outline-2 focus-within:outline-accent">
+            <label className="flex h-11 cursor-pointer items-center rounded-xl border border-line bg-surface2 px-4 text-[14px] focus-within:outline-2 focus-within:outline-(--focus)">
               Restore from file
               <input type="file" accept="application/json,.json" className="sr-only" onChange={(e) => { void restore(e.target.files?.[0]); e.target.value = ""; }} />
             </label>

@@ -1,4 +1,6 @@
 import type { Scope, Status } from "../server/logic.ts";
+import type { Energy } from "../server/planner.ts";
+import type { TimerMode } from "../server/timer.ts";
 
 export type Chapter = {
   id: string; subjectId: string; name: string; scope: Scope;
@@ -18,10 +20,17 @@ export type Phase = {
   id: string; name: string; scope: Scope; startsOn: string; endsOn: string;
   confirmed: boolean; daysLeft: number; studyDaysLeft: number;
 };
+export type Target = { id: number; title: string; chapterId: string | null; subjectId: string | null; done: boolean };
+export type TimerView = {
+  mode: TimerMode; subjectId: string | null; startedAt: number | null; durationS: number; round: number; cycleDay: string | null;
+  /** When the current mode ends (epoch ms), and the server clock when this was sent, to cancel out clock drift. */
+  endsAt: number | null; serverNow: number;
+};
 export type State = {
   today: string; phases: Phase[]; activePhaseId: string | null; autoPhase: boolean;
   subjects: Subject[]; tasks: Task[];
   sessions: { day: string; subjectId: string; minutes: number }[];
+  targets: Target[]; checkin: Energy | null; checkins: { day: string; energy: Energy }[]; timer: TimerView;
 };
 
 export class AuthError extends Error {}

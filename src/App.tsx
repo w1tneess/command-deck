@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SCOPES, STATUSES, daysLeft, inScope, phaseTarget, rankNext, type Scope, type Status } from "../server/logic.ts";
+import { SCOPES, STATUSES, daysLeft, type Scope, type Status } from "../server/logic.ts";
+import { ENERGIES, studyQueue, type Energy } from "../server/planner.ts";
+import type { TimerMode } from "../server/timer.ts";
 import { AuthError, call, type Chapter, type Phase, type State, type Subject } from "./api.ts";
+import { chime, unlockAudio } from "./chime.ts";
 
 const STATUS_LABEL: Record<Status, string> = { not_started: "Not started", learning: "Learning", revised: "Revised", mastered: "Mastered" };
 const SCOPE_LABEL: Record<Scope, string> = { term1: "Unit 1/2", pb1: "PB1", pb2: "PB2", board: "Boards" };
@@ -30,6 +33,12 @@ export function App() {
     }
   }, []);
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === "visible") void load(); };
+    const id = setInterval(refresh, 20_000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => { clearInterval(id); document.removeEventListener("visibilitychange", refresh); };
+  }, [load]);
 
   // One place for every write: send it, show a clear error if it fails, then refresh.
   const act = useCallback(async (method: string, url: string, body?: unknown) => {
@@ -56,7 +65,7 @@ export function App() {
         </nav>
       </header>
       {error && <p role="alert" className="alert">{error}</p>}
-      {tab === "Today" && <Today state={state} act={act} />}
+      {tab === "Today" && <Today state={state} act={act} reload={load} />}
       {tab === "Subjects" && <Subjects state={state} act={act} />}
       {tab === "Projects" && <Projects state={state} act={act} />}
       {tab === "Week" && <Week state={state} />}
@@ -157,16 +166,17 @@ function PinGate({ onDone }: { onDone: () => void }) {
   );
 }
 
-/** Study-next order from rankNext, for the active phase: its scope, and each subject's date in that phase. */
+/** Study-next order for the active phase, shaped by today's energy check-in. */
 function nextUp(state: State, n = 5) {
   const phase = activeOf(state);
   const subj = new Map(state.subjects.map((s) => [s.id, s]));
   const cands = state.subjects.flatMap((s) =>
-    s.chapters
-      .filter((c) => c.status !== "mastered" && inScope(c.scope, phase.scope))
-      .map((c) => ({ chapterId: c.id, subjectId: s.id, priority: s.priority, confidence: c.confidence, lastRevised: c.lastRevised, examDate: s.examDates[phase.id] ?? null, c })),
+    s.chapters.map((c) => ({
+      chapterId: c.id, subjectId: s.id, priority: s.priority, confidence: c.confidence, lastRevised: c.lastRevised,
+      status: c.status, scope: c.scope, examDate: s.examDates[phase.id] ?? null, c,
+    })),
   );
-  return rankNext(cands, state.today, phaseTarget(phase, state.today), n).map((r) => ({ s: subj.get(r.subjectId)!, c: r.c, days: r.days, dated: r.examDate !== null }));
+  return studyQueue(cands, phase, state.today, state.checkin, n).map((r) => ({ s: subj.get(r.subjectId)!, c: r.c, days: r.days, dated: r.examDate !== null }));
 }
 
 function reason(c: Chapter, today: string, days: number, dated: boolean) {
@@ -175,7 +185,14 @@ function reason(c: Chapter, today: string, days: number, dated: boolean) {
   return `Confidence ${c.confidence}/5, ${rev}${dated ? `, exam ${days === 0 ? "today" : "in " + plural(days, "day")}` : ""}`;
 }
 
-function Today({ state, act }: { state: State; act: Act }) {
+const ENERGY_LABEL: Record<Energy, string> = { low: "Low", ok: "OK", high: "High" };
+const ENERGY_NOTE: Record<Energy, string> = {
+  low: "Low energy: lighter chapters come first.",
+  ok: "Normal day: the queue follows your exam dates.",
+  high: "High energy: the hardest chapters come first.",
+};
+
+function Today({ state, act, reload }: { state: State; act: Act; reload: () => Promise<void> }) {
   const exam = activeOf(state);
   const picks = useMemo(() => nextUp(state), [state]);
   const soon = state.tasks.filter((t) => !t.done && t.due).slice(0, 4);
@@ -196,6 +213,19 @@ function Today({ state, act }: { state: State; act: Act }) {
       </section>
 
       <div className="grid">
+        <Targets state={state} act={act} />
+        <FocusHub state={state} act={act} reload={reload} />
+
+        <section className="panel">
+          <h2>How is your energy?</h2>
+          <div className="row" role="group" aria-label="Energy today">
+            {ENERGIES.map((e) => (
+              <button key={e} className={state.checkin === e ? "seg on" : "seg"} aria-pressed={state.checkin === e} onClick={() => act("POST", "/api/checkin", { energy: e })}>{ENERGY_LABEL[e]}</button>
+            ))}
+          </div>
+          <p className="muted">{state.checkin ? ENERGY_NOTE[state.checkin] : "One tap and today's targets adjust. Skip it and they follow your exam dates."}</p>
+        </section>
+
         <section className="panel">
           <h2>What to study next</h2>
           {picks.length === 0 && <p className="muted">{over ? "This phase is over. Switch phase above to plan the next one." : "Nothing left in scope. Add chapters under Subjects, or switch phase above."}</p>}
@@ -209,8 +239,6 @@ function Today({ state, act }: { state: State; act: Act }) {
           </ol>
         </section>
 
-        <Focus state={state} act={act} />
-
         <ExamDates state={state} />
 
         <section className="panel">
@@ -222,6 +250,35 @@ function Today({ state, act }: { state: State; act: Act }) {
         </section>
       </div>
     </>
+  );
+}
+
+function Targets({ state, act }: { state: State; act: Act }) {
+  const [text, setText] = useState("");
+  const done = state.targets.filter((t) => t.done).length;
+  return (
+    <section className="panel">
+      <h2>Today's targets{state.targets.length > 0 && <span className="muted count-note">{done} of {state.targets.length} done</span>}</h2>
+      {state.targets.length === 0 && <p className="muted">Nothing planned. Add a target below.</p>}
+      <ul className="plain">
+        {state.targets.map((t) => (
+          <li key={t.id} className={t.done ? "pick done" : "pick"}>
+            <label className="check">
+              <input type="checkbox" checked={t.done} onChange={(e) => act("PATCH", `/api/targets/${t.id}`, { done: e.target.checked })} />
+              <span>{t.title}</span>
+            </label>
+            <span className="row">
+              {t.chapterId && !t.done && <button onClick={() => act("POST", `/api/targets/${t.id}/swap`)}>Swap</button>}
+              <button aria-label={`Remove ${t.title}`} onClick={() => act("DELETE", `/api/targets/${t.id}`)}>Remove</button>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <form className="row" onSubmit={(e) => { e.preventDefault(); if (!text.trim()) return; void act("POST", "/api/targets", { title: text }); setText(""); }}>
+        <input aria-label="New target" placeholder="Finish the Maths lab file" value={text} onChange={(e) => setText(e.target.value)} />
+        <button>Add target</button>
+      </form>
+    </section>
   );
 }
 
@@ -268,56 +325,88 @@ function DueTag({ due, today }: { due: string; today: string }) {
   return <span className={cls}>{d < 0 ? `${plural(-d, "day")} overdue` : d === 0 ? "due today" : `${fmt(due)}, in ${plural(d, "day")}`}</span>;
 }
 
-function Focus({ state, act }: { state: State; act: Act }) {
-  const [subject, setSubject] = useState("maths");
-  const [mins, setMins] = useState(25);
-  const [left, setLeft] = useState<number | null>(null);
-  const endAt = useRef(0);
-  const ran = useRef(0);
+const MODE_LABEL: Record<TimerMode, string> = { idle: "Ready", focus: "Focus", break: "Break", long_break: "Long break" };
+const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+/** The timer lives in the cloud: start it on a phone, stop it on a computer. Finished sessions log themselves. */
+function FocusHub({ state, act, reload }: { state: State; act: Act; reload: () => Promise<void> }) {
+  const timer = state.timer;
+  const [subject, setSubject] = useState(() => { try { return localStorage.getItem("focus-subject") ?? "maths"; } catch { return "maths"; } });
+  const [note, setNote] = useState("");
+  const [, tick] = useState(0);
+  const fired = useRef<number | null>(null);
+  // Count against the server's clock, so a device with the wrong time still shows the right countdown.
+  const skew = useMemo(() => timer.serverNow - Date.now(), [timer.serverNow, timer.endsAt]);
+  const running = timer.mode !== "idle" && timer.endsAt !== null;
+  const remaining = running ? Math.max(0, Math.ceil((timer.endsAt! - (Date.now() + skew)) / 1000)) : 0;
+  const shown = timer.subjectId ?? subject;
 
   useEffect(() => {
-    if (left === null) return;
-    // Count against the wall clock, so a throttled background tab can't stretch the session.
-    const id = setInterval(() => {
-      const rem = Math.max(0, Math.round((endAt.current - Date.now()) / 1000));
-      if (rem === 0) {
-        clearInterval(id);
-        setLeft(null);
-        void act("POST", "/api/sessions", { subjectId: subject, minutes: ran.current });
-      } else setLeft(rem);
-    }, 500);
+    if (!running) return;
+    const id = setInterval(() => tick((n) => n + 1), 500);
     return () => clearInterval(id);
-  }, [left === null, subject, act]);
+  }, [running, timer.endsAt]);
 
-  const start = () => { ran.current = mins; endAt.current = Date.now() + mins * 60_000; setLeft(mins * 60); };
-  const stopEarly = () => {
-    const done = Math.floor((ran.current * 60 - (endAt.current - Date.now()) / 1000) / 60);
-    setLeft(null);
-    if (done >= 1) void act("POST", "/api/sessions", { subjectId: subject, minutes: done });
+  // When a round ends: chime once, then refresh so the server logs the session and starts the break.
+  useEffect(() => {
+    if (running && remaining === 0 && fired.current !== timer.endsAt) {
+      fired.current = timer.endsAt;
+      chime();
+      void reload();
+    }
+  });
+
+  useEffect(() => {
+    document.title = running ? `${mmss(remaining)} ${MODE_LABEL[timer.mode]} · Study Dashboard` : "Study Dashboard";
+  }, [running, remaining, timer.mode]);
+
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    return () => window.removeEventListener("pointerdown", unlock);
+  }, []);
+
+  const start = async () => {
+    unlockAudio();
+    try { localStorage.setItem("focus-subject", subject); } catch { /* optional */ }
+    setNote("");
+    await act("POST", "/api/timer/start", { subjectId: subject });
+  };
+  const stop = async () => {
+    try {
+      const r = await call<{ logged: number }>("POST", "/api/timer/stop");
+      setNote(timer.mode === "focus" ? (r.logged ? `Logged ${plural(r.logged, "minute")}.` : "Stopped. Under a minute, so nothing was logged.") : "");
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : "Couldn't stop the timer.");
+    }
+    await reload();
   };
 
+  const rounds = timer.mode === "long_break" ? 4 : timer.round;
   return (
     <section className="panel">
       <h2>Focus timer</h2>
-      {left === null ? (
+      {!running ? (
         <>
           <label>Subject
             <select value={subject} onChange={(e) => setSubject(e.target.value)}>
               {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
-          <div className="row" role="group" aria-label="Length">
-            {[25, 45, 60].map((m) => <button key={m} className={m === mins ? "seg on" : "seg"} onClick={() => setMins(m)}>{m} min</button>)}
-          </div>
-          <button className="primary" onClick={start}>Start {mins} minutes</button>
+          <button className="primary" onClick={start}>Start 25 minutes</button>
+          <p className="muted">Round {Math.min(timer.round + 1, 4)} of 4, then a longer break. Time is logged for you.</p>
         </>
       ) : (
         <>
-          <div className="clock" role="timer">{String(Math.floor(left / 60)).padStart(2, "0")}:{String(left % 60).padStart(2, "0")}</div>
-          <p className="muted">{state.subjects.find((s) => s.id === subject)?.name}</p>
-          <button onClick={stopEarly}>Stop and log time so far</button>
+          <div className="clock" role="timer" aria-label={`${MODE_LABEL[timer.mode]}, ${mmss(remaining)} left`}>{mmss(remaining)}</div>
+          <p className="muted">{MODE_LABEL[timer.mode]}{timer.mode === "focus" && `: ${state.subjects.find((s) => s.id === shown)?.name ?? ""}`}</p>
+          <div className="rounds" role="img" aria-label={`${rounds} of 4 rounds done`}>
+            {[0, 1, 2, 3].map((i) => <span key={i} className={i < rounds ? "dot-pin on" : "dot-pin"} />)}
+          </div>
+          <button onClick={stop}>{timer.mode === "focus" ? "Stop and log time so far" : "Skip break"}</button>
         </>
       )}
+      {note && <p role="status" className="muted">{note}</p>}
     </section>
   );
 }
@@ -438,26 +527,43 @@ function Week({ state }: { state: State }) {
   const bySubject = new Map<string, number>();
   state.sessions.forEach((s) => bySubject.set(s.subjectId, (bySubject.get(s.subjectId) ?? 0) + s.minutes));
   const total = byDay.reduce((a, b) => a + b, 0);
+  const weekday = (d: string) => new Date(d + "T00:00:00Z").toLocaleDateString("en-IN", { weekday: "short", timeZone: "UTC" });
   return (
-    <section className="panel">
-      <h2>This week: {(total / 60).toFixed(1)} hours</h2>
-      <div className="bars" role="img" aria-label={`Minutes studied per day: ${byDay.join(", ")}`}>
-        {days.map((d, i) => (
-          <div key={d} className="col">
-            <span className="mins">{byDay[i] || ""}</span>
-            <span className="barv" style={{ height: `${(byDay[i] / max) * 100}%` }} />
-            <span className="muted">{new Date(d + "T00:00:00Z").toLocaleDateString("en-IN", { weekday: "short", timeZone: "UTC" })}</span>
-          </div>
-        ))}
-      </div>
-      {total === 0 ? <p className="muted">No sessions yet. Run the focus timer on the Today tab and the time lands here.</p> : (
-        <ul className="plain">
-          {[...bySubject].sort((a, b) => b[1] - a[1]).map(([id, m]) => (
-            <li key={id} className="pick"><span>{state.subjects.find((s) => s.id === id)?.name ?? id}</span><span>{m} min</span></li>
+    <div className="stack">
+      <section className="panel">
+        <h2>This week: {(total / 60).toFixed(1)} hours</h2>
+        <div className="bars" role="img" aria-label={`Minutes studied per day: ${byDay.join(", ")}`}>
+          {days.map((d, i) => (
+            <div key={d} className="col">
+              <span className="mins">{byDay[i] || ""}</span>
+              <span className="barv" style={{ height: `${(byDay[i] / max) * 100}%` }} />
+              <span className="muted">{weekday(d)}</span>
+            </div>
           ))}
+        </div>
+        {total === 0 ? <p className="muted">No sessions yet. Run the focus timer on the Today tab and the time lands here.</p> : (
+          <ul className="plain">
+            {[...bySubject].sort((a, b) => b[1] - a[1]).map(([id, m]) => (
+              <li key={id} className="pick"><span>{state.subjects.find((s) => s.id === id)?.name ?? id}</span><span>{m} min</span></li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="panel">
+        <h2>Energy and study time</h2>
+        <ul className="plain">
+          {days.map((d, i) => {
+            const e = state.checkins.find((c) => c.day === d)?.energy;
+            return (
+              <li key={d} className="pick">
+                <span>{weekday(d)}, {fmt(d)}</span>
+                <span className="row"><span className={e ? `tag energy-${e}` : "tag"}>{e ? ENERGY_LABEL[e] : "no check-in"}</span><span>{byDay[i]} min</span></span>
+              </li>
+            );
+          })}
         </ul>
-      )}
-    </section>
+      </section>
+    </div>
   );
 }
 

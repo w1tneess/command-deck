@@ -128,7 +128,7 @@ describe("backup v2 and v1 upgrade", () => {
     await send("PUT", "/api/chapters/maths-1/passes/1", { done: true });
     await send("PUT", "/api/active-phase", { phaseId: "boards" });
     const backup = (await (await t.inject("/api/export")).json()) as any;
-    expect(backup.version).toBe(4);
+    expect(backup.version).toBe(5);
     // undo the changes, then restore
     await send("PUT", "/api/active-phase", { phaseId: null });
     await send("PUT", "/api/chapters/maths-1/passes/1", { done: false });

@@ -26,6 +26,7 @@ export function App() {
   const [state, setState] = useState<State | null>(null);
   const [error, setError] = useState("");
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [saving, setSaving] = useState(0); // writes in flight, for the loading bar
 
   const load = useCallback(async () => {
     try {
@@ -49,6 +50,7 @@ export function App() {
 
   // One place for every write: send it, show a clear error if it fails, then refresh.
   const act: Act = useCallback(async (method, url, body) => {
+    setSaving((n) => n + 1);
     try {
       setError("");
       await call(method, url, body);
@@ -57,15 +59,17 @@ export function App() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       return false;
+    } finally {
+      setSaving((n) => n - 1);
     }
   }, [load]);
 
   if (needsLogin) return <PinGate onDone={load} />;
   if (!state) return <main className="grid min-h-dvh place-items-center px-6 text-center text-muted">{error || "Loading…"}</main>;
-  return <Shell state={state} act={act} reload={load} error={error} />;
+  return <Shell state={state} act={act} reload={load} error={error} saving={saving > 0} />;
 }
 
-function Shell({ state, act, reload, error }: { state: State; act: Act; reload: () => Promise<void>; error: string }) {
+function Shell({ state, act, reload, error, saving }: { state: State; act: Act; reload: () => Promise<void>; error: string; saving: boolean }) {
   const [page, setPage] = useState<Page>(pageFromHash);
   const [theme, setTheme] = useTheme();
   const focus = useFocus(state, reload, act);
@@ -77,7 +81,8 @@ function Shell({ state, act, reload, error }: { state: State; act: Act; reload: 
   }, []);
 
   return (
-    <div className="min-h-dvh lg:flex">
+    <div className="min-h-dvh lg:flex" aria-busy={saving}>
+      {saving && <div aria-hidden="true" className="fixed inset-x-0 top-0 z-30 h-0.5 overflow-hidden bg-line"><div className="h-full w-1/3 animate-[slide_1s_ease-in-out_infinite] bg-accent" /></div>}
       <aside className="sticky top-0 hidden h-dvh w-[232px] shrink-0 flex-col justify-between gap-6 border-r border-line bg-surface px-4 py-6 lg:flex">
         <div className="flex flex-col gap-7">
           <div className="flex items-center gap-3 px-2">

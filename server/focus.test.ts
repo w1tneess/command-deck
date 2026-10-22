@@ -80,8 +80,8 @@ describe("studyQueue", () => {
   });
 
   it("low energy puts lighter chapters first, keeping rank order inside each group", () => {
-    const chapters = [ch("hard", { confidence: 1 }), ch("mid", { confidence: 3 }), ch("revised", { confidence: 2, status: "revised" }), ch("hard2", { confidence: 2 })];
-    expect(ids(studyQueue(chapters, phase, "2026-10-22", "low", 4))).toEqual(["revised", "mid", "hard", "hard2"]);
+    const chapters = [ch("hard", { confidence: 1 }), ch("mid", { confidence: 3 }), ch("easy", { confidence: 5 }), ch("hard2", { confidence: 2 })];
+    expect(ids(studyQueue(chapters, phase, "2026-10-22", "low", 4))).toEqual(["mid", "easy", "hard", "hard2"]);
   });
 
   it("high energy puts the hardest chapter first", () => {

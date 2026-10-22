@@ -55,5 +55,5 @@ export async function call<T = unknown>(method: string, url: string, body?: unkn
   return data as T;
 }
 
-/** Every write goes through one of these: send it, show a clear error if it fails, then refresh. */
-export type Act = (method: string, url: string, body?: unknown) => Promise<void>;
+/** Every write goes through one of these: send it, show a clear error if it fails, then refresh. Resolves to whether it worked, so a form can stay open when it didn't. */
+export type Act = (method: string, url: string, body?: unknown) => Promise<boolean>;

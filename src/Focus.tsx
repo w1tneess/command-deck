@@ -34,6 +34,7 @@ export function useFocus(state: State, reload: () => Promise<void>, act: Act) {
       fired.current = timer.endsAt;
       chime();
       void reload();
+      setTimeout(() => void reload(), 1500); // the first ask can land just before the server's clock reaches the end
     }
   });
 

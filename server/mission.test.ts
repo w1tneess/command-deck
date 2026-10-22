@@ -155,7 +155,7 @@ describe("daily targets", () => {
     expect((await send("POST", `/api/targets/${custom}/swap`)).status).toBe(400);
     await send("PATCH", `/api/targets/${targets[1].id}`, { done: true });
     expect((await send("POST", `/api/targets/${targets[1].id}/swap`)).status).toBe(400);
-    for (let n = 4; n <= 14; n++) await send("PATCH", `/api/chapters/maths-${n}`, { status: "mastered" });
+    for (let n = 4; n <= 14; n++) for (const pass of [1, 2, 3]) await send("PUT", `/api/chapters/maths-${n}/passes/${pass}`, { done: true });
     expect((await send("POST", `/api/targets/${targets[0].id}/swap`)).status).toBe(409);
   });
 });

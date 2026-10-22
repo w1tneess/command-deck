@@ -31,6 +31,7 @@ export function App() {
     try {
       setState(await call<State>("GET", "/api/state"));
       setNeedsLogin(false);
+      setError(""); // a connection error from before is over once a refresh works
     } catch (e) {
       if (e instanceof AuthError) setNeedsLogin(true);
       else setError("Can't reach the server. Check your connection, then reload.");
@@ -52,8 +53,10 @@ export function App() {
       setError("");
       await call(method, url, body);
       await load();
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
+      return false;
     }
   }, [load]);
 

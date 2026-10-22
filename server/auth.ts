@@ -56,16 +56,19 @@ export function registerAuth(app: Hono<Env>, now: () => number) {
     const ip = c.req.header("cf-connecting-ip") ?? "unknown";
     await db.prepare("DELETE FROM login_attempts WHERE ts <= ?").bind(t - GLOBAL_WINDOW).run();
 
-    // The Nth most recent failure being inside the window means the limit is reached.
-    const [mine, all] = await db.batch<{ ts: number }>([
-      db.prepare("SELECT ts FROM login_attempts WHERE ip = ? ORDER BY ts DESC LIMIT 1 OFFSET ?").bind(ip, IP_LIMIT - 1),
-      db.prepare("SELECT ts FROM login_attempts ORDER BY ts DESC LIMIT 1 OFFSET ?").bind(GLOBAL_LIMIT - 1),
+    // Record this try first, in the same batch as the check, so tries that arrive together can't all
+    // see an empty log. The (N+1)th most recent try being inside the window means the limit is reached.
+    const [added, mine, all] = await db.batch<{ ts: number }>([
+      db.prepare("INSERT INTO login_attempts (ip, ts) VALUES (?, ?)").bind(ip, t),
+      db.prepare("SELECT ts FROM login_attempts WHERE ip = ? ORDER BY ts DESC LIMIT 1 OFFSET ?").bind(ip, IP_LIMIT),
+      db.prepare("SELECT ts FROM login_attempts ORDER BY ts DESC LIMIT 1 OFFSET ?").bind(GLOBAL_LIMIT),
     ]);
     const waits = [
       mine.results[0] && mine.results[0].ts + IP_WINDOW - t,
       all.results[0] && all.results[0].ts + GLOBAL_WINDOW - t,
     ].filter((w): w is number => typeof w === "number" && w > 0);
     if (waits.length) {
+      await db.prepare("DELETE FROM login_attempts WHERE rowid = ?").bind(added.meta.last_row_id).run(); // refused tries don't extend the lock
       const retryAfter = Math.max(...waits);
       c.header("Retry-After", String(retryAfter));
       return c.json({ error: "Too many wrong tries. Try again later.", retryAfter }, 429);
@@ -73,7 +76,6 @@ export function registerAuth(app: Hono<Env>, now: () => number) {
 
     const body = ((await c.req.json().catch(() => ({}))) ?? {}) as { pin?: unknown; remember?: unknown };
     if (typeof body.pin !== "string" || !(await same(body.pin, pin))) {
-      await db.prepare("INSERT INTO login_attempts (ip, ts) VALUES (?, ?)").bind(ip, t).run();
       const n = (await db.prepare("SELECT COUNT(*) AS n FROM login_attempts WHERE ip = ? AND ts > ?").bind(ip, t - IP_WINDOW).first<{ n: number }>())?.n ?? 0;
       return c.json({ error: "Wrong PIN.", attemptsLeft: Math.max(0, IP_LIMIT - n) }, 401);
     }
@@ -103,7 +105,7 @@ export function registerAuth(app: Hono<Env>, now: () => number) {
     if (await hasValidSession(c, nowS())) {
       // Belt and braces on top of SameSite=Strict: refuse cookie-authenticated writes from another origin.
       const origin = c.req.header("origin");
-      if (origin && c.req.method !== "GET" && new URL(origin).host !== new URL(c.req.url).host) {
+      if (origin && c.req.method !== "GET" && origin !== new URL(c.req.url).origin) {
         return c.json({ error: "Cross-site request blocked." }, 403);
       }
       return next();

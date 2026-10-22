@@ -83,6 +83,15 @@ describe("lockout", () => {
     for (let i = 0; i < 4; i++) expect((await login("000000")).status).toBe(401);
   });
 
+  it("lets at most 5 wrong tries through even when they arrive at the same moment", async () => {
+    const codes = (await Promise.all(Array.from({ length: 12 }, () => login("000000", true, "7.7.7.7")))).map((r) => r.status);
+    expect(codes.filter((c) => c === 401)).toHaveLength(5);
+    expect(codes.filter((c) => c === 429)).toHaveLength(7);
+    expect((await login(PIN, true, "7.7.7.7")).status).toBe(429); // refused tries don't extend the lock
+    t.setNow(t.now() + 16 * MIN);
+    expect((await login(PIN, true, "7.7.7.7")).status).toBe(200);
+  });
+
   it("caps total wrong tries across all devices at 20 per hour", async () => {
     for (const ip of ["a", "b", "c", "d"]) for (let i = 0; i < 5; i++) await login("000000", true, ip);
     expect((await login(PIN, true, "fresh")).status).toBe(429);
@@ -131,6 +140,7 @@ describe("session cookie", () => {
     const write = (origin?: string) =>
       t.inject({ method: "POST", url: "/api/targets", payload: { title: "x" }, headers: { cookie, ...(origin ? { origin } : {}) } });
     expect((await write("https://evil.example")).status).toBe(403);
+    expect((await write("null")).status).toBe(403); // sandboxed pages send the literal "null"
     expect((await write("http://localhost")).status).toBe(201);
     expect((await write()).status).toBe(201);
   });

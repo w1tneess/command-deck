@@ -16,7 +16,7 @@ export type QueueChapter = {
 };
 
 /** "Lighter" work: a chapter you already know reasonably well or have been through once. */
-const isLight = (c: QueueChapter) => c.confidence >= 3 || c.status === "revised";
+const isLight = (c: QueueChapter) => c.confidence >= 3;
 
 /**
  * The study queue for a phase. Base order is the date-aware score from rankNext. Energy reshapes it:

@@ -99,6 +99,27 @@
   ::selection { background: var(--accent); color: var(--ink); }
 }
 
+/*
+ * States and motion, set once here so every control behaves the same. Hover only applies where a real
+ * pointer exists, so touch screens never get a stuck hover. Changes take 150ms. Kept outside any @layer
+ * so these win over the Tailwind utilities (border-line, text-muted) that set the resting colours.
+ */
+body { font-variant-numeric: tabular-nums; } /* digits line up in timers, counts and dates */
+button, a, input, select, summary {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, filter 150ms ease, transform 150ms ease;
+}
+button:not(:disabled):active { transform: scale(0.97); }
+@media (hover: hover) {
+  button:not(:disabled):hover { filter: brightness(1.12); }
+  nav a:not([aria-current]):hover { background: var(--surface2); color: var(--text); }
+  select:not(:disabled):hover, input:not([type="checkbox"]):not(:disabled):hover { border-color: var(--muted); }
+  :root[data-theme="light"] button:not(:disabled):hover { filter: brightness(0.95); }
+}
+@media (hover: hover) and (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) button:not(:disabled):hover { filter: brightness(0.95); }
+}
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+
 /* The browser draws date pickers dark or light from color-scheme, so the icon stays readable in both. */
 input[type="date"] { min-height: 44px; }
 

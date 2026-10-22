@@ -233,6 +233,6 @@ describe("backup with targets and check-ins", () => {
     const v3 = (await (await t.inject("/api/export")).json()) as any;
     const { daily_targets, checkins, ...rest } = v3;
     expect((await send("POST", "/api/import", { ...rest, tasks: [], version: 2 })).status).toBe(200);
-    expect((await state()).subjects).toHaveLength(12);
+    expect((await state()).subjects).toHaveLength(11);
   });
 });

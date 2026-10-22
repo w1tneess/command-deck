@@ -15,7 +15,9 @@ describe("api", () => {
     const s = await state();
     expect(s.phases[0]).toMatchObject({ id: "pb1", daysLeft: 28, studyDaysLeft: 27 });
     expect(maths(s).chapters).toHaveLength(14);
-    expect(s.subjects).toHaveLength(12);
+    expect(s.subjects).toHaveLength(11);
+    expect(s.subjects.map((x: any) => x.id)).not.toContain("hindi"); // Bengali is the second language
+    expect(s.deliverables.find((d: any) => d.name === "Language projects")).toMatchObject({ subject: "Bengali" });
   });
 
   it("a revision pass stamps the revision date and starts the chapter", async () => {

@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { AuthError, call, type Act, type State } from "./api.ts";
 import { Backup } from "./Backup.tsx";
+import { CaptureDrawer } from "./Capture.tsx";
 import { DeliverablesPage } from "./Deliverables.tsx";
 import { FocusBar, useFocus } from "./Focus.tsx";
+import { Habits } from "./Habits.tsx";
 import { PinGate } from "./PinGate.tsx";
+import { Projects } from "./Projects.tsx";
 import { signOut } from "./session.ts";
 import { Syllabus } from "./Syllabus.tsx";
 import { useTheme } from "./theme.ts";
 import { Today } from "./Today.tsx";
-import { Card, ICONS, Icon } from "./ui.tsx";
+import { ICONS, Icon } from "./ui.tsx";
 import { Week } from "./Week.tsx";
 
 /** `dock` marks the four tabs that sit in the phone's bottom bar; the rest live behind "More". */
@@ -77,11 +80,15 @@ function Shell({ state, act, reload, error, saving }: { state: State; act: Act; 
   const [theme, setTheme] = useTheme();
   const focus = useFocus(state, reload, act);
   const [more, setMore] = useState(false);
+  const [capture, setCapture] = useState(false);
   const inMore = NAV.some((n) => !n.dock && n.id === page);
 
   useEffect(() => {
     const onHash = () => { setPage(pageFromHash()); setMore(false); window.scrollTo(0, 0); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMore(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMore(false);
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setCapture((c) => !c); }
+    };
     window.addEventListener("hashchange", onHash);
     window.addEventListener("keydown", onKey);
     return () => { window.removeEventListener("hashchange", onHash); window.removeEventListener("keydown", onKey); };
@@ -108,21 +115,32 @@ function Shell({ state, act, reload, error, saving }: { state: State; act: Act; 
             ))}
           </nav>
         </div>
-        <button type="button" onClick={() => signOut("/api/logout")} className="h-11 rounded-xl border border-line bg-transparent text-[14px] text-muted">Sign out</button>
+        <div className="flex flex-col gap-2">
+          <button type="button" onClick={() => setCapture(true)} className="flex h-11 items-center justify-between rounded-xl border border-line bg-surface2 px-3.5 text-[14px] text-fg">
+            <span>Quick capture</span><kbd className="font-mono text-xs text-muted">Ctrl K</kbd>
+          </button>
+          <button type="button" onClick={() => signOut("/api/logout")} className="h-11 rounded-xl border border-line bg-transparent text-[14px] text-muted">Sign out</button>
+        </div>
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col gap-4 px-4 pt-5 pb-44 lg:gap-6 lg:px-10 lg:pt-8 lg:pb-12">
         {error && <p role="alert" className="m-0 rounded-xl bg-warn px-4 py-3 text-[14px] font-medium text-warn-ink">{error}</p>}
         {page === "today" && <Today state={state} act={act} focus={focus} />}
         {page === "syllabus" && <Syllabus state={state} act={act} />}
-        {page === "habits" && <ComingSoon title="Habits" />}
+        {page === "habits" && <Habits state={state} act={act} />}
         {page === "week" && <Week state={state} act={act} />}
         {page === "deliverables" && <DeliverablesPage state={state} act={act} />}
-        {page === "projects" && <ComingSoon title="Projects" />}
+        {page === "projects" && <Projects state={state} act={act} />}
         {page === "backup" && <Backup reload={reload} theme={theme} setTheme={setTheme} />}
       </main>
 
       <FocusBar focus={focus} state={state} onToday={page === "today"} />
+
+      {/* Phone: floating capture button, lifted above the timer bar when that is showing. */}
+      <button type="button" aria-label="Quick capture" onClick={() => setCapture(true)} className={`fixed right-4 z-20 flex size-14 items-center justify-center rounded-full border-0 bg-accent text-ink shadow-lg lg:hidden ${page === "today" || focus.running ? "bottom-[152px]" : "bottom-[92px]"}`}>
+        <Icon d="M12 5v14 M5 12h14" size={24} />
+      </button>
+      {capture && <CaptureDrawer state={state} act={act} onClose={() => setCapture(false)} />}
 
       {more && (
         <>
@@ -152,18 +170,5 @@ function Shell({ state, act, reload, error, saving }: { state: State; act: Act; 
         </button>
       </nav>
     </div>
-  );
-}
-
-/** Habits and Projects get their screens in the next milestone; the tabs exist now so the navigation is final. */
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <>
-      <header>
-        <div className="text-xs uppercase tracking-[0.06em] text-muted lg:text-[13px]">Class X · 2026-27</div>
-        <h1 className="m-0 mt-0.5 text-[28px] font-semibold tracking-[-0.02em] lg:mt-1 lg:text-[30px]">{title}</h1>
-      </header>
-      <Card><p className="m-0 text-[14px] text-muted">This screen arrives in the next update.</p></Card>
-    </>
   );
 }

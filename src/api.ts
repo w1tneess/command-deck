@@ -31,6 +31,12 @@ export type TimerView = {
   /** When the current mode ends (epoch ms), and the server clock when this was sent, to cancel out clock drift. */
   endsAt: number | null; serverNow: number;
 };
+/** A habit is a tick a day or a counter with a daily goal; `last7` runs oldest to today. */
+export type Habit = { id: number; name: string; kind: "tick" | "count"; goal: number; today: number; streak: number; last7: boolean[] };
+export type Capture = { id: number; text: string; kind: "note" | "todo"; done: boolean; createdAt: string };
+export type Milestone = { id: number; projectId: number; title: string; done: boolean };
+export type Project = { id: number; name: string; detail: string; milestones: Milestone[] };
+export type Routine = { day: string; sleep: number | null; kickoffAt: string | null; wins: string; tomorrow: string; shutdownAt: string | null };
 export type State = {
   today: string; phases: Phase[]; activePhaseId: string | null; autoPhase: boolean;
   subjects: Subject[]; deliverables: Deliverable[];
@@ -38,6 +44,12 @@ export type State = {
   /** Study minutes per day for the last 90 days. */
   heat: { day: string; minutes: number }[];
   targets: Target[]; checkin: Energy | null; checkins: { day: string; energy: Energy }[]; timer: TimerView;
+  habits: Habit[];
+  /** How many habits were done on each of the last 120 days (days with none are left out). */
+  habitDays: { day: string; done: number }[];
+  captures: Capture[]; projects: Project[];
+  routine: Routine; routines: { day: string; sleep: number | null }[];
+  review: { weekStart: string; note: string };
 };
 
 export class AuthError extends Error {}

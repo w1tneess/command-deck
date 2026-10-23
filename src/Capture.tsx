@@ -39,18 +39,18 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
 
   return (
     <>
-      <div aria-hidden="true" className="fixed inset-0 z-40 bg-bg/60 backdrop-blur-sm" onClick={onClose} />
+      <div aria-hidden="true" className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="capture-h"
         onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col gap-3 overflow-y-auto rounded-t-[24px] border border-line/80 bg-surface/95 backdrop-blur-2xl p-4 shadow-[0_-8px_32px_rgba(0,0,0,0.3)] animate-drawer-mobile lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[420px] lg:rounded-none lg:rounded-l-[24px] lg:p-6 lg:animate-drawer-desktop"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col gap-3 overflow-y-auto rounded-t-[28px] border border-line/80 bg-surface/90 backdrop-blur-2xl p-4 shadow-[0_-12px_48px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] animate-drawer-mobile lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[440px] lg:rounded-none lg:rounded-l-[28px] lg:p-6 lg:animate-drawer-desktop"
       >
         <div className="mx-auto -mt-1 mb-1 h-1 w-9 shrink-0 rounded-full bg-line lg:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3">
           <h2 id="capture-h" className="m-0 text-[17px] font-semibold tracking-[-0.015em]">Quick capture</h2>
-          <span className="hidden text-xs text-muted lg:inline"><kbd className="font-mono">Ctrl/⌘ K</kbd> to toggle</span>
+          <span className="hidden text-xs text-muted lg:inline"><kbd className="rounded border border-line bg-surface2 px-1.5 py-0.5 font-mono text-[11px]">Ctrl/⌘ K</kbd> to toggle</span>
           <Btn kind="ghost" aria-label="Close quick capture" onClick={onClose}>Close</Btn>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); void save(); }} className="flex flex-col gap-2.5">
@@ -64,12 +64,24 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
             placeholder="Brain dump, to-do or note. Enter to save."
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void save(); } }}
-            className="w-full resize-none rounded-xl border border-line bg-bg px-3.5 py-3 text-[15px] text-fg"
+            className="w-full resize-none rounded-xl border border-line bg-surface2/60 px-3.5 py-3 text-[15px] text-fg focus:border-accent focus:bg-surface2 transition-all placeholder:text-muted/60"
           />
           <div className="flex items-center justify-between gap-2">
             <div role="group" aria-label="Save as" className="flex gap-1.5">
               {(["note", "todo"] as const).map((k) => (
-                <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)} className={`h-11 rounded-xl border px-4 text-[14px] font-medium ${kind === k ? "border-accent bg-accent text-ink" : "border-line bg-transparent text-muted"}`}>{k === "note" ? "Note" : "To-do"}</button>
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={kind === k}
+                  onClick={() => setKind(k)}
+                  className={`h-10 rounded-xl border px-3.5 text-[13px] font-medium transition-all ${
+                    kind === k
+                      ? "border-accent/40 bg-accent/15 text-accent-text shadow-[0_0_8px_rgba(99,102,241,0.2)] font-semibold"
+                      : "border-line bg-surface2/40 text-muted hover:text-fg hover:bg-surface2/80"
+                  }`}
+                >
+                  {k === "note" ? "Note" : "To-do"}
+                </button>
               ))}
             </div>
             <Btn type="submit" kind="primary" disabled={!text.trim() || saving}>{saving ? "Saving…" : "Save"}</Btn>

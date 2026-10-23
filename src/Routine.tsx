@@ -15,14 +15,15 @@ export function Morning({ state, act }: { state: State; act: Act }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <H2 id="morning-h">Morning kickoff</H2>
         {r.kickoffAt && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-good/30 bg-good/10 px-2.5 py-0.5 font-mono text-xs font-semibold text-good">
-            ☀️ Started {clock(r.kickoffAt)}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-good/40 bg-good/15 px-3 py-1 font-mono text-xs font-semibold text-good shadow-[0_0_8px_rgba(52,211,153,0.25)]">
+            <span className="size-1.5 rounded-full bg-good animate-pulse" />
+            Started {clock(r.kickoffAt)}
           </span>
         )}
       </div>
-      <div className="mt-3" role="group" aria-labelledby="sleep-h">
-        <div id="sleep-h" className="mb-1.5 text-[13px] text-muted">How did you sleep?</div>
-        <div className="flex gap-1 rounded-xl bg-surface2/60 p-1 border border-line/60">
+      <div className="mt-3.5" role="group" aria-labelledby="sleep-h">
+        <div id="sleep-h" className="mb-2 text-[13px] font-medium text-muted">How did you sleep?</div>
+        <div className="flex gap-1.5 rounded-xl bg-surface2/60 p-1 border border-line/70 backdrop-blur-sm">
           {SLEEP.map((label, i) => (
             <button
               key={label}
@@ -30,28 +31,37 @@ export function Morning({ state, act }: { state: State; act: Act }) {
               aria-pressed={r.sleep === i + 1}
               aria-label={`Sleep ${i + 1} of 5, ${label}`}
               onClick={() => act("PUT", "/api/routine", { sleep: r.sleep === i + 1 ? null : i + 1 })}
-              className={`h-10 flex-1 rounded-[9px] text-[14px] font-medium transition-all duration-150 ${
+              className={`h-10 flex-1 rounded-[10px] text-[14px] font-medium transition-all duration-150 ${
                 r.sleep === i + 1
-                  ? "bg-accent text-ink shadow-[0_1px_3px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)]"
-                  : "text-muted hover:text-fg"
+                  ? "bg-gradient-to-b from-[#6366f1] to-[#4f46e5] text-white shadow-[0_2px_8px_rgba(99,102,241,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] scale-[1.02]"
+                  : "text-muted hover:text-fg hover:bg-surface3/40"
               }`}
             >
-              <span className="font-mono">{i + 1}</span>
+              <span className="font-mono font-semibold">{i + 1}</span>
               <span className="ml-1.5 hidden text-[12px] sm:inline">{label}</span>
             </button>
           ))}
         </div>
       </div>
       <div className="mt-4">
-        <div className="mb-1 text-[13px] text-muted">Your Big 3 today</div>
+        <div className="mb-2 flex items-baseline justify-between">
+          <div className="text-[13px] font-medium text-muted">Daily Non-Negotiables (The Big 3)</div>
+          <span className="font-mono text-[11px] text-muted">2 Academic + 1 Personal Needle</span>
+        </div>
         {big3.length === 0 ? (
-          <p className="m-0 text-[14px] text-muted">No targets yet. Add some below.</p>
+          <p className="m-0 text-[14px] text-muted rounded-xl bg-surface2/30 p-3 border border-line/40">No targets yet. Add some in Daily Targets below.</p>
         ) : (
-          <ol className="m-0 list-none p-0">
+          <ol className="m-0 list-none p-0 flex flex-col gap-1.5">
             {big3.map((t, i) => (
-              <li key={t.id} className="flex items-baseline gap-3 border-t border-line py-2 first:border-t-0">
-                <span className="font-mono text-[13px] text-muted">{i + 1}</span>
-                <span className={`text-[15px] ${t.done ? "text-muted line-through" : "text-fg"}`}>{t.title}</span>
+              <li key={t.id} className="flex items-center gap-3 rounded-xl bg-surface2/40 px-3 py-2 border border-line/40">
+                <span className="flex size-5.5 items-center justify-center rounded-lg bg-surface2 border border-line font-mono text-[12px] font-bold text-accent-text">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <div className={`text-[14px] font-medium ${t.done ? "text-muted line-through" : "text-fg"}`}>{t.title}</div>
+                  <div className="text-[11px] font-mono text-muted">
+                    {i < 2 ? "Academic Needle" : "Personal / Health Needle"}
+                  </div>
+                </div>
+                {t.done && <span className="text-xs font-semibold text-good">✓ Done</span>}
               </li>
             ))}
           </ol>
@@ -107,7 +117,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
         </summary>
         <div className="mt-3 flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={winsId} className="text-[13px] text-muted">Today's wins</label>
+            <label htmlFor={winsId} className="text-[13px] font-medium text-muted">Today's wins</label>
             <textarea
               id={winsId}
               rows={2}
@@ -119,11 +129,11 @@ export function Evening({ state, act }: { state: State; act: Act }) {
                 setHasUserEdited(true);
               }}
               onBlur={() => save("wins", wins)}
-              className="w-full resize-none rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[15px] text-fg"
+              className="w-full resize-none rounded-xl border border-line bg-surface2/60 px-3.5 py-2.5 text-[15px] text-fg focus:border-accent focus:bg-surface2 transition-all placeholder:text-muted/60"
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={tomorrowId} className="text-[13px] text-muted">Prep for tomorrow</label>
+            <label htmlFor={tomorrowId} className="text-[13px] font-medium text-muted">Prep for tomorrow</label>
             <textarea
               id={tomorrowId}
               rows={2}
@@ -135,7 +145,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
                 setHasUserEdited(true);
               }}
               onBlur={() => save("tomorrow", tomorrow)}
-              className="w-full resize-none rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[15px] text-fg"
+              className="w-full resize-none rounded-xl border border-line bg-surface2/60 px-3.5 py-2.5 text-[15px] text-fg focus:border-accent focus:bg-surface2 transition-all placeholder:text-muted/60"
             />
           </div>
           <div>

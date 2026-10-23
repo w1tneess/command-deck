@@ -67,27 +67,51 @@ export function PinGate({ onDone }: { onDone: () => void }) {
 
   const wait = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-6 py-10 text-center">
-      <div className="mb-5 flex size-12 items-center justify-center rounded-[14px] bg-accent text-ink"><Icon d="M9 11l3 3L22 4" size={26} stroke={2.4} /></div>
-      <h1 className="m-0 text-[28px] font-semibold tracking-[-0.02em]">Study</h1>
-      <p className="mt-1 mb-7 text-[14px] text-muted">Enter your PIN</p>
-      <div className="flex gap-3.5" role="img" aria-label={`${pin.length} of ${PIN_LENGTH} digits entered`}>
-        {Array.from({ length: PIN_LENGTH }, (_, i) => <span key={i} className={`size-4 rounded-full border-2 ${i < pin.length ? "border-accent-text bg-accent-text" : "border-muted"}`} />)}
+    <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 py-10 text-center">
+      <div className="w-full rounded-[28px] border border-line/80 bg-surface/85 backdrop-blur-2xl p-7 shadow-[0_16px_48px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] flex flex-col items-center">
+        <div className="mb-4 flex size-13 items-center justify-center rounded-2xl bg-gradient-to-tr from-accent to-[#818cf8] text-white shadow-[0_4px_16px_rgba(99,102,241,0.4)] border border-white/20">
+          <Icon d="M9 11l3 3L22 4" size={26} stroke={2.4} />
+        </div>
+        <h1 className="m-0 text-[26px] font-semibold tracking-tight text-fg">Study OS</h1>
+        <p className="mt-1 mb-6 text-[14px] text-muted font-medium">Enter your 6-digit passcode</p>
+
+        <div className="flex gap-3.5 items-center justify-center" role="img" aria-label={`${pin.length} of ${PIN_LENGTH} digits entered`}>
+          {Array.from({ length: PIN_LENGTH }, (_, i) => (
+            <span
+              key={i}
+              className={`size-3.5 rounded-full border transition-all duration-200 ${
+                i < pin.length
+                  ? "border-accent bg-accent shadow-[0_0_10px_var(--accent)] scale-110"
+                  : "border-line-strong bg-surface2/60"
+              }`}
+            />
+          ))}
+        </div>
+
+        <p role="alert" className="my-4 min-h-6 text-[13px] font-medium text-warn">
+          {locked ? `Too many wrong tries. Try again in ${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}.` : msg}
+        </p>
+
+        <div className="grid grid-cols-3 gap-3 w-full max-w-[260px]">
+          {KEYS.map((k, i) => k === "" ? <span key={i} /> : (
+            <button
+              key={k}
+              type="button"
+              disabled={busy || locked}
+              aria-label={k === "back" ? "Delete last digit" : k}
+              onClick={() => press(k)}
+              className="size-[72px] mx-auto rounded-full border border-line/80 bg-surface2/75 text-[24px] font-medium text-fg shadow-xs transition-all duration-150 hover:bg-surface2 hover:border-line-strong active:scale-90 active:bg-accent active:text-ink active:shadow-[0_0_12px_var(--accent)]"
+            >
+              {k === "back" ? "⌫" : k}
+            </button>
+          ))}
+        </div>
+
+        <label className="mt-6 flex min-h-11 items-center gap-2.5 text-[13px] text-muted cursor-pointer hover:text-fg transition-colors">
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-4.5 rounded-md accent-[var(--accent)] cursor-pointer" />
+          <span>Remember this device for 90 days</span>
+        </label>
       </div>
-      <p role="alert" className="my-4 min-h-6 text-[14px] font-medium text-warn">
-        {locked ? `Too many wrong tries. Try again in ${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}.` : msg}
-      </p>
-      <div className="grid grid-cols-3 gap-3">
-        {KEYS.map((k, i) => k === "" ? <span key={i} /> : (
-          <button key={k} type="button" disabled={busy || locked} aria-label={k === "back" ? "Delete last digit" : k} onClick={() => press(k)} className="size-[76px] rounded-full border border-line bg-surface2 text-[26px] font-medium active:bg-accent active:text-ink">
-            {k === "back" ? "⌫" : k}
-          </button>
-        ))}
-      </div>
-      <label className="mt-7 flex min-h-11 items-center gap-2.5 text-[14px] text-muted">
-        <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-5 accent-[var(--accent)]" />
-        Remember this device for 90 days
-      </label>
     </main>
   );
 }

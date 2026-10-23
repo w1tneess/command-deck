@@ -38,7 +38,10 @@ export const daysBetween = (from: string, to: string) => Math.round((dayOf(to).g
 
 export function Card({ children, className = "", labelledBy }: { children: ReactNode; className?: string; labelledBy?: string }) {
   return (
-    <section aria-labelledby={labelledBy} className={`min-w-0 rounded-[20px] border border-line/75 bg-surface/90 shadow-[0_2px_12px_rgba(0,0,0,0.14)] lg:rounded-[22px] lg:px-6 lg:py-5 ${className}`}>
+    <section
+      aria-labelledby={labelledBy}
+      className={`min-w-0 rounded-[22px] border border-line bg-surface/85 backdrop-blur-md p-4 shadow-[0_8px_32px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-line-strong transition-all duration-200 lg:rounded-[24px] lg:px-6 lg:py-5.5 ${className}`}
+    >
       {children}
     </section>
   );
@@ -50,26 +53,43 @@ export const H2 = ({ id, children, big = false }: { id?: string; children: React
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "secondary" | "ghost" | "outline" };
 const BTN = {
-  primary: "bg-accent text-ink font-semibold border-0 shadow-[0_1px_3px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.22)]",
-  secondary: "bg-surface2/85 text-fg border border-line/80",
-  outline: "bg-transparent text-fg border border-line",
-  ghost: "bg-transparent text-muted border-0",
+  primary:
+    "bg-gradient-to-b from-[#6366f1] to-[#4f46e5] hover:from-[#6d70f7] hover:to-[#554de8] text-white font-semibold border-t border-white/25 shadow-[0_2px_10px_rgba(99,102,241,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] hover:shadow-[0_4px_16px_rgba(99,102,241,0.5)] active:scale-[0.98]",
+  secondary:
+    "bg-surface2/75 hover:bg-surface2 text-fg border border-line hover:border-line-strong shadow-xs active:scale-[0.98]",
+  outline:
+    "bg-transparent hover:bg-surface2/50 text-fg border border-line hover:border-line-strong active:scale-[0.98]",
+  ghost:
+    "bg-transparent hover:bg-surface2/60 text-muted hover:text-fg border-0 active:scale-[0.98]",
 };
-/** 44px minimum touch target, as in the design. */
+/** 44px minimum touch target, with spring-like active:scale-[0.98] micro-interaction. */
 export function Btn({ kind = "secondary", className = "", type = "button", ...rest }: BtnProps) {
-  return <button type={type} className={`h-11 shrink-0 rounded-xl px-4 text-[14px] transition-transform duration-150 ease-out enabled:active:scale-[0.96] ${BTN[kind]} ${className}`} {...rest} />;
+  return (
+    <button
+      type={type}
+      className={`h-11 shrink-0 rounded-xl px-4 text-[14px] transition-transform duration-100 ease-out enabled:active:scale-[0.98] ${BTN[kind]} ${className}`}
+      {...rest}
+    />
+  );
 }
 
 export function Pill({ children, accent = false, className = "" }: { children: ReactNode; accent?: boolean; className?: string }) {
   return (
-    <span className={`inline-block rounded-full border px-2 py-0.5 text-xs ${accent ? "border-accent bg-accent text-ink" : "border-line bg-surface2 text-muted"} ${className}`}>{children}</span>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium tracking-tight ${accent ? "border-accent/40 bg-accent/15 text-accent-text shadow-[0_0_8px_rgba(99,102,241,0.2)]" : "border-line bg-surface2/80 text-muted"} ${className}`}>{children}</span>
   );
 }
 
 export function ConfDots({ value }: { value: number }) {
   return (
-    <span role="img" aria-label={`Confidence ${value} of 5`} className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((n) => <span key={n} className={`size-2 rounded-full ${n <= value ? "bg-blue" : "bg-line"}`} />)}
+    <span role="img" aria-label={`Confidence ${value} of 5`} className="flex gap-1.5 items-center">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span
+          key={n}
+          className={`size-2 rounded-full transition-all duration-150 ${
+            n <= value ? "bg-blue shadow-[0_0_6px_rgba(96,165,250,0.6)]" : "bg-line-strong/60"
+          }`}
+        />
+      ))}
     </span>
   );
 }
@@ -82,7 +102,17 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {PASS_NAMES.map((name, i) => (
-        <span key={name} className={`rounded-full border px-2.5 py-[3px] text-xs transition-colors duration-150 ${passes[i] ? "border-good bg-good/15 font-medium text-good" : "border-line text-muted"}`}>{passes[i] ? "✓ " : ""}{name}</span>
+        <span
+          key={name}
+          className={`rounded-full border px-2.5 py-[3px] text-xs transition-all duration-150 ${
+            passes[i]
+              ? "border-good/40 bg-good/15 font-medium text-good shadow-[0_0_8px_rgba(52,211,153,0.2)]"
+              : "border-line bg-surface2/40 text-muted"
+          }`}
+        >
+          {passes[i] ? "✓ " : ""}
+          {name}
+        </span>
       ))}
     </div>
   );
@@ -90,17 +120,16 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
 
 /** 22px on a phone, 24px on a wide screen, as in the design. */
 export const Check = ({ on }: { on: boolean }) => (
-  <span className={`flex size-[22px] items-center justify-center rounded-[7px] border-2 text-good-ink transition-colors duration-150 lg:size-6 lg:rounded-lg ${on ? "border-good bg-good" : "border-muted"}`}>
+  <span className={`flex size-[22px] items-center justify-center rounded-[7px] border transition-all duration-150 lg:size-6 lg:rounded-lg ${on ? "border-good bg-good text-good-ink shadow-[0_0_10px_rgba(52,211,153,0.35)]" : "border-line bg-surface2/60 text-transparent hover:border-muted"}`}>
     {on && <Icon d={ICONS.check} size={14} stroke={3} />}
   </span>
 );
 
-/** Science and Social Science are shown as groups of their subjects, as in the design. */
-export const GROUPS: { label: string; ids: string[] }[] = [
-  { label: "Mathematics", ids: ["maths"] },
-  { label: "Science", ids: ["physics", "chemistry", "biology"] },
-  { label: "Social Science", ids: ["history", "civics", "geography", "economics"] },
+export const GROUPS = [
+  { label: "Maths", ids: ["maths"] },
+  { label: "Science", ids: ["science"] },
+  { label: "Social Science", ids: ["history", "geography", "political-science", "economics"] },
   { label: "English", ids: ["english"] },
-  { label: "Bengali", ids: ["bengali"] },
-  { label: "Information Technology", ids: ["it"] },
+  { label: "Hindi", ids: ["hindi"] },
+  { label: "Computer / AI", ids: ["ai"] },
 ];

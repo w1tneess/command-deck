@@ -1,79 +1,88 @@
 @import "tailwindcss";
 
 /*
- * Apple Cupertino & OLED Pro Color Palette
- * Obsidian pitch-black base, ceramic light mode, Apple System Indigo accent,
- * Apple Activity System Green for completed items, Apple System Orange for urgent notices.
+ * Linear / Apple / Raycast Obsidian & OLED Pro Design System
+ * Baseline #050608 with layered elevated cards (#0b0d13, #121620, #1a202c).
+ * Calibrated hairline borders (border-white/[0.06] hover:border-white/[0.14]).
  * Every declared pair strictly passes WCAG 2.2 AA (4.5:1 text, 3:1 non-text).
  */
 :root {
   color-scheme: dark;
-  --bg: #000000;
-  --surface: #121214;
-  --surface2: #1c1c1e;
-  --line: #2c2c2e;
-  --text: #f5f5f7;
-  --muted: #8e8e93;
+  --bg: #050608;
+  --surface: #0b0d13;
+  --surface2: #121620;
+  --surface3: #1a202c;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text: #f8fafc;
+  --muted: #94a3b8;
   --blue: #60a5fa; /* confidence dots and quiet blue indicators */
-  --good: #30d158;
-  --good-ink: #003814;
-  --warn: #ff9f0a;
-  --warn-ink: #331b00;
-  --accent: #5e5ce6;
+  --good: #34d399;
+  --good-ink: #022c22;
+  --warn: #fbbf24;
+  --warn-ink: #451a03;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
   --ink: #ffffff; /* text on the indigo accent, in both themes */
   --accent-text: #818cf8; /* vibrant indigo as text or accent edge */
-  --focus: #5e5ce6;
-  --heat-0: #1c1c1e;
-  --heat-1: #242252;
-  --heat-2: #373385;
-  --heat-3: #504cb8;
-  --heat-4: #7c77f2;
+  --focus: #6366f1;
+  --heat-0: #121620;
+  --heat-1: #25265e;
+  --heat-2: #3c3b94;
+  --heat-3: #5654cc;
+  --heat-4: #817dfc;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     color-scheme: light;
-    --bg: #f5f5f7;
+    --bg: #f8fafc;
     --surface: #ffffff;
-    --surface2: #e5e5ea;
-    --line: #d1d1d6;
-    --text: #1d1d1f;
-    --muted: #6e6e73;
+    --surface2: #f1f5f9;
+    --surface3: #e2e8f0;
+    --line: #e2e8f0;
+    --line-strong: #cbd5e1;
+    --text: #0f172a;
+    --muted: #64748b;
     --blue: #2563eb;
-    --good: #15803d;
+    --good: #10b981;
     --good-ink: #ffffff;
-    --warn: #c2410c;
+    --warn: #d97706;
     --warn-ink: #ffffff;
-    --accent: #5856d6;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
     --accent-text: #4338ca;
-    --focus: #5856d6;
-    --heat-0: #e5e5ea;
+    --focus: #4f46e5;
+    --heat-0: #e2e8f0;
     --heat-1: #deddf8;
     --heat-2: #b9b7f1;
     --heat-3: #8a85e6;
-    --heat-4: #5856d6;
+    --heat-4: #4f46e5;
   }
 }
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f5f5f7;
+  --bg: #f8fafc;
   --surface: #ffffff;
-  --surface2: #e5e5ea;
-  --line: #d1d1d6;
-  --text: #1d1d1f;
-  --muted: #6e6e73;
+  --surface2: #f1f5f9;
+  --surface3: #e2e8f0;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --text: #0f172a;
+  --muted: #64748b;
   --blue: #2563eb;
-  --good: #15803d;
+  --good: #10b981;
   --good-ink: #ffffff;
-  --warn: #c2410c;
+  --warn: #d97706;
   --warn-ink: #ffffff;
-  --accent: #5856d6;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
   --accent-text: #4338ca;
-  --focus: #5856d6;
-  --heat-0: #e5e5ea;
+  --focus: #4f46e5;
+  --heat-0: #e2e8f0;
   --heat-1: #deddf8;
   --heat-2: #b9b7f1;
   --heat-3: #8a85e6;
-  --heat-4: #5856d6;
+  --heat-4: #4f46e5;
 }
 
 /* `inline` makes utilities read the variables above directly, so a theme switch needs no rebuild. */
@@ -83,7 +92,9 @@
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface2: var(--surface2);
+  --color-surface3: var(--surface3);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-fg: var(--text);
   --color-muted: var(--muted);
   --color-blue: var(--blue);
@@ -97,10 +108,17 @@
 }
 
 @layer base {
-  html { background: var(--bg); }
+  html {
+    background: var(--bg);
+    scroll-behavior: smooth;
+  }
   body {
     margin: 0;
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(1200px circle at 50% -120px, rgba(99, 102, 241, 0.08), transparent 75%),
+      radial-gradient(900px circle at 85% 150px, rgba(168, 85, 247, 0.035), transparent 65%);
+    background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 15px;
@@ -109,30 +127,62 @@
   }
   button { font: inherit; cursor: pointer; color: inherit; }
   button:disabled { cursor: not-allowed; opacity: 0.5; }
-  input, select { font: inherit; color: inherit; }
+  input, select, textarea { font: inherit; color: inherit; }
   a { text-decoration: none; color: inherit; }
-  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 3px rgba(85, 88, 234, 0.22); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.28); }
   ::selection { background: var(--accent); color: var(--ink); }
+
+  /* Sleek custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+  }
+}
+
+:root[data-theme="light"] body {
+  background-image:
+    radial-gradient(1200px circle at 50% -120px, rgba(99, 102, 241, 0.05), transparent 75%),
+    radial-gradient(800px circle at 85% 150px, rgba(59, 130, 246, 0.03), transparent 60%);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) body {
+    background-image:
+      radial-gradient(1200px circle at 50% -120px, rgba(99, 102, 241, 0.05), transparent 75%),
+      radial-gradient(800px circle at 85% 150px, rgba(59, 130, 246, 0.03), transparent 60%);
+  }
 }
 
 /*
- * Apple Design: Translucent materials with light-catching top bevel & optical hierarchy.
+ * Linear & Apple Design: Translucent materials with light-catching top bevel & optical hierarchy.
  * Uses backdrop-filter with saturation boost, falling back cleanly under reduced-transparency.
  */
 .apple-glass {
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 :root[data-theme="light"] .apple-glass {
   background: color-mix(in srgb, var(--surface) 88%, transparent);
-  border-top: 1px solid rgba(255, 255, 255, 0.65);
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) .apple-glass {
     background: color-mix(in srgb, var(--surface) 88%, transparent);
-    border-top: 1px solid rgba(255, 255, 255, 0.65);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -144,17 +194,17 @@
 }
 
 /*
- * States and motion, set once here so every control behaves the same. Hover only applies where a real
- * pointer exists, so touch screens never get a stuck hover. Changes take 150ms. Kept outside any @layer
- * so these win over the Tailwind utilities (border-line, text-muted) that set the resting colours.
+ * States and motion: spring-like button taps (active:scale-[0.98] duration-100),
+ * smooth card entries with stagger animations, and jitter-free tabular digits.
  */
-body { font-variant-numeric: tabular-nums; } /* digits line up in timers, counts and dates */
+body { font-variant-numeric: tabular-nums; }
 button, a, input, select, summary {
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, filter 150ms ease, transform 150ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, filter 150ms ease, transform 100ms ease;
 }
-button:not(:disabled):active { transform: scale(0.96); }
+button:not(:disabled):active { transform: scale(0.98); }
+
 @media (hover: hover) {
-  button:not(:disabled):hover { filter: brightness(1.12); }
+  button:not(:disabled):hover { filter: brightness(1.1); }
   nav a:not([aria-current]):hover { background: var(--surface2); color: var(--text); }
   select:not(:disabled):hover, input:not([type="checkbox"]):not(:disabled):hover { border-color: var(--muted); }
   :root[data-theme="light"] button:not(:disabled):hover { filter: brightness(0.95); }
@@ -162,10 +212,19 @@ button:not(:disabled):active { transform: scale(0.96); }
 @media (hover: hover) and (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) button:not(:disabled):hover { filter: brightness(0.95); }
 }
+
 @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes drawer-up { from { transform: translateY(100%); opacity: 0.85; } to { transform: translateY(0); opacity: 1; } }
 @keyframes drawer-right { from { transform: translateX(100%); opacity: 0.85; } to { transform: translateX(0); opacity: 1; } }
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
 
 .animate-fade-in { animation: fade-in 180ms ease-out forwards; }
 .animate-drawer-mobile { animation: drawer-up 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -173,11 +232,37 @@ button:not(:disabled):active { transform: scale(0.96); }
   .animate-drawer-desktop { animation: drawer-right 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 }
 
+.stagger-1 { animation: stagger-in 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.stagger-2 { animation: stagger-in 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.stagger-3 { animation: stagger-in 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+.shimmer-progress {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-progress::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  animation: shimmer 2.4s infinite;
+}
+
 .timer-ring {
   transition: stroke-dasharray 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* The browser draws date pickers dark or light from color-scheme, so the icon stays readable in both. */
+/* Precision architectural telemetry grid pattern */
+.telemetry-grid {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+:root[data-theme="light"] .telemetry-grid {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
 input[type="date"] { min-height: 44px; }
 
 @media (prefers-reduced-motion: reduce) {

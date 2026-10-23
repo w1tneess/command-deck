@@ -52,6 +52,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
   const [removing, setRemoving] = useState(false);
   const isOverdue = !!d.due && d.status !== "done" && d.due < today;
   const left = d.due ? daysBetween(today, d.due) : null;
+  const isUrgent = !!d.due && d.status !== "done" && !isOverdue && left !== null && left <= 3;
   const patch = (body: object) => act("PATCH", `/api/deliverables/${d.id}`, body);
 
   // Optimistic stepper with promise queue to avoid dropping rapid clicks
@@ -102,7 +103,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           <div className="mt-0.5 text-[13px] text-muted">
             {d.subject}{d.detail ? ` · ${d.detail}` : ""}
             {d.due && (
-              <span className={isOverdue ? "font-medium text-warn" : ""}>
+              <span className={isOverdue ? "font-medium text-warn" : isUrgent ? "font-medium text-amber-400" : ""}>
                 {" "}· due {fmtShort(d.due)}
                 {left !== null && d.status !== "done" ? (left < 0 ? ` (${plural(-left, "day")} late)` : left === 0 ? " (today)" : ` (in ${plural(left, "day")})`) : ""}
               </span>
@@ -119,14 +120,16 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
             className={`rounded-full border px-2.5 py-[3px] text-xs transition-colors duration-150 ${
               isOverdue
                 ? "border-warn bg-warn font-semibold text-warn-ink"
-                : d.status === "done"
-                  ? "border-good bg-good/15 font-medium text-good"
-                  : d.status === "in_progress"
-                    ? "border-accent-text bg-accent/10 font-medium text-accent-text"
-                    : "border-line text-muted"
+                : isUrgent
+                  ? "border-amber-500/50 bg-amber-500/15 font-semibold text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.25)] animate-pulse"
+                  : d.status === "done"
+                    ? "border-good bg-good/15 font-medium text-good"
+                    : d.status === "in_progress"
+                      ? "border-accent-text bg-accent/10 font-medium text-accent-text"
+                      : "border-line text-muted"
             }`}
           >
-            {isOverdue ? "Overdue" : d.status === "done" ? "✓ Done" : STATE_LABEL[d.status]}
+            {isOverdue ? "Overdue" : isUrgent ? "⚡ Urgent (<72h)" : d.status === "done" ? "✓ Done" : STATE_LABEL[d.status]}
           </span>
         </button>
       </div>

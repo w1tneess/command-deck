@@ -79,8 +79,8 @@ export function useFocus(state: State, reload: () => Promise<void>, act: Act) {
 }
 export type FocusModel = ReturnType<typeof useFocus>;
 
-/** Desktop card: the ring from the design, with Stop while running and Subject + Start when idle. */
-export function FocusCard({ focus, state }: { focus: FocusModel; state: State }) {
+/** Desktop card: the ring from the design, with Stop while running, Subject + Start when idle, and Zen Studio launcher. */
+export function FocusCard({ focus, state, onOpenZen }: { focus: FocusModel; state: State; onOpenZen?: () => void }) {
   const f = focus;
   const shown = f.running ? f.remaining : FOCUS_S;
   const arc = f.running ? (f.remaining / f.total) * RING : 0;
@@ -89,7 +89,7 @@ export function FocusCard({ focus, state }: { focus: FocusModel; state: State })
   return (
     <Card labelledBy="focus-h" className="flex flex-col items-center gap-4">
       <div className="flex items-baseline justify-between self-stretch">
-        <H2 id="focus-h">Focus</H2>
+        <H2 id="focus-h">Focus Engine</H2>
         <span className="text-[13px] text-muted">{f.roundText}{f.running && isFocusMode ? ` · ${f.subjectName}` : ""}</span>
       </div>
       <div className="relative size-[200px]">
@@ -105,23 +105,23 @@ export function FocusCard({ focus, state }: { focus: FocusModel; state: State })
               strokeWidth="10"
               strokeLinecap="round"
               strokeDasharray={`${arc} ${RING}`}
-              className={`timer-ring transition-all duration-300 ease-linear ${isFocusMode ? "[filter:drop-shadow(0_0_8px_rgba(94,92,230,0.5))]" : "[filter:drop-shadow(0_0_8px_rgba(48,209,88,0.5))]"}`}
+              className={`timer-ring transition-all duration-300 ease-linear ${isFocusMode ? "[filter:drop-shadow(0_0_10px_rgba(99,102,241,0.65))]" : "[filter:drop-shadow(0_0_10px_rgba(52,211,153,0.65))]"}`}
             />
           )}
         </svg>
         <div role="timer" aria-live="off" className="absolute inset-0 flex flex-col items-center justify-center">
           {f.running ? (
-            <span className="mb-0.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider bg-accent/15 text-accent-text border border-accent/30">
+            <span className="mb-0.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider bg-accent/15 text-accent-text border border-accent/30 shadow-[0_0_8px_rgba(99,102,241,0.2)]">
               <span className="size-1.5 rounded-full bg-accent animate-pulse" />
               {f.label}
             </span>
           ) : (
-            <span className="mb-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-muted bg-surface2/60 border border-line/60">
+            <span className="mb-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-muted bg-surface2/80 border border-line/70">
               Ready
             </span>
           )}
-          <span className="font-mono tabular-nums text-[46px] font-bold tracking-tight">{mmss(shown)}</span>
-          <span className="text-[13px] text-muted">{f.next}</span>
+          <span className="font-mono tabular-nums text-[46px] font-bold tracking-tight text-fg">{mmss(shown)}</span>
+          <span className="text-[13px] text-muted font-medium">{f.next}</span>
         </div>
       </div>
       <div className="flex gap-3 self-stretch">
@@ -133,7 +133,7 @@ export function FocusCard({ focus, state }: { focus: FocusModel; state: State })
               aria-label="Subject"
               value={f.subject}
               onChange={(e) => f.setSubject(e.target.value)}
-              className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-[15px] text-fg"
+              className="h-12 min-w-0 flex-1 rounded-xl border border-line/80 bg-surface px-3 text-[15px] text-fg shadow-2xs"
             >
               {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -141,6 +141,18 @@ export function FocusCard({ focus, state }: { focus: FocusModel; state: State })
           </>
         )}
       </div>
+
+      {onOpenZen && (
+        <button
+          type="button"
+          onClick={onOpenZen}
+          className="flex items-center justify-center gap-2 w-full rounded-xl border border-line/80 bg-surface2/50 hover:bg-surface2/90 py-2.5 text-xs font-mono font-medium text-muted hover:text-fg transition-all active:scale-[0.98]"
+        >
+          <span>🧘</span>
+          <span>Open Fullscreen Zen Studio (F)</span>
+        </button>
+      )}
+
       {f.note && <p role="status" className="m-0 text-center text-[13px] text-fg">{f.note}</p>}
       <p className="m-0 text-center text-[13px] text-muted">A finished round logs to its subject on its own, even with every tab closed.</p>
     </Card>
@@ -148,28 +160,48 @@ export function FocusCard({ focus, state }: { focus: FocusModel; state: State })
 }
 
 /** Phone bar, pinned above the dock. Shows while a round runs, and on Today so a round can be started. */
-export function FocusBar({ focus, state, onToday }: { focus: FocusModel; state: State; onToday: boolean }) {
+export function FocusBar({ focus, state, onToday, onOpenZen }: { focus: FocusModel; state: State; onToday: boolean; onOpenZen?: () => void }) {
   const f = focus;
   if (!f.running && !onToday) return null;
   return (
     <div className="fixed inset-x-0 bottom-[76px] z-10 px-4 lg:hidden">
-      <div className="flex items-center gap-3 rounded-[22px] border border-line/75 bg-surface/85 backdrop-blur-xl py-2.5 pr-2.5 pl-4 shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
+      <div className="flex items-center gap-3 rounded-[24px] border border-line/80 bg-surface/90 backdrop-blur-2xl py-2.5 pr-2.5 pl-4 shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
         {f.running ? (
           <>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0" onClick={onOpenZen}>
               <div role="timer" aria-live="off" className="font-mono tabular-nums text-2xl font-semibold tracking-[-0.02em]">{mmss(f.remaining)}</div>
-              <div className="text-xs text-muted">{f.timer.mode === "focus" ? `${f.subjectName} · ${f.roundText.toLowerCase()}` : f.label}</div>
+              <div className="text-xs text-muted truncate">{f.timer.mode === "focus" ? `${f.subjectName} · ${f.roundText.toLowerCase()}` : f.label}</div>
             </div>
+            {onOpenZen && (
+              <button
+                type="button"
+                onClick={onOpenZen}
+                aria-label="Zen mode"
+                className="flex size-9 items-center justify-center rounded-xl border border-line bg-surface2/70 text-xs text-muted hover:text-fg"
+              >
+                🧘
+              </button>
+            )}
             <Btn kind="primary" className="h-11 px-5 text-[15px]" onClick={f.stop}>{f.timer.mode === "focus" ? "Stop" : "Skip"}</Btn>
           </>
         ) : (
           <>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="text-xs text-muted">Focus · {f.roundText.toLowerCase()}</div>
               <select aria-label="Subject" value={f.subject} onChange={(e) => f.setSubject(e.target.value)} className="-ml-1 h-11 max-w-full bg-transparent text-[15px] font-medium text-fg">
                 {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
+            {onOpenZen && (
+              <button
+                type="button"
+                onClick={onOpenZen}
+                aria-label="Zen mode"
+                className="flex size-9 items-center justify-center rounded-xl border border-line bg-surface2/70 text-xs text-muted hover:text-fg"
+              >
+                🧘
+              </button>
+            )}
             <Btn kind="primary" className="h-11 px-5 text-[15px]" onClick={f.start}>Start</Btn>
           </>
         )}

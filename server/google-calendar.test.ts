@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PIN, setup } from "./testdb.ts";
 import {
   buildGoogleAuthUrl,
@@ -262,5 +262,48 @@ describe("Google Calendar Two-Way Live Sync Endpoints", () => {
     const eventCount = (await t.db.prepare("SELECT COUNT(*) AS c FROM external_events").first<{ c: number }>())?.c;
     expect(syncCount).toBe(0);
     expect(eventCount).toBe(0);
+  });
+});
+
+describe("security hardening", () => {
+  it("calendar feed never accepts the PIN as a URL credential", async () => {
+    for (const q of ["token", "passcode", "key"]) {
+      expect((await t.inject({ url: `/api/calendar/feed.ics?${q}=${PIN}` })).status).toBe(401);
+    }
+  });
+
+  it("backups never contain Google OAuth tokens", async () => {
+    const cookie = cookieOf(await login());
+    await t.db.prepare("INSERT INTO google_sync (id, refresh_token, access_token) VALUES (1, 'secret-refresh', 'secret-access')").run();
+    const text = await (await t.inject({ url: "/api/export", headers: { cookie } })).text();
+    expect(text).not.toContain("secret-refresh");
+    expect(text).not.toContain("google_sync");
+  });
+
+  it("calendar OAuth state is cookie-bound, expiring and single-use", async () => {
+    const cookie = cookieOf(await login());
+    await t.db.prepare("INSERT INTO settings (key, value) VALUES ('google_client_id', 'id')").run();
+    await t.db.prepare("INSERT INTO settings (key, value) VALUES ('google_client_secret', 'secret')").run();
+    const start = async () => {
+      const res = await t.inject({ url: "/api/google/auth/url", headers: { cookie } });
+      const state = new URL(((await res.json()) as any).url).searchParams.get("state")!;
+      return { state, stateCookie: cookieOf(res) };
+    };
+    const callback = async (state: string, headers: Record<string, string> = {}) =>
+      (await t.inject({ url: `/api/google/callback?code=c&state=${state}`, headers })).headers.get("location") ?? "";
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }));
+    try {
+      const a = await start();
+      expect(await callback("forged", { cookie: a.stateCookie })).toContain("state_mismatch");
+      expect(await callback(a.state, { cookie: a.stateCookie })).not.toContain("state_mismatch");
+      // single-use: the localhost D1 fallback row was consumed above, so a cookie-less replay is refused
+      expect(await callback(a.state)).toContain("state_mismatch");
+      // an expired localhost fallback row is refused
+      const b = await start();
+      await t.db.prepare("UPDATE settings SET value = ? WHERE key = 'google_oauth_state'").bind(`${b.state}:1`).run();
+      expect(await callback(b.state)).toContain("state_mismatch");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

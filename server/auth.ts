@@ -101,6 +101,9 @@ export async function getGoogleAuthCredentials(
 }
 
 
+/** Cross-scheme HTTPS->HTTP redirects drop Lax cookies on localhost, so the D1 OAuth-state fallback is only honoured there. */
+export const isLocalDev = (url: string) => ["localhost", "127.0.0.1"].includes(new URL(url).hostname);
+
 /** Registers /api/login, /api/auth/google, /api/auth/google/callback, /api/logout, and guards every other /api route. */
 export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof fetch = fetch) {
   const nowS = () => Math.floor(now() / 1000);
@@ -131,11 +134,14 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
       maxAge: 600, // 10 minutes
     });
 
-    // 2b. Also persist in D1 settings as a fallback for localhost cross-scheme (HTTPS -> HTTP) cookie dropping
-    const expiresAtS = nowS() + 600;
-    await c.env.DB.prepare(
-      "INSERT INTO settings (key, value) VALUES ('google_login_state', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
-    ).bind(`${stateNonce}:${expiresAtS}`).run();
+    // 2b. Also persist in D1 settings as a fallback for localhost cross-scheme (HTTPS -> HTTP) cookie dropping.
+    // Never in production: a shared row isn't bound to the browser that started the flow.
+    if (isLocalDev(c.req.url)) {
+      const expiresAtS = nowS() + 600;
+      await c.env.DB.prepare(
+        "INSERT INTO settings (key, value) VALUES ('google_login_state', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+      ).bind(`${stateNonce}:${expiresAtS}`).run();
+    }
 
     // 3. Redirect user to Google OAuth endpoint with prompt: select_account
     const p = new URLSearchParams({
@@ -172,7 +178,7 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
     }
 
     // Fallback: Check D1 settings table if cookie was dropped by cross-scheme HTTPS->HTTP redirect (e.g. localhost dev)
-    if (!stateValid && state) {
+    if (!stateValid && state && isLocalDev(c.req.url)) {
       const row = await db.prepare("SELECT value FROM settings WHERE key = 'google_login_state'").first<{ value: string }>();
       if (row?.value) {
         const [savedNonce, expiryStr] = row.value.split(":");
@@ -184,7 +190,7 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
     }
 
     // Single-use guarantee: clear saved state immediately
-    await db.prepare("DELETE FROM settings WHERE key = 'google_login_state'").run().catch(() => null);
+    if (isLocalDev(c.req.url)) await db.prepare("DELETE FROM settings WHERE key = 'google_login_state'").run().catch(() => null);
 
     if (!stateValid) {
       return c.text("Invalid OAuth State", 400);

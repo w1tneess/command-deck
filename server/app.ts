@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { registerAuth, type Env, hasValidSession, same } from "./auth.ts";
+import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
+import { registerAuth, type Env, hasValidSession, isLocalDev, same } from "./auth.ts";
 import { SCOPES, STATUSES, activePhase, computeChapterDuration, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
 import { lifeState, registerLife } from "./life.ts";
 import { ENERGIES, studyQueue, type Energy } from "./planner.ts";
@@ -54,11 +55,11 @@ const TABLES: Record<string, string[]> = {
   routine: ["day", "sleep", "kickoff_at", "wins", "tomorrow", "shutdown_at"],
   reviews: ["week_start", "note"],
   schedule_blocks: ["id", "title", "category", "start_time", "end_time", "color", "pos"],
-  google_sync: ["id", "refresh_token", "access_token", "expires_at", "calendar_id", "last_synced_at", "sync_token"],
   external_events: ["id", "summary", "description", "starts_at", "ends_at", "is_study_block", "updated_at"],
 };
+/** google_sync is deliberately absent from TABLES: its OAuth tokens must never be written to (or planted from) a backup file. */
 /** Tables added in backup version 5. An older file doesn't have them, so restoring one leaves them as they are. */
-const LIFE_TABLES = ["habits", "habit_log", "projects", "milestones", "captures", "routine", "reviews", "schedule_blocks", "google_sync", "external_events"];
+const LIFE_TABLES = ["habits", "habit_log", "projects", "milestones", "captures", "routine", "reviews", "schedule_blocks", "external_events"];
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const validDate = (d: unknown): d is string => typeof d === "string" && ISO.test(d) && !Number.isNaN(Date.parse(d));
 const validScope = (s: unknown): s is Scope => SCOPES.includes(s as Scope);
@@ -604,20 +605,14 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     if (!c.env.STUDY_PASSCODE || !c.env.SESSION_SECRET) {
       return c.text("Server auth isn't configured.", 500);
     }
-    const token = c.req.query("token") || c.req.query("passcode") || c.req.query("key") || "";
+    const token = c.req.query("token") ?? "";
     let authorized = false;
 
+    // Only the dedicated random calendar token (or a session) opens the feed. The PIN and APP_TOKEN must never
+    // be accepted here: this endpoint has no lockout, so it would be an unthrottled PIN guessing oracle.
     if (token) {
-      const db = c.env.DB;
-      const calTokenRow = await db.prepare("SELECT value FROM settings WHERE key = 'calendar_token'").first<{ value: string }>();
-      const savedToken = calTokenRow?.value;
-      if (savedToken && (await same(token, savedToken))) {
-        authorized = true;
-      } else if (c.env.STUDY_PASSCODE && (await same(token, c.env.STUDY_PASSCODE))) {
-        authorized = true;
-      } else if (c.env.APP_TOKEN && (await same(token, c.env.APP_TOKEN))) {
-        authorized = true;
-      }
+      const calTokenRow = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'calendar_token'").first<{ value: string }>();
+      authorized = !!calTokenRow?.value && (await same(token, calTokenRow.value));
     } else {
       authorized = await hasValidSession(c, Math.floor(now() / 1000));
     }
@@ -795,8 +790,21 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
         error: "Google Client ID and Secret are not configured yet. Configure them in environment secrets or the Setup tab.",
       }, 400);
     }
+    const secret = c.env.SESSION_SECRET;
+    if (!secret) return c.json({ error: "Server auth isn't configured." }, 500);
     const stateToken = crypto.randomUUID();
-    await db.prepare("INSERT INTO settings (key, value) VALUES ('google_oauth_state', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(stateToken).run();
+    // Bind the state to this browser with a short-lived signed Lax cookie (Lax so it survives Google's redirect back).
+    await setSignedCookie(c, "gcal_state", stateToken, secret, {
+      httpOnly: true,
+      secure: c.req.url.startsWith("https:"),
+      sameSite: "Lax",
+      path: "/",
+      maxAge: 600,
+    });
+    // Localhost-only fallback for the HTTPS -> HTTP cookie drop (see isLocalDev).
+    if (isLocalDev(c.req.url)) {
+      await db.prepare("INSERT INTO settings (key, value) VALUES ('google_oauth_state', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(`${stateToken}:${Math.floor(now() / 1000) + 600}`).run();
+    }
     const url = buildGoogleAuthUrl(creds, stateToken);
     return c.json({ url });
   });
@@ -814,8 +822,18 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
       return c.redirect("/#schedule?sync_error=missing_code");
     }
 
-    const savedState = (await db.prepare("SELECT value FROM settings WHERE key = 'google_oauth_state'").first<{ value: string }>())?.value;
-    if (!savedState || savedState !== state) {
+    // State must match the signed cookie from this browser; single-use, so both copies are cleared up front.
+    const secret = c.env.SESSION_SECRET;
+    const cookieState = secret ? await getSignedCookie(c, secret, "gcal_state") : undefined;
+    deleteCookie(c, "gcal_state", { path: "/" });
+    let stateValid = !!state && !!cookieState && (await same(state, cookieState));
+    if (isLocalDev(c.req.url)) {
+      const row = await db.prepare("SELECT value FROM settings WHERE key = 'google_oauth_state'").first<{ value: string }>();
+      await db.prepare("DELETE FROM settings WHERE key = 'google_oauth_state'").run();
+      const [savedNonce, expiry] = (row?.value ?? "").split(":");
+      if (!stateValid && state && savedNonce && Number(expiry) >= Math.floor(now() / 1000) && (await same(state, savedNonce))) stateValid = true;
+    }
+    if (!stateValid) {
       return c.redirect("/#schedule?sync_error=state_mismatch");
     }
 

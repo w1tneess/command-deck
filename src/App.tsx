@@ -101,7 +101,7 @@ export function App() {
   }, [load]);
 
   if (needsLogin) return <PinGate onDone={load} />;
-  if (!state) return <main className="grid min-h-dvh place-items-center px-6 text-center text-muted bg-bg text-zinc-400">{error || "Loading…"}</main>;
+  if (!state) return <main className="grid min-h-dvh place-items-center px-6 text-center text-muted bg-bg text-muted">{error || "Loading…"}</main>;
   return <Shell state={state} act={act} reload={load} error={error} setError={setError} saving={saving > 0} online={online} />;
 }
 
@@ -169,7 +169,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
 
   return (
     <div
-      className="bg-bg min-h-screen font-sans text-zinc-100 flex flex-col lg:flex-row relative"
+      className="bg-bg min-h-screen font-sans text-fg flex flex-col lg:flex-row relative"
       aria-busy={saving}
     >
       {saving && (
@@ -222,7 +222,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
             </nav>
           )}
           {error && (
-            <div role="alert" className="m-0 flex items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-rose-950/20 text-rose-200 px-4.5 py-3 text-xs sm:text-sm shadow-xs">
+            <div role="alert" className="m-0 flex items-center justify-between gap-3 rounded-2xl border border-danger/30 bg-danger/10 text-danger px-4.5 py-3 text-xs sm:text-sm shadow-xs">
               <div className="flex items-center gap-2.5">
                 <span className="size-2 rounded-full bg-rose-500" />
                 <span>{error}</span>
@@ -233,7 +233,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
             </div>
           )}
           {!online && (
-            <div role="status" className="m-0 flex items-center gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-950/20 text-amber-200 px-4.5 py-3 text-xs sm:text-sm shadow-xs">
+            <div role="status" className="m-0 flex items-center gap-2.5 rounded-2xl border border-warn/30 bg-warn/15 text-warn px-4.5 py-3 text-xs sm:text-sm shadow-xs">
               <span className="size-2 rounded-full bg-amber-500" />
               <span>Offline mode: Changes will synchronize when network connection is re-established.</span>
             </div>

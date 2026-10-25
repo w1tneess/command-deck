@@ -7,7 +7,7 @@ export { AppleEmoji, AppleText, AppleEmojiPicker, getAppleEmojiUrl } from "./emo
 export function BrandLogo({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
     <div
-      className={`relative flex items-center justify-center rounded-[3px] bg-bg border border-white/10 shadow-sm overflow-hidden shrink-0 group ${className}`}
+      className={`relative flex items-center justify-center rounded-[3px] bg-bg border border-line shadow-sm overflow-hidden shrink-0 group ${className}`}
       style={{ width: size, height: size }}
     >
       <svg
@@ -208,8 +208,8 @@ export interface SubjectPastel {
  * Pastel Subject Palette Mapping:
  * - Mathematics: Soft Peach / Coral (`bg-[#fdd5cc] text-zinc-800 border border-orange-200/40 paper`)
  * - Science: Soft Lavender (`bg-[#ded9fd] text-zinc-800 border border-indigo-200/40 paper`)
- * - Social Science: Warm Honey Cream (`bg-[#fee2be] text-zinc-800 border border-amber-200/40 paper`)
- * - Languages & IT: Mint / Celadon (`bg-[#c8f0d8] text-zinc-800 border border-emerald-200/40 paper`)
+ * - Social Science: Warm Honey Cream (`bg-[#fee2be] text-zinc-800 border border-warn/30 paper`)
+ * - Languages & IT: Mint / Celadon (`bg-[#c8f0d8] text-zinc-800 border border-accent/30 paper`)
  */
 export function getSubjectPastel(subjectId: string): SubjectPastel {
   const id = subjectId.toLowerCase();
@@ -241,7 +241,7 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
     return {
       bg: "bg-[#fee2be] paper",
       text: "text-zinc-800",
-      border: "border-amber-200/40",
+      border: "border-warn/30",
       badgeBg: "bg-white/80",
       badgeText: "text-amber-950",
       code: "SST-087",
@@ -252,7 +252,7 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
   return {
     bg: "bg-[#c8f0d8] paper",
     text: "text-zinc-800",
-    border: "border-emerald-200/40",
+    border: "border-accent/30",
     badgeBg: "bg-white/80",
     badgeText: "text-emerald-950",
     code: id.includes("it") ? "IT-402" : id.includes("eng") ? "ENG-184" : id.includes("beng") ? "BEN-005" : "LANG-102",
@@ -295,9 +295,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   chemistry: {
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-accent",
+    bg: "bg-accent/15",
+    border: "border-accent/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M10 2v5.5L5.2 16.6A3 3 0 0 0 7.8 21h8.4a3 3 0 0 0 2.6-4.4L14 7.5V2h-4z" />
@@ -319,9 +319,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   science: {
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-accent",
+    bg: "bg-accent/15",
+    border: "border-accent/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M10 2v5.5L5.2 16.6A3 3 0 0 0 7.8 21h8.4a3 3 0 0 0 2.6-4.4L14 7.5V2h-4z" />
@@ -331,9 +331,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   history: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M4 4h16 M4 20h16 M5 8h14 M7 8v12 M12 8v12 M17 8v12 M12 2l8 3H4l8-3z" />
@@ -341,9 +341,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   civics: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M12 3v18 M8 21h8 M4 7h16 M4 7l-2 6a3 3 0 0 0 6 0L6 7 M20 7l-2 6a3 3 0 0 0 6 0L22 7" />
@@ -351,9 +351,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   geography: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <circle cx="12" cy="12" r="9" />
@@ -362,9 +362,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   "political-science": {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M12 3v18 M8 21h8 M4 7h16 M4 7l-2 6a3 3 0 0 0 6 0L6 7 M20 7l-2 6a3 3 0 0 0 6 0L22 7" />
@@ -372,9 +372,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   economics: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M3 3v18h18 M18 9l-5 5-4-4-6 6 M14 9h4v4" />
@@ -403,9 +403,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   hindi: {
-    color: "text-rose-400",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/20",
+    color: "text-danger",
+    bg: "bg-danger/10",
+    border: "border-danger/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M4 4h16 M16 4v16 M10.5 12h5.5 M10.5 6a3 3 0 0 0-3 3c0 1.5 1.5 2.5 3 3 M10.5 12c-1.8.5-3.5 1.8-3.5 3.8a3.5 3.5 0 0 0 3.8 3.2" />

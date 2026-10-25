@@ -124,20 +124,20 @@ export function PinGate({ onDone }: { onDone: () => void }) {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 py-8 text-center select-none">
-      <div className="w-full rounded-3xl border border-white/10 bg-bg/90 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl flex flex-col items-center">
+      <div className="w-full rounded-3xl border border-line bg-bg/90 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl flex flex-col items-center">
         <BrandLogo size={48} className="mb-3" />
-        <h1 className="m-0 text-xl font-bold tracking-tight text-white">Study OS</h1>
-        <p className="mt-1 mb-5 text-xs text-zinc-400">Class 10 CBSE & Life OS Dashboard</p>
+        <h1 className="m-0 text-xl font-bold tracking-tight text-fg">Study OS</h1>
+        <p className="mt-1 mb-5 text-xs text-muted">Class 10 CBSE & Life OS Dashboard</p>
 
         {/* Unauthorized Whitelist Alert Banner */}
         {urlError && (
           <div
             role="alert"
-            className="mb-5 w-full rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 leading-relaxed text-left flex items-start gap-2.5 animate-fade-in"
+            className="mb-5 w-full rounded-2xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger leading-relaxed text-left flex items-start gap-2.5 animate-fade-in"
           >
             <span className="shrink-0 text-base leading-none">⚠️</span>
             <div className="flex-1">
-              <p className="font-semibold text-rose-200">Access Restricted</p>
+              <p className="font-semibold text-danger">Access Restricted</p>
               <p className="mt-0.5 text-[11.5px] opacity-90">{urlError}</p>
             </div>
             <button
@@ -150,7 +150,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
                   window.history.replaceState({}, "", url.pathname + url.hash);
                 }
               }}
-              className="shrink-0 text-rose-400 hover:text-rose-200 text-sm leading-none p-1 transition-colors"
+              className="shrink-0 text-danger hover:text-danger text-sm leading-none p-1 transition-colors"
               aria-label="Dismiss error notification"
             >
               ✕
@@ -161,7 +161,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
         {/* Primary 1-Click Sign In with Google Button */}
         <a
           href="/api/auth/google"
-          className="w-full flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/20 active:scale-[0.98] px-4 py-3 text-sm font-semibold text-white shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-sky-400/50"
+          className="w-full flex items-center justify-center gap-3 rounded-2xl border border-line bg-surface3 hover:bg-surface3 hover:border-line-strong active:scale-[0.98] px-4 py-3 text-sm font-semibold text-fg shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-sky-400/50"
         >
           <GoogleIcon className="size-4 shrink-0" />
           <span>Sign in with Google</span>
@@ -169,8 +169,8 @@ export function PinGate({ onDone }: { onDone: () => void }) {
 
         {/* Visual Divider */}
         <div className="relative my-5 flex w-full items-center justify-center">
-          <div className="w-full border-t border-white/[0.08]" />
-          <span className="absolute bg-bg px-3 text-xs font-medium  text-zinc-500 ">
+          <div className="w-full border-t border-line" />
+          <span className="absolute bg-bg px-3 text-xs font-medium  text-muted ">
             or enter passcode
           </span>
         </div>
@@ -183,14 +183,14 @@ export function PinGate({ onDone }: { onDone: () => void }) {
               className={`size-3.5 rounded-full border transition-all duration-150 ${
                 i < pin.length
                   ? "border-sky-400 bg-fg shadow-[0_0_8px_rgba(56,189,248,0.7)] scale-110"
-                  : "border-white/15 bg-white/[0.04]"
+                  : "border-line-strong bg-surface2"
               }`}
             />
           ))}
         </div>
 
         {/* Lockout / Error Message */}
-        <p role="alert" className="my-3 min-h-6 text-xs font-medium text-rose-400">
+        <p role="alert" className="my-3 min-h-6 text-xs font-medium text-danger">
           {locked ? `Rate limit active: Try again in ${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}.` : msg}
         </p>
 
@@ -203,7 +203,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
               disabled={busy || locked}
               aria-label={k === "back" ? "Delete last digit" : k}
               onClick={() => press(k)}
-              className="size-15 mx-auto rounded-2xl border border-white/[0.08] bg-white/[0.04] text-xl font-medium text-white transition-all hover:bg-white/[0.12] hover:border-white/20 active:scale-95 disabled:opacity-20 flex items-center justify-center shadow-xs"
+              className="size-15 mx-auto rounded-2xl border border-line bg-surface2 text-xl font-medium text-fg transition-all hover:bg-surface3 hover:border-line-strong active:scale-95 disabled:opacity-20 flex items-center justify-center shadow-xs"
             >
               {k === "back" ? "⌫" : k}
             </button>
@@ -211,7 +211,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
         </div>
 
         {/* Remember Device Checkbox */}
-        <label htmlFor={rememberId} className="mt-5 flex min-h-9 items-center gap-2.5 text-xs text-zinc-400 cursor-pointer hover:text-white transition-colors">
+        <label htmlFor={rememberId} className="mt-5 flex min-h-9 items-center gap-2.5 text-xs text-muted cursor-pointer hover:text-fg transition-colors">
           <input
             id={rememberId}
             type="checkbox"

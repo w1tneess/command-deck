@@ -328,20 +328,20 @@ export function VivaDrawer({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative flex h-full w-full max-w-xl flex-col rounded-l-[28px] sm:rounded-l-[32px] border-l border-black/[0.08] bg-[#faf7f2] text-zinc-900 shadow-2xl overflow-hidden animate-drawer-desktop paper">
+      <div className="relative flex h-full w-full max-w-xl flex-col rounded-l-[28px] sm:rounded-l-[32px] border-l border-line bg-[#faf7f2] text-zinc-900 shadow-2xl overflow-hidden animate-drawer-desktop paper">
         {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-black/[0.06] px-6 py-4 bg-white/95 backdrop-blur-md">
+        <div className="flex items-center justify-between border-b border-line px-6 py-4 bg-white/95 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-full bg-amber-100 text-amber-900 border border-amber-200 shadow-xs">
               <AppleEmoji emoji="⚡" size={18} />
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-sans text-xs font-semibold   text-zinc-500">
+                <span className="font-sans text-xs font-semibold   text-muted">
                   {subject.name} · Active Recall
                 </span>
-                <span className="text-zinc-400 font-mono text-[11px]">/</span>
-                <span className="font-sans text-xs  text-zinc-500">Class 10 CBSE</span>
+                <span className="text-muted font-mono text-[11px]">/</span>
+                <span className="font-sans text-xs  text-muted">Class 10 CBSE</span>
               </div>
               <h2 id="viva-title" className="m-0 text-base sm:text-lg font-bold text-zinc-900 tracking-tight">
                 {chapter.name}
@@ -350,15 +350,15 @@ export function VivaDrawer({
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="hidden sm:flex items-center gap-2 rounded-full border border-black/[0.06] bg-[#f4efe8] px-3 py-1.5 paper">
-              <span className="font-sans text-xs font-medium text-zinc-600">Confidence:</span>
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-line bg-[#f4efe8] px-3 py-1.5 paper">
+              <span className="font-sans text-xs font-medium text-muted">Confidence:</span>
               <ConfDots value={chapter.confidence} />
             </div>
             <button
               type="button"
               aria-label="Close viva modal"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-full border border-black/[0.08] bg-white text-zinc-700 hover:bg-zinc-900 hover:text-white transition-all shadow-xs cursor-pointer"
+              className="flex size-8 items-center justify-center rounded-full border border-line bg-white text-zinc-700 hover:bg-surface3 hover:text-fg transition-all shadow-xs cursor-pointer"
             >
               ✕
             </button>
@@ -366,14 +366,14 @@ export function VivaDrawer({
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex border-b border-black/[0.06] bg-[#f4efe8]/60 px-6 gap-2 pt-2 pb-0 paper">
+        <div className="flex border-b border-line bg-[#f4efe8]/60 px-6 gap-2 pt-2 pb-0 paper">
           <button
             type="button"
             onClick={() => setTab("quiz")}
             className={`border-b-2 px-4 py-2.5 text-xs font-semibold tracking-wide transition-all ${
               tab === "quiz"
                 ? "border-zinc-950 text-zinc-950 font-bold"
-                : "border-transparent text-zinc-500 hover:text-zinc-900"
+                : "border-transparent text-muted hover:text-zinc-900"
             }`}
           >
             Flashcards ({kit.cards.length})
@@ -384,7 +384,7 @@ export function VivaDrawer({
             className={`border-b-2 px-4 py-2.5 text-xs font-semibold tracking-wide transition-all ${
               tab === "cheatsheet"
                 ? "border-zinc-950 text-zinc-950 font-bold"
-                : "border-transparent text-zinc-500 hover:text-zinc-900"
+                : "border-transparent text-muted hover:text-zinc-900"
             }`}
           >
             Formulas & Keywords
@@ -396,7 +396,7 @@ export function VivaDrawer({
           {tab === "quiz" ? (
             <div className="flex flex-col gap-4">
               {/* Flashcard Header & Progress */}
-              <div className="flex items-center justify-between text-xs font-mono  text-zinc-500">
+              <div className="flex items-center justify-between text-xs font-mono  text-muted">
                 <span>QUESTION {String(cardIndex + 1).padStart(2, "0")} OF {String(kit.cards.length).padStart(2, "0")}</span>
                 {currentCard.boardYear && (
                   <span className="rounded-full border border-amber-300 bg-[#fee2be] px-2.5 py-0.5 text-amber-950 font-sans text-xs font-semibold shadow-2xs paper">
@@ -411,15 +411,15 @@ export function VivaDrawer({
                 role="button"
                 aria-label={revealed ? "Answer revealed. Click to hide." : "Question card. Click to reveal answer."}
                 onClick={() => setRevealed((r) => !r)}
-                className="group relative flex min-h-[220px] cursor-pointer flex-col justify-between rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm hover:border-black/20 transition-all text-zinc-900"
+                className="group relative flex min-h-[220px] cursor-pointer flex-col justify-between rounded-3xl border border-line bg-white p-6 shadow-sm hover:border-line-strong transition-all text-zinc-900"
               >
                 <div>
                   <div className="flex items-center gap-2 mb-2.5">
-                    <span className="font-mono text-[11px] font-semibold   text-zinc-400">
+                    <span className="font-mono text-[11px] font-semibold   text-muted">
                       Prompt Spec
                     </span>
-                    <span className="text-zinc-300">·</span>
-                    <span className="font-mono text-[11px] text-zinc-500">Click or Space to flip</span>
+                    <span className="text-fg/80">·</span>
+                    <span className="font-mono text-[11px] text-muted">Click or Space to flip</span>
                   </div>
                   <p className="m-0 text-base sm:text-[17px] font-semibold leading-relaxed text-zinc-900">
                     {currentCard.question}
@@ -427,7 +427,7 @@ export function VivaDrawer({
                 </div>
 
                 {revealed ? (
-                  <div className="mt-5 border-t border-black/[0.06] pt-4.5 animate-fade-in">
+                  <div className="mt-5 border-t border-line pt-4.5 animate-fade-in">
                     <div className="font-sans text-xs font-bold   text-emerald-800 mb-2 flex items-center gap-1.5">
                       <span>✓ Examiner Model Answer & PYQ Rubric</span>
                     </div>
@@ -450,11 +450,11 @@ export function VivaDrawer({
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-5 flex items-center justify-between font-sans text-xs text-zinc-500 border-t border-black/[0.04] pt-3">
+                  <div className="mt-5 flex items-center justify-between font-sans text-xs text-muted border-t border-line pt-3">
                     <span className="group-hover:text-zinc-900 transition-colors font-medium">
                       Click to reveal examiner answer
                     </span>
-                    <span className="text-zinc-400   text-[11px] font-mono">Flip Card ↵</span>
+                    <span className="text-muted   text-[11px] font-mono">Flip Card ↵</span>
                   </div>
                 )}
               </div>
@@ -466,7 +466,7 @@ export function VivaDrawer({
                   disabled={kit.cards.length <= 1}
                   onClick={prevCard}
                   aria-label="Previous question flashcard"
-                  className="flex h-10 items-center gap-2 rounded-full border border-black/[0.08] bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-950 hover:text-white disabled:opacity-30 transition-all tracking-wide cursor-pointer shadow-xs active:scale-95"
+                  className="flex h-10 items-center gap-2 rounded-full border border-line bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-950 hover:text-fg disabled:opacity-30 transition-all tracking-wide cursor-pointer shadow-xs active:scale-95"
                 >
                   ← Prev
                 </button>
@@ -475,7 +475,7 @@ export function VivaDrawer({
                   type="button"
                   onClick={() => setRevealed((r) => !r)}
                   aria-label={revealed ? "Hide examiner model answer" : "Reveal examiner model answer"}
-                  className="flex h-10 items-center justify-center rounded-full border border-transparent bg-zinc-950 px-5 text-xs font-semibold text-white hover:bg-zinc-800 transition-all tracking-wide shadow-sm cursor-pointer active:scale-95"
+                  className="flex h-10 items-center justify-center rounded-full border border-transparent bg-zinc-950 px-5 text-xs font-semibold text-fg hover:bg-surface3 transition-all tracking-wide shadow-sm cursor-pointer active:scale-95"
                 >
                   {revealed ? "Hide Answer" : "Reveal Answer"}
                 </button>
@@ -485,16 +485,16 @@ export function VivaDrawer({
                   disabled={kit.cards.length <= 1}
                   onClick={nextCard}
                   aria-label="Next question flashcard"
-                  className="flex h-10 items-center gap-2 rounded-full border border-black/[0.08] bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-950 hover:text-white disabled:opacity-30 transition-all tracking-wide cursor-pointer shadow-xs active:scale-95"
+                  className="flex h-10 items-center gap-2 rounded-full border border-line bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-950 hover:text-fg disabled:opacity-30 transition-all tracking-wide cursor-pointer shadow-xs active:scale-95"
                 >
                   Next →
                 </button>
               </div>
 
               {/* 3-Point Self-Grade Scale to Auto-Update Confidence */}
-              <div className="mt-2 rounded-3xl border border-black/[0.06] bg-white p-4 shadow-xs">
+              <div className="mt-2 rounded-3xl border border-line bg-white p-4 shadow-xs">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-sans text-xs font-semibold   text-zinc-500">
+                  <span className="font-sans text-xs font-semibold   text-muted">
                     Self-Evaluation & Confidence
                   </span>
                   {gradeFeedback && (
@@ -541,8 +541,8 @@ export function VivaDrawer({
               </div>
 
               {/* Revision Passes Toggles */}
-              <div className="flex items-center justify-between rounded-3xl border border-black/[0.06] bg-white p-4 shadow-xs">
-                <span className="font-sans text-xs font-semibold   text-zinc-500">Revision Passes:</span>
+              <div className="flex items-center justify-between rounded-3xl border border-line bg-white p-4 shadow-xs">
+                <span className="font-sans text-xs font-semibold   text-muted">Revision Passes:</span>
                 <div className="flex items-center gap-1.5">
                   {PASS_NAMES.map((name, i) => (
                     <button
@@ -554,7 +554,7 @@ export function VivaDrawer({
                       className={`h-8 rounded-full border px-3 font-mono text-xs transition-all  cursor-pointer active:scale-95 ${
                         chapter.passes[i]
                           ? "border-emerald-300 bg-[#c8f0d8] text-emerald-950 font-bold shadow-2xs paper"
-                          : "border-black/[0.08] bg-[#f4efe8] text-zinc-600 hover:text-zinc-950 hover:bg-[#ece5dc] paper"
+                          : "border-line bg-[#f4efe8] text-muted hover:text-zinc-950 hover:bg-[#ece5dc] paper"
                       }`}
                     >
                       {chapter.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}
@@ -566,8 +566,8 @@ export function VivaDrawer({
           ) : (
             /* Cheat-sheet View */
             <div className="flex flex-col gap-4">
-              <div className="rounded-3xl border border-black/[0.06] bg-white p-5 shadow-xs">
-                <span className="font-sans text-xs font-semibold   text-zinc-500 block mb-1.5">
+              <div className="rounded-3xl border border-line bg-white p-5 shadow-xs">
+                <span className="font-sans text-xs font-semibold   text-muted block mb-1.5">
                   Chapter Blueprint
                 </span>
                 <p className="m-0 text-sm leading-relaxed text-zinc-800 font-medium">
@@ -577,19 +577,19 @@ export function VivaDrawer({
 
               {kit.formulas.length > 0 && (
                 <div className="flex flex-col gap-2.5">
-                  <span className="font-sans text-xs font-semibold   text-zinc-500">
+                  <span className="font-sans text-xs font-semibold   text-muted">
                     Core Formulas & Laws
                   </span>
                   <div className="grid gap-2.5">
                     {kit.formulas.map((f) => (
                       <div
                         key={f.title}
-                        className="rounded-2xl border border-black/[0.05] bg-white p-4 flex flex-col gap-1.5 shadow-2xs"
+                        className="rounded-2xl border border-line bg-white p-4 flex flex-col gap-1.5 shadow-2xs"
                       >
                         <span className="text-xs font-bold text-zinc-900 tracking-wide">
                           {f.title}
                         </span>
-                        <code className="font-mono text-xs text-zinc-900 bg-[#f4efe8] rounded-xl px-3 py-2 border border-black/[0.04] block paper">
+                        <code className="font-mono text-xs text-zinc-900 bg-[#f4efe8] rounded-xl px-3 py-2 border border-line block paper">
                           {f.detail}
                         </code>
                       </div>
@@ -600,14 +600,14 @@ export function VivaDrawer({
 
               {kit.keywords.length > 0 && (
                 <div className="flex flex-col gap-2.5">
-                  <span className="font-sans text-xs font-semibold   text-zinc-500">
+                  <span className="font-sans text-xs font-semibold   text-muted">
                     Critical Board Keywords (Mandatory in Answers)
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {kit.keywords.map((kw) => (
                       <span
                         key={kw}
-                        className="rounded-full border border-black/[0.08] bg-white px-3 py-1 font-sans text-xs font-semibold text-zinc-800 shadow-2xs"
+                        className="rounded-full border border-line bg-white px-3 py-1 font-sans text-xs font-semibold text-zinc-800 shadow-2xs"
                       >
                         #{kw}
                       </span>
@@ -620,12 +620,12 @@ export function VivaDrawer({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-black/[0.06] bg-white px-6 py-3.5 font-sans text-xs text-zinc-500">
+        <div className="flex items-center justify-between border-t border-line bg-white px-6 py-3.5 font-sans text-xs text-muted">
           <span>Esc (close) · Space (flip) · Arrow Keys (nav)</span>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-transparent bg-zinc-950 px-4 py-1.5 font-sans text-xs font-semibold text-white hover:bg-zinc-800   transition-all cursor-pointer shadow-xs active:scale-95"
+            className="rounded-full border border-transparent bg-zinc-950 px-4 py-1.5 font-sans text-xs font-semibold text-fg hover:bg-surface3   transition-all cursor-pointer shadow-xs active:scale-95"
           >
             Done
           </button>

@@ -428,14 +428,14 @@ function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subjec
   };
 
   return (
-    <form className="flex flex-wrap items-end gap-3.5 py-4 border-t border-white/[0.08]" onSubmit={submit}>
+    <form className="flex flex-wrap items-end gap-3.5 py-4 border-t border-line" onSubmit={submit}>
       <div className="flex flex-[1_1_240px] flex-col gap-1.5">
         <label htmlFor={`${id}-name`} className="font-mono text-xs   text-muted">Chapter name</label>
-        <input id={`${id}-name`} autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-9 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors" />
+        <input id={`${id}-name`} autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-9 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors" />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${id}-scope`} className="font-mono text-xs   text-muted">Scope</label>
-        <select id={`${id}-scope`} value={v.scope} onChange={(e) => setV({ ...v, scope: e.target.value as Scope })} className="h-9 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors">
+        <select id={`${id}-scope`} value={v.scope} onChange={(e) => setV({ ...v, scope: e.target.value as Scope })} className="h-9 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors">
           {SCOPES.map((s) => <option key={s} value={s}>{SCOPE_LABEL[s]}</option>)}
         </select>
       </div>
@@ -444,7 +444,7 @@ function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subjec
           <span id={`${id}-conf`} className="font-mono text-xs   text-muted">Confidence</span>
           <div role="group" aria-labelledby={`${id}-conf`} className="flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" aria-pressed={v.confidence === n} aria-label={`Confidence ${n} of 5`} onClick={() => setV({ ...v, confidence: n })} className={`size-9 rounded-xl border font-mono text-xs font-semibold transition-all ${v.confidence === n ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-300" : "border-white/10 bg-surface text-zinc-400 hover:border-white/25"}`}>{n}</button>
+              <button key={n} type="button" aria-pressed={v.confidence === n} aria-label={`Confidence ${n} of 5`} onClick={() => setV({ ...v, confidence: n })} className={`size-9 rounded-xl border font-mono text-xs font-semibold transition-all ${v.confidence === n ? "border-accent/30 bg-accent/15 text-accent" : "border-line bg-surface text-muted hover:border-line-strong"}`}>{n}</button>
             ))}
           </div>
         </div>
@@ -460,21 +460,21 @@ function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subjec
 /** Where the four phases' dates are edited. Only Pre-Boards 1 is confirmed; the rest are placeholders. */
 function PhaseDates({ state, act }: { state: State; act: Act }) {
   return (
-    <details className="group rounded-2xl border border-white/[0.08] bg-surface/80 px-4 py-4 backdrop-blur-md lg:px-6 lg:py-5">
-      <summary className="flex min-h-9 cursor-pointer items-center justify-between font-mono text-xs font-semibold   text-zinc-200">
+    <details className="group rounded-2xl border border-line bg-surface/80 px-4 py-4 backdrop-blur-md lg:px-6 lg:py-5">
+      <summary className="flex min-h-9 cursor-pointer items-center justify-between font-mono text-xs font-semibold   text-fg">
         <span>Exam Phases & Calendar Anchors</span>
         <span className="text-xs text-muted transition-transform group-open:rotate-180">▾</span>
       </summary>
       <p className="mt-1 mb-4 text-xs text-muted">Pre-Boards 1 dates locked from academic schedule. Secondary phases synchronize with school notifications.</p>
       <ul className="m-0 list-none p-0">
         {state.phases.map((p) => (
-          <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] py-3.5">
-            <strong className="text-xs   text-zinc-200">{p.name}</strong>
+          <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-3.5">
+            <strong className="text-xs   text-fg">{p.name}</strong>
             <span className="flex flex-wrap items-center gap-2.5">
-              <input type="date" aria-label={`${p.name} starts`} value={p.startsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { startsOn: e.target.value })} className="h-8 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors" />
+              <input type="date" aria-label={`${p.name} starts`} value={p.startsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { startsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors" />
               <span className="font-mono text-xs text-muted">to</span>
-              <input type="date" aria-label={`${p.name} ends`} value={p.endsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { endsOn: e.target.value })} className="h-8 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors" />
-              <label className="flex min-h-8 items-center gap-2 text-xs font-medium text-zinc-300">
+              <input type="date" aria-label={`${p.name} ends`} value={p.endsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { endsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors" />
+              <label className="flex min-h-8 items-center gap-2 text-xs font-medium text-fg/80">
                 <input type="checkbox" checked={p.confirmed} onChange={(e) => act("PUT", `/api/phases/${p.id}`, { confirmed: e.target.checked })} className="size-4 rounded-md accent-emerald-500" />
                 Confirmed
               </label>

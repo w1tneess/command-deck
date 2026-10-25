@@ -294,13 +294,13 @@ export function AppleEmojiPicker({
     <div
       role="dialog"
       aria-label="Apple Emoji Picker"
-      className="flex flex-col rounded-2xl border border-white/10 bg-surface p-4 text-zinc-100 shadow-2xl w-full max-w-sm sm:max-w-md animate-fade-in"
+      className="flex flex-col rounded-2xl border border-line bg-surface p-4 text-fg shadow-2xl w-full max-w-sm sm:max-w-md animate-fade-in"
     >
       {/* Header & Search Bar */}
-      <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+      <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
         <div className="flex items-center gap-2">
           <AppleEmoji emoji="✨" size={18} />
-          <span className="font-sans text-xs font-semibold text-white tracking-wide">
+          <span className="font-sans text-xs font-semibold text-fg tracking-wide">
             Apple iOS Emoji Pack
           </span>
         </div>
@@ -309,7 +309,7 @@ export function AppleEmojiPicker({
             type="button"
             onClick={onClose}
             aria-label="Close emoji picker"
-            className="rounded-lg p-1 text-zinc-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+            className="rounded-lg p-1 text-muted hover:text-fg hover:bg-white/5 transition-all cursor-pointer"
           >
             ✕
           </button>
@@ -324,13 +324,13 @@ export function AppleEmojiPicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search Apple emojis (e.g. fire, books, zen, study)..."
-          className="w-full h-9 rounded-xl border border-white/[0.1] bg-bg px-3 text-xs text-white placeholder:text-zinc-500 focus:border-sky-400 focus:outline-none transition-all"
+          className="w-full h-9 rounded-xl border border-line-strong bg-bg px-3 text-xs text-fg placeholder:text-muted focus:border-sky-400 focus:outline-none transition-all"
         />
         {search && (
           <button
             type="button"
             onClick={() => setSearch("")}
-            className="absolute right-2.5 top-2 text-xs text-zinc-400 hover:text-white"
+            className="absolute right-2.5 top-2 text-xs text-muted hover:text-fg"
           >
             ✕
           </button>
@@ -339,7 +339,7 @@ export function AppleEmojiPicker({
 
       {/* Category Tabs (shown when not searching) */}
       {!trimmedSearch && (
-        <div className="flex items-center gap-1 overflow-x-auto py-2.5 no-scrollbar border-b border-white/[0.06]">
+        <div className="flex items-center gap-1 overflow-x-auto py-2.5 no-scrollbar border-b border-line">
           {APPLE_EMOJI_MEGA_PACK.map((cat) => {
             const active = activeCategory === cat.id;
             return (
@@ -350,7 +350,7 @@ export function AppleEmojiPicker({
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-sans whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   active
                     ? "bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30"
-                    : "text-zinc-400 hover:text-white hover:bg-white/[0.04] border border-transparent"
+                    : "text-muted hover:text-fg hover:bg-surface2 border border-transparent"
                 }`}
               >
                 <AppleEmoji emoji={cat.icon} size={14} />
@@ -364,7 +364,7 @@ export function AppleEmojiPicker({
       {/* Emoji Grid */}
       <div className="mt-3 max-h-56 overflow-y-auto pr-1">
         {filteredEmojis.length === 0 ? (
-          <div className="py-8 text-center text-xs text-zinc-500">
+          <div className="py-8 text-center text-xs text-muted">
             No emojis found for "{search}".
           </div>
         ) : (
@@ -384,7 +384,7 @@ export function AppleEmojiPicker({
                   className={`flex size-11 items-center justify-center rounded-xl border transition-all cursor-pointer group active:scale-90 ${
                     isSelected
                       ? "border-sky-400 bg-sky-500/20 shadow-md ring-1 ring-sky-400"
-                      : "border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/20"
+                      : "border-line bg-surface2 hover:bg-surface3 hover:border-line-strong"
                   }`}
                 >
                   <AppleEmoji
@@ -400,10 +400,10 @@ export function AppleEmojiPicker({
       </div>
 
       {/* Footer Preview / Selected Info */}
-      <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
+      <div className="mt-3 pt-2.5 border-t border-line flex items-center justify-between text-xs text-muted">
         <span>Click an emoji to apply</span>
         {value && (
-          <div className="flex items-center gap-1.5 font-medium text-white">
+          <div className="flex items-center gap-1.5 font-medium text-fg">
             <span>Selected:</span>
             <AppleEmoji emoji={value} size={16} />
           </div>

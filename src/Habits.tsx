@@ -23,7 +23,7 @@ export function Habits({ state, act }: { state: State; act: Act }) {
 
   return (
     <>
-      <PageHeader eyebrow="Habits" title="Daily habits">
+      <PageHeader title="Habits" sub="Tick them off each day. Streaks count in IST.">
 
         <div className="flex items-center gap-3">
           <div className="flex flex-col items-end">

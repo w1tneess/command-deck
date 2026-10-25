@@ -132,7 +132,7 @@ export function CalendarModal({
             href={gcalSubscribeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2.5 w-full rounded-xl bg-sky-500 hover:bg-sky-400 text-zinc-950 font-sans font-semibold text-xs py-3 px-4 shadow-lg hover:shadow-sky-500/20 active:scale-[0.99] transition-all"
+            className="flex items-center justify-center gap-2.5 w-full rounded-xl bg-fg hover:opacity-90 text-zinc-950 font-sans font-semibold text-xs py-3 px-4 shadow-lg hover:shadow-sky-500/20 active:scale-[0.99] transition-all"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />

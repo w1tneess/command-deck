@@ -46,7 +46,7 @@ export function RevisionMatrix({
       {/* Matrix Controls & Telemetry Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-surface/80 p-4 lg:p-5 backdrop-blur-md shadow-sm">
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted">
+          <div className="flex items-center gap-2 font-mono text-[11px] font-semibold   text-muted">
             <span className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
             <span>Syllabus Radar</span>
             <span className="text-zinc-600">/</span>
@@ -158,7 +158,7 @@ export function RevisionMatrix({
                             type="button"
                             aria-label={`Open Viva and Active Recall for ${c.name}`}
                             onClick={() => onOpenViva(c, subject)}
-                            className="shrink-0 flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 transition-all uppercase tracking-wider"
+                            className="shrink-0 flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 transition-all  "
                           >
                             <AppleEmoji emoji="⚡" size={11} />
                             <span>Viva</span>

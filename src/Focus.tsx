@@ -195,7 +195,7 @@ export function FocusCard({
       {/* Calm Faceplate Header */}
       <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
         <div className="flex items-center gap-2">
-          <span className={`size-2 rounded-full ${f.running ? (isFocusMode ? "bg-sky-400" : "bg-emerald-400") : "bg-zinc-600"}`} />
+          <span className={`size-2 rounded-full ${f.running ? (isFocusMode ? "bg-fg" : "bg-emerald-400") : "bg-zinc-600"}`} />
           <span id="focus-h" className="font-sans text-xs font-semibold tracking-tight text-white">Focus Studio</span>
         </div>
         <span className="font-sans text-xs text-zinc-400">
@@ -239,7 +239,7 @@ export function FocusCard({
             />
             <button
               type="submit"
-              className="h-8 rounded-lg bg-sky-400 hover:bg-sky-300 text-zinc-950 px-3 font-sans text-xs font-semibold transition-all shadow-xs"
+              className="h-8 rounded-lg bg-fg hover:opacity-90 text-zinc-950 px-3 font-sans text-xs font-semibold transition-all shadow-xs"
             >
               Log Note
             </button>
@@ -534,14 +534,14 @@ export function FocusBar({
   onOpenCapture?: () => void;
 }) {
   const f = focus;
-  if (!f.running && !onToday) return null;
+  // Only while a round is running: starting one is the job of the "Next up" card.
+  if (!f.running) return null;
   return (
-    <div className="fixed inset-x-0 bottom-[66px] z-10 px-2.5 lg:hidden">
-      <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-bg/95 backdrop-blur-xl py-1.5 px-3 shadow-2xl">
-        {f.running ? (
-          <>
+    <div className="fixed inset-x-0 bottom-[76px] z-10 px-3 lg:hidden">
+      <div className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface py-2 pl-4 pr-2 shadow-lg">
+        <>
             <div className="flex-1 min-w-0 cursor-pointer" onClick={onOpenZen}>
-              <div role="timer" aria-live="off" className="font-mono tabular-nums text-base font-bold text-white tracking-tight leading-snug">
+              <div role="timer" aria-live="off" className="tabular-nums text-lg font-semibold text-fg tracking-tight leading-snug">
                 {mmss(f.remaining)}
               </div>
               <div className="text-xs font-sans text-zinc-300 truncate">
@@ -565,39 +565,7 @@ export function FocusBar({
             >
               {f.timer.mode === "focus" ? "Stop" : "Skip"}
             </button>
-          </>
-        ) : (
-          <>
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] font-sans text-zinc-400">{f.roundText}</div>
-              <select
-                aria-label="Subject"
-                value={f.subject}
-                onChange={(e) => f.setSubject(e.target.value)}
-                className="h-8 max-w-full bg-transparent font-sans text-xs font-semibold text-white focus:outline-hidden"
-              >
-                {state.subjects.map((s) => <option key={s.id} value={s.id} className="bg-bg text-white">{s.name}</option>)}
-              </select>
-            </div>
-            {onOpenZen && (
-              <button
-                type="button"
-                onClick={onOpenZen}
-                aria-label="Zen mode"
-                className="flex size-11 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-zinc-300 hover:text-white transition-all active:scale-95"
-              >
-                <AppleEmoji emoji="🧘" size={16} />
-              </button>
-            )}
-            <button
-              type="button"
-              className="min-h-[44px] px-4 rounded-lg border border-transparent bg-white text-zinc-950 font-sans text-xs font-semibold tracking-wide active:scale-95 transition-all shadow-xs"
-              onClick={() => f.start()}
-            >
-              Start
-            </button>
-          </>
-        )}
+        </>
 
         {/* 1-Tap Thumb-Accessible Floating Quick Capture Action (44px target) */}
         {onOpenCapture && (
@@ -606,7 +574,7 @@ export function FocusBar({
             aria-label="Quick capture"
             onClick={onOpenCapture}
             title="Quick Capture [Ctrl+K]"
-            className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-sky-400/40 bg-sky-400 text-zinc-950 font-mono font-bold text-lg active:scale-95 hover:bg-sky-300 transition-all shadow-sm"
+            className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-sky-400/40 bg-fg text-zinc-950 font-mono font-bold text-lg active:scale-95 hover:opacity-90 transition-all shadow-sm"
           >
             +
           </button>

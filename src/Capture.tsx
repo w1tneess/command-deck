@@ -133,7 +133,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                     setKind(k);
                     setText((cur) => (cur.includes(tag) ? cur : cur ? `${cur} ${tag}` : `${tag} `));
                   }}
-                  className={`h-6 rounded-[3px] border px-2 font-mono text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 hover:brightness-125 ${color}`}
+                  className={`h-6 rounded-[3px] border px-2 font-mono text-[11px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
                 >
                   {tag}
                 </button>
@@ -182,7 +182,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
 
               {!c.done && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-white/[0.04]">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Triage:</span>
+                  <span className="font-mono text-[11px]   text-zinc-500">Triage:</span>
                   <button
                     type="button"
                     onClick={() => void convertToTask(c)}
@@ -300,8 +300,8 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
     <Card labelledBy="capture-inbox-h">
       <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-3">
         <div className="flex items-center gap-2">
-          <span className="size-2 rounded-[1px] bg-sky-400" />
-          <span className="font-mono text-[11px] font-bold tracking-[0.2em] text-zinc-400 uppercase">INBOX // QUICK CAPTURE</span>
+          <span className="size-2 rounded-[1px] bg-fg" />
+          <span className="font-mono text-[11px] font-bold tracking-[0.2em] text-zinc-400 ">INBOX // QUICK CAPTURE</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs text-zinc-400">
@@ -311,7 +311,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
             <button
               type="button"
               onClick={onOpenDrawer}
-              className="font-mono text-[11px] text-zinc-400 hover:text-white uppercase transition-colors"
+              className="font-mono text-[11px] text-zinc-400 hover:text-white  transition-colors"
             >
               Drawer [Ctrl+K]
             </button>
@@ -342,7 +342,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
           <div className="flex items-center gap-1.5">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">Quick Tags:</span>
+            <span className="font-mono text-[11px]   text-zinc-400">Quick Tags:</span>
             {[
               { tag: "#task", k: "todo" as const, color: "border-sky-500/40 bg-sky-500/10 text-sky-300" },
               { tag: "#note", k: "note" as const, color: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" },
@@ -355,7 +355,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                   setKind(k);
                   setText((cur) => (cur.includes(tag) ? cur : cur ? `${cur} ${tag}` : `${tag} `));
                 }}
-                className={`h-5.5 rounded-[2px] border px-1.5 font-mono text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 hover:brightness-125 ${color}`}
+                className={`h-5.5 rounded-[2px] border px-1.5 font-mono text-[11px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
               >
                 {tag}
               </button>
@@ -369,7 +369,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                 type="button"
                 aria-pressed={kind === k}
                 onClick={() => setKind(k)}
-                className={`h-5.5 rounded-[2px] border px-2 font-mono text-[11px] uppercase font-bold tracking-wider transition-all ${
+                className={`h-5.5 rounded-[2px] border px-2 font-mono text-[11px]  font-bold  transition-all ${
                   kind === k
                     ? "border-sky-500/40 bg-sky-500/20 text-sky-300"
                     : "border-white/[0.08] bg-transparent text-zinc-400 hover:text-white"
@@ -403,7 +403,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                       <Check on={c.done} />
                     </button>
                   ) : (
-                    <span className="size-1.5 rounded-[1px] bg-sky-400 shrink-0" aria-hidden="true" />
+                    <span className="size-1.5 rounded-[1px] bg-fg shrink-0" aria-hidden="true" />
                   )}
                   <span className={`truncate text-xs font-mono font-medium ${c.done ? "text-zinc-500 line-through" : "text-zinc-100"}`}>
                     <AppleText text={c.text} size={13} />
@@ -421,7 +421,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
 
               {!c.done && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/[0.04]">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Triage:</span>
+                  <span className="font-mono text-[11px]   text-zinc-500">Triage:</span>
                   <button
                     type="button"
                     onClick={() => void convertToTask(c)}

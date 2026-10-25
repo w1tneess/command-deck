@@ -334,7 +334,7 @@ export function CommandBar({
                             </>
                           )}
                           {item.badge && !isChapter && (
-                            <span className="rounded px-1.5 py-0.2 font-mono text-[11px] uppercase tracking-wider text-sky-400 border border-sky-500/20 bg-sky-500/10">
+                            <span className="rounded px-1.5 py-0.2 font-mono text-[11px]   text-sky-400 border border-sky-500/20 bg-sky-500/10">
                               {item.badge}
                             </span>
                           )}

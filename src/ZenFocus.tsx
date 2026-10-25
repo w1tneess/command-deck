@@ -121,7 +121,7 @@ export function ZenFocusStudio({
       {/* Top Telemetry & Controls */}
       <div className="flex items-center justify-between border-b border-white/[0.08] pb-5">
         <div className="flex items-center gap-3">
-          <span className="size-2.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
+          <span className="size-2.5 rounded-full bg-fg shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
           <span className="text-sm font-semibold tracking-wide text-white">
             Zen Focus Studio · {isFocusMode ? "Deep Session" : f.label}
           </span>
@@ -194,7 +194,7 @@ export function ZenFocusStudio({
             />
             <button
               type="submit"
-              className="h-9 rounded-lg bg-sky-400 hover:bg-sky-300 text-zinc-950 px-4 font-sans text-xs font-semibold transition-all shadow-xs"
+              className="h-9 rounded-lg bg-fg hover:opacity-90 text-zinc-950 px-4 font-sans text-xs font-semibold transition-all shadow-xs"
             >
               Save Mastery
             </button>
@@ -313,7 +313,7 @@ export function ZenFocusStudio({
                 <button
                   type="button"
                   onClick={() => f.start()}
-                  className="h-10 rounded-[3px] border border-transparent bg-white hover:bg-zinc-100 text-zinc-950 px-8 font-mono text-xs sm:text-sm uppercase font-bold tracking-wider transition-all active:scale-95 shadow-sm inline-flex items-center gap-2"
+                  className="h-10 rounded-[3px] border border-transparent bg-white hover:bg-zinc-100 text-zinc-950 px-8 font-mono text-xs sm:text-sm  font-bold  transition-all active:scale-95 shadow-sm inline-flex items-center gap-2"
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <polygon points="5 3 19 12 5 21 5 3" />
@@ -338,7 +338,7 @@ export function ZenFocusStudio({
                 </div>
                 <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-300 ${done ? "bg-emerald-400" : "bg-sky-400"}`}
+                    className={`h-full rounded-full transition-all duration-300 ${done ? "bg-emerald-400" : "bg-fg"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -351,7 +351,7 @@ export function ZenFocusStudio({
       {/* Bottom Ambient Soundscape & Mechanical Controls */}
       <div className="flex flex-wrap items-center justify-between gap-5 border-t border-white/[0.08] pt-5">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+          <span className="text-xs font-semibold tracking-wide text-zinc-400 ">
             Soundscape:
           </span>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Ambient Sound Generator">

@@ -3,7 +3,7 @@ import { SCOPES, inScope, type Scope } from "../server/logic.ts";
 import type { Act, Chapter, State, Subject } from "./api.ts";
 import { activeOf, chaptersLabel, startedCount } from "./model.ts";
 import { RevisionMatrix } from "./RevisionMatrix.tsx";
-import { AppleEmoji, Btn, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill, ScopeTag, SubjectBadge, SubjectIcon, plural, PageHeader } from "./ui.tsx";
+import { AppleEmoji, Btn, Segmented, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill, ScopeTag, SubjectBadge, SubjectIcon, plural, PageHeader } from "./ui.tsx";
 import { VivaDrawer } from "./VivaDrawer.tsx";
 
 const SCOPE_LABEL: Record<Scope, string> = { unit1: "Unit 1", unit2: "Unit 2", pb1: "PB1", pb2: "PB2", board: "Boards" };
@@ -35,75 +35,17 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
 
   return (
     <>
-      <PageHeader eyebrow="Class 10 CBSE" title="Syllabus">
-
-        {/* View Switcher & Scope Level Selector */}
-        <div className="flex flex-col gap-2.5 lg:items-end">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* View Mode Switcher */}
-            <div className="flex rounded-xl border border-white/[0.08] bg-surface/90 p-1 backdrop-blur-md">
-              <button
-                type="button"
-                aria-pressed={viewMode === "tree"}
-                onClick={() => setViewMode("tree")}
-                className={`flex items-center gap-1.5 h-8 rounded-lg px-3.5 text-xs font-semibold tracking-wide transition-all ${
-                  viewMode === "tree"
-                    ? "bg-white text-zinc-950 shadow-sm"
-                    : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                <Icon d={ICONS.syllabus} size={13} stroke={2} />
-                <span>Detailed Breakdown</span>
-              </button>
-              <button
-                type="button"
-                aria-pressed={viewMode === "matrix"}
-                onClick={() => setViewMode("matrix")}
-                className={`flex items-center gap-1.5 h-8 rounded-lg px-3.5 text-xs font-semibold tracking-wide transition-all ${
-                  viewMode === "matrix"
-                    ? "bg-white text-zinc-950 shadow-sm"
-                    : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                <Icon d={ICONS.flash} size={13} stroke={2} />
-                <span>Compact Matrix View</span>
-              </button>
-            </div>
-
-            {/* Import Official CBSE Button */}
-            <button
-              type="button"
-              disabled={importingAll}
-              onClick={handleImportAll}
-              title="Import official CBSE Class 10 curriculum and NCERT rationalised chapters for all subjects"
-              className="flex items-center gap-1.5 h-8 rounded-xl border border-white/[0.08] bg-surface/90 px-3 text-xs font-medium tracking-wide text-zinc-300 hover:text-white hover:border-white/20 transition-all disabled:opacity-50"
-            >
-              <Icon d={ICONS.syllabus} size={13} stroke={2} />
-              <span>{importingAll ? "Importing..." : "Import Official CBSE"}</span>
-            </button>
-
-            {/* Scope Filter Buttons */}
-            {viewMode === "tree" && (
-              <div className="flex flex-wrap gap-1 rounded-xl border border-white/[0.08] bg-surface/50 p-1" role="group" aria-label="Show chapters up to">
-                {SCOPES.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    aria-pressed={level === s}
-                    onClick={() => setChosen(s)}
-                    className={`h-8 rounded-lg border px-3 text-xs font-medium tracking-wide transition-all ${
-                      level === s
-                        ? "border-white/20 bg-white text-zinc-950 font-semibold shadow-sm"
-                        : "border-transparent bg-transparent text-zinc-400 hover:text-white hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    {SCOPE_LABEL[s]}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="font-mono text-xs text-muted">A phase covers its own scope level and all previous milestones.</div>
+      <PageHeader eyebrow="Class 10 CBSE" title="Syllabus" sub={viewMode === "tree" ? `Showing chapters up to ${SCOPE_LABEL[level]}.` : "Every chapter, by confidence and last revision."}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Segmented
+            label="View"
+            value={viewMode}
+            onChange={setViewMode}
+            options={[["tree", "Chapters"], ["matrix", "Revision grid"]]}
+          />
+          {viewMode === "tree" && (
+            <Segmented label="Up to" value={level} onChange={setChosen} options={SCOPES.map((sc) => [sc, SCOPE_LABEL[sc]] as const)} />
+          )}
         </div>
       </PageHeader>
 
@@ -124,10 +66,8 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
                 type="button"
                 aria-current={s.id === subject.id ? "page" : undefined}
                 onClick={() => setSelected(s.id)}
-                className={`inline-flex items-center gap-2 h-9 shrink-0 rounded-xl border px-3 text-xs font-medium tracking-wide transition-all ${
-                  s.id === subject.id
-                    ? "border-emerald-500/40 bg-emerald-500/15 font-semibold text-emerald-300 shadow-sm"
-                    : "border-white/[0.08] bg-surface/80 text-zinc-400 hover:border-white/20"
+                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border-0 px-4 text-sm font-medium cursor-pointer ${
+                  s.id === subject.id ? "bg-fg text-bg" : "bg-surface3 text-muted"
                 }`}
               >
                 <SubjectIcon id={s.id} size={14} />
@@ -137,28 +77,28 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
           </nav>
 
           <div className="flex flex-wrap items-start gap-4 lg:gap-6">
-            <nav aria-label="Subjects list" className="hidden max-w-[280px] min-w-0 flex-[1_1_240px] flex-col gap-1.5 rounded-2xl border border-white/[0.08] bg-surface/80 p-3.5 backdrop-blur-md lg:flex">
+            <nav aria-label="Subjects list" className="hidden max-w-[280px] min-w-0 flex-[1_1_240px] flex-col gap-1.5 lg:flex">
               {GROUPS.map((g) => {
                 const members = g.ids.map((id) => state.subjects.find((s) => s.id === id)).filter((s): s is Subject => !!s);
                 if (!members.length) return null;
                 return (
                   <div key={g.label} className="flex flex-col gap-1">
-                    {members.length > 1 && <div className="px-3 pt-2.5 pb-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted">{g.label}</div>}
+                    {members.length > 1 && <div className="px-3 pt-3 pb-1 text-sm font-semibold text-muted">{g.label}</div>}
                     {members.map((s) => (
                       <button
                         key={s.id}
                         type="button"
                         aria-current={s.id === subject.id ? "page" : undefined}
                         onClick={() => setSelected(s.id)}
-                        className={`group flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all ${s.id === subject.id ? "border-emerald-500/30 bg-emerald-500/10 text-white shadow-sm" : "border-transparent bg-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]"}`}
+                        className={`group flex items-start gap-3 rounded-xl border-0 px-3 py-2.5 text-left cursor-pointer ${s.id === subject.id ? "bg-surface3 text-fg" : "bg-transparent text-muted hover:bg-surface3 hover:text-fg"}`}
                       >
                         <SubjectIcon id={s.id} size={15} className="mt-0.5" />
                         <div className="flex-1 min-w-0">
-                          <span className="text-xs font-semibold tracking-wide text-zinc-200 group-hover:text-white">{members.length > 1 ? s.name : g.label}</span>
-                          <span className="block font-mono text-xs text-muted">{chaptersLabel(s)}</span>
+                          <span className="text-sm font-semibold text-fg">{members.length > 1 ? s.name : g.label}</span>
+                          <span className="block text-sm text-muted">{chaptersLabel(s)}</span>
                           {s.chapters.length > 0 && (
-                            <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                              <span className="block h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${s.progressPct}%` }} />
+                            <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-surface3">
+                              <span className="block h-full rounded-full transition-all duration-300 ease-out bg-accent" style={{ width: `${s.progressPct}%` }} />
                             </span>
                           )}
                         </div>
@@ -181,6 +121,11 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
           </div>
 
           <PhaseDates state={state} act={act} />
+          <div>
+            <Btn kind="outline" disabled={importingAll} onClick={handleImportAll} title="Import the official CBSE Class 10 chapters for every subject">
+              {importingAll ? "Importing..." : "Import official CBSE chapters for all subjects"}
+            </Btn>
+          </div>
         </>
       )}
 
@@ -221,6 +166,7 @@ function SubjectCard({
   const [importingSub, setImportingSub] = useState(false);
   const busySub = useRef(false);
   const [query, setQuery] = useState("");
+  const searchId = useId();
   const unchecked = subject.chapters.length > 0 && subject.chapters.some((c) => !c.confirmed);
   const visible = subject.chapters
     .filter((c) => inScope(c.scope, level))
@@ -229,11 +175,9 @@ function SubjectCard({
 
   // Progress Telemetry
   const totalChapters = subject.chapters.length;
-  const verifiedCount = subject.chapters.filter((c) => c.confirmed).length;
   const avgConfidence = totalChapters > 0
     ? (subject.chapters.reduce((sum, c) => sum + c.confidence, 0) / totalChapters).toFixed(1)
     : "—";
-  const pyqCount = subject.chapters.filter((c) => !!c.passes[1]).length;
   const masteredCount = subject.chapters.filter((c) => c.passes.every(Boolean) || c.confidence === 5).length;
 
   const handleImportSub = async () => {
@@ -278,112 +222,58 @@ function SubjectCard({
     if (target) { e.preventDefault(); reorder(id, target); }
   };
 
+  const passesDone = subject.chapters.reduce((n, c) => n + c.passes.filter(Boolean).length, 0);
+  const passesTotal = totalChapters * 3;
+
   return (
     <Card labelledBy="subject-h" className="flex-[3_1_480px]">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <SubjectIcon id={subject.id} size={22} />
+          <SubjectIcon id={subject.id} size={24} />
           <div>
             <H2 id="subject-h" big>{title}</H2>
-            <div className="font-mono text-xs text-muted">{plural(subject.chapters.length, "chapter")} · {startedCount(subject)} started</div>
+            <div className="text-sm text-muted">{plural(subject.chapters.length, "chapter")}, {masteredCount} mastered</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Btn
-            kind="outline"
-            disabled={importingSub}
-            onClick={handleImportSub}
-            title={`Sync or import official CBSE chapters for ${subject.name}`}
-            className="text-xs h-9 px-3"
-          >
-            {importingSub ? "Importing..." : "Sync Official"}
-          </Btn>
-          <Btn kind="primary" aria-expanded={adding} onClick={() => setAdding((a) => !a)} className="h-9 px-3.5">
-            {adding ? "Close" : "Add Chapter"}
-          </Btn>
-        </div>
+        <Btn kind="primary" aria-expanded={adding} onClick={() => setAdding((a) => !a)}>
+          {adding ? "Close" : "Add chapter"}
+        </Btn>
       </div>
 
-      <label className="mb-4 flex flex-wrap items-center gap-3 font-mono text-xs text-zinc-400">
-        <span>EXAM DATE [{phase.name.toUpperCase()}]:</span>
-        <input
-          type="date"
-          value={subject.examDates[phase.id] ?? ""}
-          onChange={(e) => act("PUT", `/api/subjects/${subject.id}/exam-date`, { phaseId: phase.id, date: e.target.value || null })}
-          className="h-8 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors"
-        />
-      </label>
-
-      {/* Progress Telemetry Banner */}
       {totalChapters > 0 && (
-        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">CBSE Verified</span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-base font-bold text-white tabular-nums">{verifiedCount}</span>
-              <span className="font-mono text-xs text-muted">/ {totalChapters}</span>
-              {verifiedCount === totalChapters && (
-                <span className="ml-auto inline-flex items-center text-[11px] text-emerald-400 font-medium">✓ 100%</span>
-              )}
-            </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
-              <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-300"
-                style={{ width: `${(verifiedCount / totalChapters) * 100}%` }}
-              />
-            </div>
+        <div className="mb-5">
+          <div className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="text-muted">{passesDone} of {passesTotal} revision passes done</span>
+            <span className="text-muted">Average confidence {avgConfidence} of 5</span>
           </div>
-
-          <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Avg Confidence</span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-base font-bold text-sky-400 tabular-nums">{avgConfidence}</span>
-              <span className="font-mono text-xs text-muted">/ 5.0</span>
-            </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
-              <div
-                className="h-full rounded-full bg-sky-400 transition-all duration-300"
-                style={{ width: `${(Number(avgConfidence) / 5) * 100}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">PYQ Pass</span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-base font-bold text-teal-400 tabular-nums">{pyqCount}</span>
-              <span className="font-mono text-xs text-muted">/ {totalChapters}</span>
-              <span className="ml-auto font-mono text-[11px] text-zinc-400">{Math.round((pyqCount / totalChapters) * 100)}%</span>
-            </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
-              <div
-                className="h-full rounded-full bg-teal-400 transition-all duration-300"
-                style={{ width: `${(pyqCount / totalChapters) * 100}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Full Mastery</span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-base font-bold text-emerald-400 tabular-nums">{masteredCount}</span>
-              <span className="font-mono text-xs text-muted">/ {totalChapters}</span>
-              <span className="ml-auto font-mono text-[11px] text-zinc-400">{Math.round((masteredCount / totalChapters) * 100)}%</span>
-            </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
-                style={{ width: `${(masteredCount / totalChapters) * 100}%` }}
-              />
-            </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface3">
+            <div className="h-full rounded-full bg-accent transition-all duration-300" style={{ width: `${passesTotal ? (passesDone / passesTotal) * 100 : 0}%` }} />
           </div>
         </div>
       )}
 
+      <details className="mb-5">
+        <summary className="cursor-pointer text-sm font-medium text-muted hover:text-fg">Subject settings</summary>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-3 text-sm text-muted">
+            <span>Exam date for {phase.name}</span>
+            <input
+              type="date"
+              value={subject.examDates[phase.id] ?? ""}
+              onChange={(e) => act("PUT", `/api/subjects/${subject.id}/exam-date`, { phaseId: phase.id, date: e.target.value || null })}
+              className="h-10 rounded-xl border border-line-strong bg-surface px-3 text-sm text-fg"
+            />
+          </label>
+          <Btn kind="outline" disabled={importingSub} onClick={handleImportSub} title={`Sync or import official CBSE chapters for ${subject.name}`}>
+            {importingSub ? "Importing..." : "Sync official chapters"}
+          </Btn>
+        </div>
+      </details>
+
       {unchecked && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-300">
-          <span className="text-xs">The {title} list has not been checked against the school PDF yet.</span>
-          <Btn kind="secondary" className="bg-surface/80 border-amber-500/40 text-amber-200" onClick={() => act("PUT", `/api/subjects/${subject.id}/confirmed`, { confirmed: true })}>Mark Checked</Btn>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface3 px-4 py-3 text-fg">
+          <span className="text-sm">The {title} list has not been checked against the school PDF yet.</span>
+          <Btn onClick={() => act("PUT", `/api/subjects/${subject.id}/confirmed`, { confirmed: true })}>Mark checked</Btn>
         </div>
       )}
 
@@ -400,65 +290,42 @@ function SubjectCard({
       )}
 
       {subject.chapters.length === 0 && !adding && (
-        <div className="border-t border-white/[0.08] py-8 px-4 text-center flex flex-col items-center justify-center gap-3">
-          <div className="size-11 rounded-2xl bg-surface/90 border border-white/[0.08] flex items-center justify-center text-zinc-400 shadow-sm">
-            <SubjectIcon id={subject.id} size={22} />
+        <div className="flex flex-col items-center gap-3 border-t border-line px-4 py-10 text-center">
+          <SubjectIcon id={subject.id} size={28} />
+          <div className="max-w-sm">
+            <div className="text-base font-semibold text-fg">No chapters yet</div>
+            <div className="mt-1 text-sm text-muted">Load the official CBSE Class 10 chapters for {title}, or add your own.</div>
           </div>
-          <div className="flex flex-col gap-1 max-w-sm">
-            <span className="text-sm font-semibold text-zinc-200">No chapters configured yet</span>
-            <span className="text-xs text-zinc-400">
-              Load the official CBSE Class 10 rationalised NCERT syllabus for {title} directly with official scopes & verified citations.
-            </span>
-          </div>
-          <Btn
-            kind="primary"
-            disabled={importingSub}
-            onClick={handleImportSub}
-            className="mt-1"
-          >
-            {importingSub ? "Importing..." : `Import Official ${subject.name} Chapters`}
+          <Btn kind="primary" disabled={importingSub} onClick={handleImportSub}>
+            {importingSub ? "Importing..." : `Import ${subject.name} chapters`}
           </Btn>
         </div>
       )}
-      {/* Chapter Search Bar for catalog density */}
+
       {subject.chapters.length > 5 && (
-        <div className="mb-3 flex items-center gap-2">
-          <div className="relative flex-1 min-w-0">
-            <input
-              type="text"
-              placeholder={`Search ${subject.chapters.length} chapters...`}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="h-8 w-full rounded-xl border border-white/[0.08] bg-surface/70 px-3 pl-8 font-mono text-xs text-white placeholder-zinc-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
-            />
-            <span className="pointer-events-none absolute left-2.5 top-2">
-              <AppleEmoji emoji="🔍" size={13} />
-            </span>
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute right-2.5 top-1.5 text-xs text-zinc-500 hover:text-white"
-                aria-label="Clear chapter search"
-              >
-                ✕
-              </button>
-            )}
-          </div>
+        <div className="relative mb-2">
+          <label htmlFor={`${searchId}-q`} className="sr-only">Search chapters</label>
+          <input
+            id={`${searchId}-q`}
+            type="search"
+            placeholder={`Search ${subject.chapters.length} chapters`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-11 w-full rounded-full border border-line-strong bg-surface px-4 text-base text-fg placeholder:text-muted"
+          />
         </div>
       )}
       {subject.chapters.length > 0 && visible.length === 0 && (
-        <p className="m-0 border-t border-white/[0.08] py-5 font-mono text-xs text-muted">
-          {query ? `No chapters match "${query}".` : "No chapters at this scope level. Increase scope threshold above."}
+        <p className="m-0 border-t border-line py-5 text-sm text-muted">
+          {query ? `No chapters match "${query}".` : "No chapters at this level. Show a later milestone above."}
         </p>
       )}
 
       <ol className="m-0 list-none p-0">
         {visible.map((c) => {
-          const number = String(ids.indexOf(c.id) + 1).padStart(2, "0");
           if (editing === c.id) {
             return (
-              <li key={c.id} className="border-t border-white/[0.08]">
+              <li key={c.id} className="border-t border-line">
                 <ChapterForm
                   subject={subject}
                   initial={{ name: c.name, scope: c.scope, confidence: c.confidence }}
@@ -474,8 +341,8 @@ function SubjectCard({
             );
           }
           return (
-            <li key={c.id} data-chapter-id={c.id} className={`border-t ${drag?.over === c.id && drag.id !== c.id ? "border-emerald-500" : "border-white/[0.06]"} ${drag?.id === c.id ? "opacity-50" : ""} transition-colors`}>
-              <div className="flex flex-wrap items-center gap-2.5 py-2.5">
+            <li key={c.id} data-chapter-id={c.id} className={`border-t ${drag?.over === c.id && drag.id !== c.id ? "border-accent" : "border-line"} ${drag?.id === c.id ? "opacity-50" : ""} transition-colors`}>
+              <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 py-4 sm:grid-cols-[32px_minmax(0,1fr)_auto]">
                 <button
                   type="button"
                   aria-label={`Reorder ${c.name}. Drag, or use the up and down arrow keys.`}
@@ -484,27 +351,16 @@ function SubjectCard({
                   onPointerUp={endDrag}
                   onPointerCancel={endDrag}
                   onKeyDown={(e) => nudge(c.id, e)}
-                  className="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border-0 bg-transparent text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-all"
+                  className="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border-0 bg-transparent text-muted hover:text-fg hover:bg-surface3"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" /><circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" /><circle cx="9" cy="18" r="1.8" /><circle cx="15" cy="18" r="1.8" /></svg>
                 </button>
-                <span className="w-6 font-mono text-xs tabular-nums text-muted">{number}</span>
-                <div className="flex min-w-0 flex-[1_1_200px] flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-zinc-100">{c.name}</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="text-base font-medium text-fg">{c.name}</span>
                   <ScopeTag scope={c.scope} />
                 </div>
 
-                <button
-                  type="button"
-                  aria-label={`Open Quick Viva / Active Recall for ${c.name}`}
-                  onClick={() => onOpenViva(c)}
-                  className="h-7 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 font-mono text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-all uppercase tracking-wider flex items-center gap-1"
-                >
-                  <AppleEmoji emoji="⚡" size={11} />
-                  <span>Viva</span>
-                </button>
-
-                <div className="flex items-center gap-1">
+                <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-3">
                   {PASS_NAMES.map((full, i) => (
                     <button
                       key={full}
@@ -512,24 +368,30 @@ function SubjectCard({
                       aria-pressed={!!c.passes[i]}
                       aria-label={`${PASS_SHORT[i]} pass for ${c.name}`}
                       onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${i + 1}`, { done: !c.passes[i] })}
-                      className="h-8 border-0 bg-transparent px-0.5"
+                      className={`min-h-9 rounded-full border-0 px-3 text-sm font-medium cursor-pointer ${c.passes[i] ? "bg-accent/15 text-accent" : "bg-surface3 text-muted hover:text-fg"}`}
                     >
-                      <span className={`block rounded-lg border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-all ${c.passes[i] ? "border-emerald-500/40 bg-emerald-500/15 font-semibold text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.15)]" : "border-white/[0.08] bg-surface text-zinc-400 hover:border-white/20 hover:text-zinc-200"}`}>{c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}</span>
+                      {c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}
                     </button>
                   ))}
-                </div>
-                <span className="flex w-16 justify-center"><ConfDots value={c.confidence} /></span>
-                <div className="flex items-center gap-1">
-                  <button type="button" aria-label={`Edit ${c.name}`} onClick={() => { setEditing(c.id); setDeleting(null); }} className="flex size-8 items-center justify-center rounded-lg border-0 bg-transparent text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors"><Icon d={ICONS.edit} size={15} /></button>
-                  <button type="button" aria-label={`Delete ${c.name}`} onClick={() => setDeleting(c.id)} className="flex size-8 items-center justify-center rounded-lg border-0 bg-transparent text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"><Icon d={ICONS.trash} size={15} /></button>
+                  <ConfDots value={c.confidence} />
+                  <button
+                    type="button"
+                    aria-label={`Quiz me on ${c.name}`}
+                    onClick={() => onOpenViva(c)}
+                    className="min-h-9 rounded-full border border-line-strong bg-transparent px-3 text-sm font-medium text-fg hover:bg-surface3 cursor-pointer"
+                  >
+                    Quiz
+                  </button>
+                  <button type="button" aria-label={`Edit ${c.name}`} onClick={() => { setEditing(c.id); setDeleting(null); }} className="flex size-9 items-center justify-center rounded-full border-0 bg-transparent text-muted hover:text-fg hover:bg-surface3 cursor-pointer"><Icon d={ICONS.edit} size={16} /></button>
+                  <button type="button" aria-label={`Delete ${c.name}`} onClick={() => setDeleting(c.id)} className="flex size-9 items-center justify-center rounded-full border-0 bg-transparent text-muted hover:text-danger hover:bg-surface3 cursor-pointer"><Icon d={ICONS.trash} size={16} /></button>
                 </div>
               </div>
               {deleting === c.id && (
-                <div role="alert" className="mx-0 mt-2 mb-3.5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-950/20 px-4 py-3 lg:ml-11">
-                  <span className="text-xs text-rose-300 font-medium">Delete &ldquo;{c.name}&rdquo;? Targets and revision records will be purged.</span>
+                <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-danger/10 px-4 py-3">
+                  <span className="text-sm font-medium text-danger">Delete &ldquo;{c.name}&rdquo;? Its targets and revision records go too.</span>
                   <div className="flex gap-2">
-                    <Btn kind="outline" className="px-3" onClick={() => setDeleting(null)}>Cancel</Btn>
-                    <Btn className="border border-rose-500/50 bg-rose-600 px-3 font-mono text-xs font-semibold text-on-solid hover:bg-rose-500" onClick={async () => { if (await act("DELETE", `/api/chapters/${c.id}`)) setDeleting(null); }}>Delete</Btn>
+                    <Btn kind="outline" onClick={() => setDeleting(null)}>Cancel</Btn>
+                    <Btn className="border-0 bg-danger text-on-solid" onClick={async () => { if (await act("DELETE", `/api/chapters/${c.id}`)) setDeleting(null); }}>Delete</Btn>
                   </div>
                 </div>
               )}
@@ -568,18 +430,18 @@ function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subjec
   return (
     <form className="flex flex-wrap items-end gap-3.5 py-4 border-t border-white/[0.08]" onSubmit={submit}>
       <div className="flex flex-[1_1_240px] flex-col gap-1.5">
-        <label htmlFor={`${id}-name`} className="font-mono text-xs uppercase tracking-wider text-muted">Chapter name</label>
+        <label htmlFor={`${id}-name`} className="font-mono text-xs   text-muted">Chapter name</label>
         <input id={`${id}-name`} autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-9 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors" />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${id}-scope`} className="font-mono text-xs uppercase tracking-wider text-muted">Scope</label>
+        <label htmlFor={`${id}-scope`} className="font-mono text-xs   text-muted">Scope</label>
         <select id={`${id}-scope`} value={v.scope} onChange={(e) => setV({ ...v, scope: e.target.value as Scope })} className="h-9 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors">
           {SCOPES.map((s) => <option key={s} value={s}>{SCOPE_LABEL[s]}</option>)}
         </select>
       </div>
       {editing && (
         <div className="flex flex-col gap-1.5">
-          <span id={`${id}-conf`} className="font-mono text-xs uppercase tracking-wider text-muted">Confidence</span>
+          <span id={`${id}-conf`} className="font-mono text-xs   text-muted">Confidence</span>
           <div role="group" aria-labelledby={`${id}-conf`} className="flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} type="button" aria-pressed={v.confidence === n} aria-label={`Confidence ${n} of 5`} onClick={() => setV({ ...v, confidence: n })} className={`size-9 rounded-xl border font-mono text-xs font-semibold transition-all ${v.confidence === n ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-300" : "border-white/10 bg-surface text-zinc-400 hover:border-white/25"}`}>{n}</button>
@@ -599,7 +461,7 @@ function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subjec
 function PhaseDates({ state, act }: { state: State; act: Act }) {
   return (
     <details className="group rounded-2xl border border-white/[0.08] bg-surface/80 px-4 py-4 backdrop-blur-md lg:px-6 lg:py-5">
-      <summary className="flex min-h-9 cursor-pointer items-center justify-between font-mono text-xs font-semibold uppercase tracking-wider text-zinc-200">
+      <summary className="flex min-h-9 cursor-pointer items-center justify-between font-mono text-xs font-semibold   text-zinc-200">
         <span>Exam Phases & Calendar Anchors</span>
         <span className="text-xs text-muted transition-transform group-open:rotate-180">▾</span>
       </summary>
@@ -607,7 +469,7 @@ function PhaseDates({ state, act }: { state: State; act: Act }) {
       <ul className="m-0 list-none p-0">
         {state.phases.map((p) => (
           <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] py-3.5">
-            <strong className="text-xs uppercase tracking-wider text-zinc-200">{p.name}</strong>
+            <strong className="text-xs   text-zinc-200">{p.name}</strong>
             <span className="flex flex-wrap items-center gap-2.5">
               <input type="date" aria-label={`${p.name} starts`} value={p.startsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { startsOn: e.target.value })} className="h-8 rounded-xl border border-white/10 bg-surface px-3 font-mono text-xs text-white focus:border-emerald-500/50 focus:outline-none transition-colors" />
               <span className="font-mono text-xs text-muted">to</span>

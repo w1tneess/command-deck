@@ -185,7 +185,7 @@ export function GoogleSyncModal({
             onClick={() => setTab("sync")}
             className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
               tab === "sync"
-                ? "bg-indigo-600 text-on-solid shadow-sm font-bold"
+                ? "bg-fg text-bg shadow-sm font-bold"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -196,7 +196,7 @@ export function GoogleSyncModal({
             onClick={() => setTab("setup")}
             className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
               tab === "setup"
-                ? "bg-indigo-600 text-on-solid shadow-sm font-bold"
+                ? "bg-fg text-bg shadow-sm font-bold"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -253,7 +253,7 @@ export function GoogleSyncModal({
                       type="button"
                       onClick={handleLiveSync}
                       disabled={isSyncing}
-                      className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-on-solid font-sans font-semibold text-xs py-2 px-3.5 shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-xs py-2 px-3.5 shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                     >
                       <AppleEmoji emoji="🔄" size={14} />
                       <span>{isSyncing ? "Syncing..." : "Sync Events Now"}</span>
@@ -281,7 +281,7 @@ export function GoogleSyncModal({
                     <button
                       type="button"
                       onClick={handleOAuthConnect}
-                      className="flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-on-solid font-sans font-semibold text-xs py-2.5 px-4 shadow-md active:scale-95 transition-all cursor-pointer w-full justify-center"
+                      className="flex items-center gap-2 rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-xs py-2.5 px-4 shadow-md active:scale-95 transition-all cursor-pointer w-full justify-center"
                     >
                       <AppleEmoji emoji="🔗" size={16} />
                       <span>Authorize with Google Calendar (OAuth 2.0)</span>
@@ -319,7 +319,7 @@ export function GoogleSyncModal({
             {/* Synced External Events List */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span className="font-semibold uppercase tracking-wider text-xs">
+                <span className="font-semibold   text-xs">
                   Today's Google Calendar Events ({events.length})
                 </span>
                 <span className="text-xs font-mono">Date: {state.today}</span>
@@ -339,7 +339,7 @@ export function GoogleSyncModal({
                       className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface p-3 text-xs"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className={`size-2.5 rounded-full shrink-0 ${ev.isStudyBlock ? "bg-indigo-400" : "bg-sky-400"}`} />
+                        <span className={`size-2.5 rounded-full shrink-0 ${ev.isStudyBlock ? "bg-fg" : "bg-fg"}`} />
                         <div className="min-w-0">
                           <div className="font-semibold text-white truncate">
                             <AppleText text={ev.summary} size={13} />
@@ -447,7 +447,7 @@ export function GoogleSyncModal({
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.08]">
               <button
                 type="submit"
-                className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-on-solid font-sans font-semibold text-xs py-2 px-4 shadow-md active:scale-95 transition-all cursor-pointer"
+                className="rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-xs py-2 px-4 shadow-md active:scale-95 transition-all cursor-pointer"
               >
                 Save Credentials & Connect
               </button>

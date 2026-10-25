@@ -143,7 +143,7 @@ export function Schedule({
 
   return (
     <div className="space-y-6 max-w-4xl w-full">
-      <PageHeader eyebrow="Today, IST" title="Schedule" sub="Time blocks for the day. Shift them when plans slip." />
+      <PageHeader title="Schedule" sub="Time blocks for today. Shift them when plans slip." />
       {/* Hero Header & Google Calendar Integration Banner */}
       <Card labelledBy={`${uid}-hero-h`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
@@ -171,7 +171,7 @@ export function Schedule({
               className={`flex items-center justify-center gap-2 rounded-xl font-sans font-semibold text-xs py-2.5 px-3.5 shadow-md active:scale-95 transition-all cursor-pointer shrink-0 ${
                 state.googleSync?.connected
                   ? "bg-emerald-500 hover:bg-emerald-400 text-zinc-950"
-                  : "bg-indigo-600 hover:bg-indigo-500 text-on-solid"
+                  : "bg-fg hover:opacity-90 text-bg"
               }`}
             >
               <AppleEmoji emoji={state.googleSync?.connected ? "🔄" : "🔗"} size={15} />
@@ -359,7 +359,7 @@ export function Schedule({
               }`}
             >
               {isCurrent && (
-                <div className="mb-3 flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-sans font-bold text-emerald-400 uppercase tracking-wider">
+                <div className="mb-3 flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-sans font-bold text-emerald-400  ">
                   <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Now Active</span>
                 </div>
@@ -378,7 +378,7 @@ export function Schedule({
                       <h3 className="m-0 font-sans text-sm font-semibold text-white truncate">
                         <AppleText text={block.title} size={15} />
                       </h3>
-                      <span className={`rounded-md px-1.5 py-0.5 font-mono text-[11px] uppercase font-semibold ${style.badge}`}>
+                      <span className={`rounded-md px-1.5 py-0.5 font-mono text-[11px]  font-semibold ${style.badge}`}>
                         {block.category}
                       </span>
                     </div>

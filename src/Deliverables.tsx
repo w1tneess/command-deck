@@ -101,7 +101,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
-                <span className="font-mono text-[11px] text-zinc-500 uppercase tracking-wider">
+                <span className="font-mono text-[11px] text-zinc-500  ">
                   {t.subjectId.toUpperCase()} VIVA
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -151,7 +151,7 @@ export function DeliverablesPage({
 
   return (
     <>
-      <PageHeader eyebrow="Class X · 2026-27" title="Deliverables">
+      <PageHeader title="Due dates" sub="Lab manuals, projects and practicals for Class X.">
         <button
           type="button"
           onClick={() => setShowCalendarModal(true)}
@@ -352,7 +352,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
         <div className="flex items-center gap-3">
           <span className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
             <span
-              className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-sky-400"}`}
+              className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-fg"}`}
               style={{ width: `${pct}%` }}
             />
           </span>

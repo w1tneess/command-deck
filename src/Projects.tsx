@@ -6,7 +6,7 @@ export function Projects({ state, act }: { state: State; act: Act }) {
   const [adding, setAdding] = useState(false);
   return (
     <>
-      <PageHeader eyebrow="Beyond the syllabus" title="Projects">
+      <PageHeader title="Projects" sub="Goals beyond the syllabus, in small steps.">
         <Btn kind="primary" aria-expanded={adding} onClick={() => setAdding((a) => !a)}>{adding ? "Close" : "+ Add Project"}</Btn>
       </PageHeader>
       {adding && (
@@ -81,7 +81,7 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
       {p.milestones.length > 0 && (
         <div className="mt-4 flex items-center gap-3">
           <span className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
-            <span className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-sky-400"}`} style={{ width: `${pct}%` }} />
+            <span className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-fg"}`} style={{ width: `${pct}%` }} />
           </span>
           <span className="font-mono text-xs text-zinc-400">{done} of {p.milestones.length}</span>
         </div>

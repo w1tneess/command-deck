@@ -29,7 +29,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
       <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
         <div className="flex items-center gap-2">
           <span className="size-2 rounded-full bg-emerald-400" />
-          <h2 id="timeline-h" className="m-0 font-sans text-xs font-semibold tracking-tight text-white uppercase">
+          <h2 id="timeline-h" className="m-0 font-sans text-xs font-semibold tracking-tight text-white ">
             Daily Routine Timeline
           </h2>
         </div>
@@ -53,9 +53,9 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
       <div className="relative flex flex-col gap-6 pl-4 border-l border-white/[0.08] ml-2">
         {/* Step 1: Morning Intent (07:00) */}
         <div className="relative flex flex-col gap-2.5">
-          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-sky-400" />
+          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-fg" />
           <div className="flex items-center justify-between">
-            <span className="font-sans text-xs font-semibold text-sky-400 uppercase tracking-wider">
+            <span className="font-sans text-xs font-semibold text-sky-400  ">
               01 · Morning Intent (07:00)
             </span>
             {r.kickoffAt ? (
@@ -149,7 +149,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
                   aria-pressed={r.sleep === lvl}
                   onClick={() => act("PUT", "/api/routine", { sleep: r.sleep === lvl ? null : lvl })}
                   className={`min-h-[32px] rounded-md font-sans text-xs font-medium transition-all ${
-                    r.sleep === lvl ? "bg-sky-400 text-zinc-950 font-semibold shadow-xs" : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                    r.sleep === lvl ? "bg-fg text-zinc-950 font-semibold shadow-xs" : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
                   }`}
                 >
                   {lvl}★
@@ -205,9 +205,9 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
 
         {/* Step 2: Deep Work Blocks (10:00 - 18:00) */}
         <div className="relative flex flex-col gap-2">
-          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-indigo-400" />
+          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-fg" />
           <div className="flex items-center justify-between">
-            <span className="font-sans text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+            <span className="font-sans text-xs font-semibold text-indigo-400  ">
               02 · Deep Work Blocks
             </span>
             <span className="font-mono text-xs text-zinc-300 font-semibold">
@@ -239,8 +239,8 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
 
         {/* Step 3: Evening Review (21:00) */}
         <div className="relative flex flex-col gap-2">
-          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-purple-400" />
-          <span className="font-sans text-xs font-semibold text-purple-400 uppercase tracking-wider">
+          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-fg" />
+          <span className="font-sans text-xs font-semibold text-purple-400  ">
             03 · Evening Review (21:00)
           </span>
           <Evening state={state} act={act} />
@@ -365,15 +365,15 @@ export function Evening({ state, act }: { state: State; act: Act }) {
       <details open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)} className="group">
         <summary className="flex min-h-9 cursor-pointer flex-wrap items-center justify-between gap-2.5 list-none">
           <div className="flex items-center gap-2">
-            <span className={`size-2 rounded-[1px] ${r.shutdownAt ? "bg-emerald-400" : "bg-indigo-400"}`} />
-            <span id="evening-h" className="font-mono text-[11px] font-bold tracking-[0.2em] text-zinc-300 uppercase">
+            <span className={`size-2 rounded-[1px] ${r.shutdownAt ? "bg-emerald-400" : "bg-fg"}`} />
+            <span id="evening-h" className="font-mono text-[11px] font-bold tracking-[0.2em] text-zinc-300 ">
               EVENING // SHUTDOWN
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-mono text-[11px] text-zinc-300">
               {r.shutdownAt ? (
-                <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-400 uppercase">
+                <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-400 ">
                   <AppleEmoji emoji="🌙" size={12} />
                   <span>Shut down {clock(r.shutdownAt)}</span>
                 </span>
@@ -386,7 +386,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
         </summary>
         <div className="mt-3 flex flex-col gap-3 pt-2.5 border-t border-white/[0.08]">
           <div className="flex flex-col gap-1">
-            <label htmlFor={winsId} className="font-mono text-[11px] uppercase tracking-wider text-zinc-300">Today's Key Wins & Mastered Topics</label>
+            <label htmlFor={winsId} className="font-mono text-[11px]   text-zinc-300">Today's Key Wins & Mastered Topics</label>
             <textarea
               id={winsId}
               rows={2}
@@ -402,7 +402,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={tomorrowId} className="font-mono text-[11px] uppercase tracking-wider text-zinc-300">Preparation for Tomorrow</label>
+            <label htmlFor={tomorrowId} className="font-mono text-[11px]   text-zinc-300">Preparation for Tomorrow</label>
             <textarea
               id={tomorrowId}
               rows={2}
@@ -426,7 +426,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
               <button
                 type="button"
                 onClick={handleShutdown}
-                className="h-8 w-full rounded-[2px] border border-transparent bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs uppercase font-bold tracking-wider active:scale-[0.99] transition-all shadow-xs"
+                className="h-8 w-full rounded-[2px] border border-transparent bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs  font-bold  active:scale-[0.99] transition-all shadow-xs"
               >
                 Shut down for the day
               </button>
@@ -441,7 +441,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
 export function Routine({ state, act }: { state: State; act: Act }) {
   return (
     <div className="space-y-6 max-w-4xl w-full">
-      <PageHeader eyebrow="Daily" title="Routine" sub="Start the day, then close it." />
+      <PageHeader title="Routine" sub="Start the day, then close it." />
       <Morning state={state} act={act} />
       <DailyRoutineTimeline state={state} act={act} />
       <Evening key={state.routine.day} state={state} act={act} />

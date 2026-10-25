@@ -76,7 +76,7 @@ export function Card({ children, className = "", labelledBy }: { children: React
   return (
     <section
       aria-labelledby={labelledBy}
-      className={`min-w-0 rounded-2xl bg-surface border border-white/[0.06] hover:border-white/[0.12] p-5 sm:p-6 shadow-sm text-zinc-100 transition-all duration-200 ${className}`}
+      className={`min-w-0 rounded-3xl bg-surface border border-line p-5 sm:p-6 text-fg ${className}`}
     >
       {children}
     </section>
@@ -84,19 +84,15 @@ export function Card({ children, className = "", labelledBy }: { children: React
 }
 
 export const H2 = ({ id, children, big = false }: { id?: string; children: ReactNode; big?: boolean }) => (
-  <h2 id={id} className={`m-0 font-sans font-semibold tracking-tight text-white ${big ? "text-xl sm:text-2xl" : "text-base sm:text-lg"}`}>{children}</h2>
+  <h2 id={id} className={`m-0 font-serif font-semibold tracking-tight text-fg ${big ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"}`}>{children}</h2>
 );
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "secondary" | "ghost" | "outline" };
 const BTN = {
-  primary:
-    "bg-accent hover:bg-accent-hover text-accent-text font-medium shadow-xs active:scale-[0.98] border border-transparent",
-  secondary:
-    "bg-surface2 hover:bg-surface3 text-zinc-200 border border-white/[0.08] active:bg-surface",
-  outline:
-    "bg-transparent hover:bg-white/[0.05] text-zinc-300 border border-white/[0.12] active:bg-white/[0.08]",
-  ghost:
-    "bg-transparent hover:bg-white/[0.05] text-zinc-400 hover:text-white border-0",
+  primary: "bg-fg text-bg font-semibold hover:opacity-90 active:scale-[0.98] border border-transparent",
+  secondary: "bg-surface2 hover:bg-surface3 text-fg border border-line active:bg-surface3",
+  outline: "bg-transparent hover:bg-surface2 text-fg border border-line-strong active:bg-surface3",
+  ghost: "bg-transparent hover:bg-surface2 text-muted hover:text-fg border-0",
 };
 
 /** Modern ergonomic button with clean styling and tactile feedback. */
@@ -104,7 +100,7 @@ export function Btn({ kind = "secondary", className = "", type = "button", ...re
   return (
     <button
       type={type}
-      className={`min-h-[38px] sm:min-h-[36px] shrink-0 rounded-full px-4 font-sans text-xs font-medium tracking-wide transition-all duration-200 ease-out inline-flex items-center justify-center gap-1.5 enabled:active:scale-[0.98] ${BTN[kind]} ${className}`}
+      className={`min-h-[44px] sm:min-h-[38px] shrink-0 rounded-full px-5 sm:px-4 font-sans text-sm font-medium transition-all duration-200 ease-out inline-flex items-center justify-center gap-1.5 enabled:active:scale-[0.98] ${BTN[kind]} ${className}`}
       {...rest}
     />
   );
@@ -112,32 +108,15 @@ export function Btn({ kind = "secondary", className = "", type = "button", ...re
 
 export function Pill({ children, accent = false, className = "" }: { children: ReactNode; accent?: boolean; className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-xs font-medium tracking-normal transition-all duration-150 ${accent ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300 font-semibold shadow-xs" : "border-white/[0.08] bg-white/[0.04] text-zinc-300"} ${className}`}>{children}</span>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-sans text-xs font-medium ${accent ? "bg-accent/15 text-accent" : "bg-surface3 text-muted"} ${className}`}>{children}</span>
   );
 }
 
 /** High-contrast, clean geometric milestone badge. */
 export function ScopeTag({ scope, className = "" }: { scope: Scope; className?: string }) {
-  const styles: Record<Scope, string> = {
-    unit1: "border-emerald-200 bg-[#c8f0d8] text-emerald-950 paper",
-    unit2: "border-indigo-200 bg-[#ded9fd] text-indigo-950 paper",
-    pb1: "border-orange-200 bg-[#fdd5cc] text-orange-950 paper",
-    pb2: "border-amber-200 bg-[#fee2be] text-amber-950 paper",
-    board: "border-line-strong bg-fg text-bg",
-  };
-  const label: Record<Scope, string> = {
-    unit1: "UNIT 1",
-    unit2: "UNIT 2",
-    pb1: "PB 1",
-    pb2: "PB 2",
-    board: "BOARDS",
-  };
+  const label: Record<Scope, string> = { unit1: "Unit 1", unit2: "Unit 2", pb1: "Pre-Boards 1", pb2: "Pre-Boards 2", board: "Boards" };
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-wider ${
-        styles[scope] ?? "border-black/10 bg-[#f4efe8] text-zinc-800 paper"
-      } ${className}`}
-    >
+    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ${scope === "board" ? "bg-fg text-bg" : "bg-surface3 text-muted"} ${className}`}>
       {label[scope] ?? scope}
     </span>
   );
@@ -150,7 +129,7 @@ export function ConfDots({ value }: { value: number }) {
         <span
           key={n}
           className={`size-2 rounded-full transition-all duration-150 ${
-            n <= value ? "bg-amber-400 shadow-xs" : "bg-black/[0.08]"
+            n <= value ? "bg-accent" : "bg-line-strong"
           }`}
         />
       ))}
@@ -166,15 +145,8 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
   return (
     <div className="flex flex-wrap gap-1">
       {PASS_SHORT.map((name, i) => (
-        <span
-          key={name}
-          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-150 ${
-            passes[i]
-              ? "border-emerald-200 bg-[#c8f0d8] text-emerald-900 font-semibold paper"
-              : "border-black/[0.06] bg-black/[0.02] text-zinc-400 font-medium"
-          }`}
-        >
-          {passes[i] ? "✓ " : "○ "}
+        <span key={name} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${passes[i] ? "bg-accent/15 text-accent" : "bg-surface3 text-muted"}`}>
+          {passes[i] ? "✓ " : ""}
           {name}
         </span>
       ))}
@@ -204,11 +176,7 @@ export function PassToggles({
               e.stopPropagation();
               onToggle(i);
             }}
-            className={`min-h-[26px] rounded-full border px-2.5 font-mono text-[11px] uppercase font-semibold tracking-wider transition-all duration-150 active:scale-95 ${
-              done
-                ? "border-emerald-300 bg-[#c8f0d8] text-emerald-900 paper"
-                : "border-black/[0.08] bg-white text-zinc-600 hover:border-black/20 hover:text-zinc-900 hover:bg-black/[0.02]"
-            }`}
+            className={`min-h-[32px] min-w-[44px] rounded-full px-3 text-xs font-semibold active:scale-95 ${done ? "bg-accent/15 text-accent" : "bg-surface3 text-muted hover:text-fg"}`}
           >
             {done ? "✓ " : ""}P{i + 1}
           </button>
@@ -220,7 +188,7 @@ export function PassToggles({
 
 /** Precision rounded circular checkbox with emerald check indicator. */
 export const Check = ({ on }: { on: boolean }) => (
-  <span className={`flex size-5 shrink-0 items-center justify-center rounded-full border transition-all duration-150 text-xs ${on ? "border-accent bg-accent text-accent-text font-bold shadow-xs" : "border-white/20 bg-transparent text-transparent hover:border-white/40"}`}>
+  <span className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 text-xs ${on ? "border-accent bg-accent text-accent-text font-bold" : "border-line-strong bg-transparent text-transparent hover:border-muted"}`}>
     {on && "✓"}
   </span>
 );
@@ -515,5 +483,24 @@ export function PageHeader({ eyebrow, title, sub, children }: { eyebrow?: string
       </div>
       {children}
     </header>
+  );
+}
+
+/** A short either/or choice (view, scope). Buttons with aria-pressed, so it reads as a group of toggles. */
+export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: readonly (readonly [T, string])[]; onChange: (v: T) => void }) {
+  return (
+    <div role="group" aria-label={label} className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-surface3 p-1">
+      {options.map(([v, text]) => (
+        <button
+          key={v}
+          type="button"
+          aria-pressed={value === v}
+          onClick={() => onChange(v)}
+          className={`min-h-9 whitespace-nowrap rounded-full border-0 px-4 text-sm font-medium cursor-pointer ${value === v ? "bg-surface text-fg shadow-sm" : "bg-transparent text-muted hover:text-fg"}`}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
   );
 }

@@ -170,7 +170,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
         {/* Visual Divider */}
         <div className="relative my-5 flex w-full items-center justify-center">
           <div className="w-full border-t border-white/[0.08]" />
-          <span className="absolute bg-bg px-3 text-xs font-medium tracking-wider text-zinc-500 uppercase">
+          <span className="absolute bg-bg px-3 text-xs font-medium  text-zinc-500 ">
             or enter passcode
           </span>
         </div>
@@ -182,7 +182,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
               key={i}
               className={`size-3.5 rounded-full border transition-all duration-150 ${
                 i < pin.length
-                  ? "border-sky-400 bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.7)] scale-110"
+                  ? "border-sky-400 bg-fg shadow-[0_0_8px_rgba(56,189,248,0.7)] scale-110"
                   : "border-white/15 bg-white/[0.04]"
               }`}
             />

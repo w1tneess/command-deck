@@ -10,6 +10,11 @@
   },
   // The domain's DNS record and SSL certificate are created on deploy; the zone must be on this account.
   "routes": [{ "pattern": "study.advaitachandra.in", "custom_domain": true }],
+  "vars": {
+    "ALLOWED_GOOGLE_EMAILS": "advaita974@gmail.com",
+    "GOOGLE_REDIRECT_URI": "https://study.advaitachandra.in/api/auth/google/callback",
+    "GOOGLE_CALENDAR_REDIRECT_URI": "https://study.advaitachandra.in/api/google/callback"
+  },
   "d1_databases": [
     {
       "binding": "DB",

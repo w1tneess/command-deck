@@ -55,6 +55,32 @@ describe("api", () => {
     expect(s.subjects.find((x: any) => x.id === "physics").chapters[0].name).toBe("Electricity");
     expect(s.sessions).toEqual([{ day: "2026-10-22", subjectId: "maths", minutes: 45 }]);
   });
+
+  it("imports official CBSE chapters for a subject and for all subjects", async () => {
+    const chemRes = await send("POST", "/api/syllabus/import-official", { subjectId: "chemistry" });
+    expect(chemRes.status).toBe(200);
+    const chemData = (await chemRes.json()) as any;
+    expect(chemData.imported).toBe(4);
+
+    const s = await state();
+    const chem = s.subjects.find((x: any) => x.id === "chemistry");
+    expect(chem.chapters).toHaveLength(4);
+    expect(chem.chapters[0].confirmed).toBe(true);
+    expect(chem.chapters[0].source).toContain("CBSE Class 10 Science (Code 086)");
+
+    // User sets confidence = 4 on chapter 0
+    await send("PATCH", `/api/chapters/${chem.chapters[0].id}`, { confidence: 4 });
+    expect((await state()).subjects.find((x: any) => x.id === "chemistry").chapters[0].confidence).toBe(4);
+
+    // Re-importing is strictly idempotent: 0 imported, confidence preserved
+    const reRes = await send("POST", "/api/syllabus/import-official", { subjectId: "chemistry" });
+    expect(((await reRes.json()) as any).imported).toBe(0);
+    const afterReimport = (await state()).subjects.find((x: any) => x.id === "chemistry");
+    expect(afterReimport.chapters).toHaveLength(4);
+    expect(afterReimport.chapters[0].confidence).toBe(4); // NOT wiped
+
+    expect((await send("POST", "/api/syllabus/import-official", { subjectId: "nonexistent" })).status).toBe(404);
+  });
 });
 
 describe("access control", () => {

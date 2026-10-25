@@ -18,7 +18,8 @@ describe("deliverables", () => {
   it("starts with the eight Pre-Boards 1 submissions, none started", async () => {
     const { deliverables } = await state();
     expect(deliverables).toHaveLength(8);
-    expect(deliverables.every((d: any) => d.phaseId === "pb1" && d.status === "not_started" && !d.vivaPrep && d.due === null)).toBe(true);
+    expect(deliverables.every((d: any) => d.phaseId === "pb1" && d.status === "not_started" && !d.vivaPrep)).toBe(true);
+    expect(deliverables.find((d: any) => d.name === "Chemistry practicals")?.due).toBe("2026-10-20");
     expect(deliverables[0]).toMatchObject({ name: "Activity file (portfolio)", subject: "Maths", doneCount: 0, totalCount: 12 });
     expect(deliverables.slice(1).every((d: any) => d.totalCount === null)).toBe(true);
   });

@@ -76,3 +76,13 @@ export function rankNext<T extends Candidate>(cands: T[], today: string, fallbac
     .sort((a, b) => b.score - a.score || a.priority - b.priority || (a.lastRevised ?? "").localeCompare(b.lastRevised ?? ""))
     .slice(0, n);
 }
+
+/** Canonical chapter duration calculator used across Study Queue, Daily Targets, and Calendar scheduling. */
+export function computeChapterDuration(confidence?: number, subjectId?: string): string {
+  const isHeavy = ["maths", "physics", "chemistry"].includes(subjectId ?? "");
+  const conf = confidence ?? 3;
+  if (conf <= 1) return isHeavy ? "1h 30m" : "1h 00m";
+  if (conf === 2) return isHeavy ? "1h 15m" : "50m";
+  if (conf === 3) return isHeavy ? "1h 00m" : "45m";
+  return isHeavy ? "45m" : "30m";
+}

@@ -1,3 +1,8 @@
 APP_TOKEN=dev-token
 STUDY_PASSCODE=123456
 SESSION_SECRET=any-long-random-string
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:8787/api/auth/google/callback
+GOOGLE_CALENDAR_REDIRECT_URI=http://localhost:8787/api/google/callback
+ALLOWED_GOOGLE_EMAILS=advaita974@gmail.com

@@ -66,6 +66,17 @@ describe("rankNext", () => {
     );
     expect(out.map((x) => x.chapterId)).toEqual(["p1", "p2"]);
   });
+
+  it("prioritizes newly imported, unrated chapters with maximum score (confidence = 1)", () => {
+    const unratedNew = { ...base, chapterId: "new-unrated", subjectId: "a", confidence: 1, examDate: "2026-11-19" };
+    const reviewed = { ...base, chapterId: "reviewed", subjectId: "a", confidence: 4, examDate: "2026-11-19" };
+    const mastered = { ...base, chapterId: "mastered", subjectId: "a", confidence: 5, examDate: "2026-11-19" };
+    const out = rankNext([reviewed, unratedNew, mastered], "2026-10-22", "2026-11-19");
+    expect(out[0].chapterId).toBe("new-unrated");
+    expect(out[0].score).toBeCloseTo(50 / (28 + 1), 2);
+    expect(out[1].chapterId).toBe("reviewed");
+    expect(out[2].chapterId).toBe("mastered");
+  });
 });
 
 describe("activePhase", () => {

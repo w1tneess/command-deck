@@ -1,9 +1,31 @@
 import { Hono } from "hono";
-import { registerAuth, type Env } from "./auth.ts";
-import { SCOPES, STATUSES, activePhase, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
+import { registerAuth, type Env, hasValidSession, same } from "./auth.ts";
+import { SCOPES, STATUSES, activePhase, computeChapterDuration, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
 import { lifeState, registerLife } from "./life.ts";
 import { ENERGIES, studyQueue, type Energy } from "./planner.ts";
 import { IDLE, settleTimer, startFocus, stopTimer, type SessionLog, type Timer } from "./timer.ts";
+import { OFFICIAL_CURRICULUM } from "./curriculum.ts";
+import { generateIcsFeed, shiftTimeStr, type ScheduleBlock } from "./calendar.ts";
+import {
+  buildGoogleAuthUrl,
+  detectScheduleConflicts,
+  exchangeGoogleAuthCode,
+  getGoogleCredentials,
+  pullGoogleEvents,
+  pushAllBlocksToGoogle,
+  pushBlockToGoogle,
+  deleteGoogleCalendarEvent,
+  type ExternalEvent,
+  type ExternalEventRow,
+} from "./google-calendar.ts";
+
+export const DEFAULT_SCHEDULE_BLOCKS: Omit<ScheduleBlock, "id">[] = [
+  { title: "Morning Deep Work", category: "morning", startTime: "07:00", endTime: "08:30", color: "#38bdf8", pos: 1 },
+  { title: "School & Lab Sessions", category: "school", startTime: "08:45", endTime: "14:30", color: "#f59e0b", pos: 2 },
+  { title: "Afternoon Revision & Formula Prep", category: "revision", startTime: "15:30", endTime: "17:00", color: "#818cf8", pos: 3 },
+  { title: "Evening Problem Solving & PYQs", category: "practice", startTime: "17:30", endTime: "19:30", color: "#a855f7", pos: 4 },
+  { title: "Routine Review & Wind Down", category: "winddown", startTime: "21:00", endTime: "22:00", color: "#ec4899", pos: 5 },
+];
 
 // PTM only. Diwali (8-11 Nov) is deliberately absent: those are free study days.
 export const NON_STUDY = ["2026-10-31"];
@@ -31,9 +53,12 @@ const TABLES: Record<string, string[]> = {
   captures: ["id", "text", "kind", "done", "created_at"],
   routine: ["day", "sleep", "kickoff_at", "wins", "tomorrow", "shutdown_at"],
   reviews: ["week_start", "note"],
+  schedule_blocks: ["id", "title", "category", "start_time", "end_time", "color", "pos"],
+  google_sync: ["id", "refresh_token", "access_token", "expires_at", "calendar_id", "last_synced_at", "sync_token"],
+  external_events: ["id", "summary", "description", "starts_at", "ends_at", "is_study_block", "updated_at"],
 };
 /** Tables added in backup version 5. An older file doesn't have them, so restoring one leaves them as they are. */
-const LIFE_TABLES = ["habits", "habit_log", "projects", "milestones", "captures", "routine", "reviews"];
+const LIFE_TABLES = ["habits", "habit_log", "projects", "milestones", "captures", "routine", "reviews", "schedule_blocks", "google_sync", "external_events"];
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const validDate = (d: unknown): d is string => typeof d === "string" && ISO.test(d) && !Number.isNaN(Date.parse(d));
 const validScope = (s: unknown): s is Scope => SCOPES.includes(s as Scope);
@@ -47,7 +72,8 @@ async function loadModel(db: D1Database, t: string) {
     db.prepare("SELECT id, name, scope, starts_on AS startsOn, ends_on AS endsOn, confirmed FROM phases ORDER BY pos"),
     db.prepare(
       `SELECT c.id, c.subject_id AS subjectId, c.name, c.scope, c.confirmed, c.source,
-              p.status, p.confidence, p.last_revised AS lastRevised, p.practice_done AS practiceDone
+              p.status, p.confidence, p.last_revised AS lastRevised, p.practice_done AS practiceDone,
+              COALESCE(p.notes, '') AS notes
        FROM chapters c JOIN progress p ON p.chapter_id = c.id ORDER BY c.subject_id, c.pos`,
     ),
     db.prepare("SELECT chapter_id AS chapterId, pass_no AS n, done_at AS doneAt FROM passes"),
@@ -93,8 +119,16 @@ function suggest(model: Model, t: string, energy: Energy | null, n: number, excl
   return studyQueue(chapters, model.active as { id: string; startsOn: string; endsOn: string; scope: Scope }, t, energy, n, exclude);
 }
 
-async function addChapterTargets(db: D1Database, picks: { chapterId: string; title: string }[], t: string) {
-  if (picks.length) await db.batch(picks.map((p) => db.prepare("INSERT INTO daily_targets (day, chapter_id, title) VALUES (?, ?, ?)").bind(t, p.chapterId, p.title)));
+async function addChapterTargets(db: D1Database, picks: { chapterId: string; subjectId?: string; confidence?: number; title: string }[], t: string) {
+  if (picks.length) {
+    await db.batch(
+      picks.map((p) =>
+        db
+          .prepare("INSERT INTO daily_targets (day, chapter_id, subject_id, title, duration) VALUES (?, ?, ?, ?, ?)")
+          .bind(t, p.chapterId, p.subjectId ?? null, p.title, computeChapterDuration(p.confidence, p.subjectId)),
+      ),
+    );
+  }
 }
 
 const energyOn = async (db: D1Database, t: string) => (await db.prepare("SELECT energy FROM checkins WHERE day = ?").bind(t).first<{ energy: Energy }>())?.energy ?? null;
@@ -133,10 +167,11 @@ async function settleNow(db: D1Database, nowMs: number): Promise<Timer> {
 
 const timerView = (t: Timer, nowMs: number) => ({ ...t, endsAt: t.startedAt === null ? null : t.startedAt + t.durationS * 1000, serverNow: nowMs });
 
-export function createApp(opts: { now?: () => number } = {}) {
+export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } = {}) {
   const app = new Hono<Env>();
   const now = () => opts.now?.() ?? Date.now();
   const today = () => todayIST(now());
+  const fetchFn = opts.fetchFn ?? fetch;
   const body = async <T>(c: { req: { json: () => Promise<unknown> } }) => ((await c.req.json().catch(() => ({}))) ?? {}) as T;
 
   app.onError((err, c) => {
@@ -144,7 +179,7 @@ export function createApp(opts: { now?: () => number } = {}) {
     return c.json({ error: "Unexpected server error." }, 500);
   });
 
-  registerAuth(app, now);
+  registerAuth(app, now, fetchFn);
   registerLife(app, today, () => new Date(now()).toISOString());
 
   app.get("/api/state", async (c) => {
@@ -162,31 +197,72 @@ export function createApp(opts: { now?: () => number } = {}) {
     if (claim.meta.changes === 1) await addChapterTargets(db, suggest(model, t, await energyOn(db, t), TARGETS_PER_DAY, []), t);
 
     const since90 = new Date(Date.parse(t + "T00:00:00Z") - 90 * DAY_MS).toISOString().slice(0, 10);
-    const [deliverableRes, sessionRes, targetRes, checkinRes, heatRes] = await db.batch<Row>([
+    const [deliverableRes, sessionRes, targetRes, checkinRes, heatRes, scheduleRes, calTokenRes, googleSyncRes, externalEventsRes] = await db.batch<Row>([
       db.prepare("SELECT id, name, subject, detail, phase_id AS phaseId, status, done_count AS doneCount, total_count AS totalCount, due, viva_prep AS vivaPrep FROM deliverables ORDER BY id"),
       db.prepare("SELECT day, subject_id AS subjectId, SUM(minutes) AS minutes FROM sessions WHERE day >= ? GROUP BY day, subject_id ORDER BY day").bind(since),
-      db.prepare("SELECT t.id, t.title, t.chapter_id AS chapterId, c.subject_id AS subjectId, t.done FROM daily_targets t LEFT JOIN chapters c ON c.id = t.chapter_id WHERE t.day = ? ORDER BY t.id").bind(t),
+      db.prepare("SELECT t.id, t.title, t.chapter_id AS chapterId, COALESCE(t.subject_id, c.subject_id) AS subjectId, COALESCE(t.duration, '45m') AS duration, t.done FROM daily_targets t LEFT JOIN chapters c ON c.id = t.chapter_id WHERE t.day = ? ORDER BY t.id").bind(t),
       db.prepare("SELECT day, energy FROM checkins WHERE day >= ? ORDER BY day").bind(since14),
       db.prepare("SELECT day, SUM(minutes) AS minutes FROM sessions WHERE day >= ? GROUP BY day ORDER BY day").bind(since90),
+      db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time"),
+      db.prepare("SELECT value FROM settings WHERE key = 'calendar_token'"),
+      db.prepare("SELECT id, calendar_id AS calendarId, last_synced_at AS lastSyncedAt, sync_token AS syncToken FROM google_sync WHERE id = 1"),
+      db.prepare("SELECT id, summary, description, starts_at AS startsAt, ends_at AS endsAt, is_study_block AS isStudyBlock, updated_at AS updatedAt FROM external_events WHERE starts_at >= ? AND starts_at <= ? ORDER BY starts_at").bind(`${t}T00:00:00+05:30`, `${t}T23:59:59+05:30`),
     ]);
+
+    let scheduleBlocks = scheduleRes.results as ScheduleBlock[];
+    if (scheduleBlocks.length === 0) {
+      await db.batch(
+        DEFAULT_SCHEDULE_BLOCKS.map((b) =>
+          db.prepare("INSERT INTO schedule_blocks (title, category, start_time, end_time, color, pos) VALUES (?, ?, ?, ?, ?, ?)")
+            .bind(b.title, b.category, b.startTime, b.endTime, b.color, b.pos)
+        )
+      );
+      scheduleBlocks = (await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time").all<ScheduleBlock>()).results;
+    }
+
+    let calToken = calTokenRes.results[0]?.value as string | undefined;
+    if (!calToken) {
+      calToken = "study_cal_" + crypto.randomUUID().replace(/-/g, "");
+      await db.prepare("INSERT INTO settings (key, value) VALUES ('calendar_token', ?) ON CONFLICT(key) DO NOTHING").bind(calToken).run();
+    }
+
+    const syncRow = googleSyncRes.results[0] as { calendarId?: string; lastSyncedAt?: string; syncToken?: string } | undefined;
+    const rawEvents = (externalEventsRes.results || []) as any[];
+    const externalEvents = rawEvents.map((e) => ({
+      ...e,
+      isStudyBlock: !!e.isStudyBlock,
+    }));
+    const scheduleConflicts = detectScheduleConflicts(scheduleBlocks, rawEvents as any, t);
+
     return c.json({
       today: t, phases: model.phases, activePhaseId: model.active?.id ?? null, autoPhase: model.autoPhase, subjects: model.subjects,
       deliverables: deliverableRes.results.map((r) => ({ ...r, vivaPrep: !!r.vivaPrep })), sessions: sessionRes.results, heat: heatRes.results,
-      targets: targetRes.results.map((r) => ({ ...r, done: !!r.done })),
+      targets: targetRes.results.map((r) => ({ ...r, done: !!r.done, duration: r.duration ?? "45m" })),
       checkin: (checkinRes.results.find((r) => r.day === t)?.energy as Energy | undefined) ?? null,
       checkins: checkinRes.results,
+      scheduleBlocks,
+      calendarToken: calToken,
+      googleSync: {
+        connected: !!syncRow,
+        calendarId: syncRow?.calendarId || "primary",
+        lastSyncedAt: syncRow?.lastSyncedAt || null,
+        syncToken: syncRow?.syncToken || null,
+      },
+      externalEvents,
+      scheduleConflicts,
       timer: timerView(timer, nowMs),
       ...(await lifeState(db, t)),
     });
   });
 
   app.post("/api/timer/start", async (c) => {
-    const { subjectId } = await body<{ subjectId?: string }>(c);
+    const { subjectId, durationS } = await body<{ subjectId?: string; durationS?: number }>(c);
     const db = c.env.DB;
     if (!(await db.prepare("SELECT 1 AS ok FROM subjects WHERE id = ?").bind(subjectId ?? "").first())) return c.json({ error: "Pick a subject first." }, 404);
     const nowMs = now();
     const cur = await settleNow(db, nowMs);
-    const next = startFocus(cur, subjectId!, nowMs);
+    const validDuration = (typeof durationS === "number" && durationS >= 300 && durationS <= 7200) ? durationS : undefined;
+    const next = startFocus(cur, subjectId!, nowMs, validDuration);
     if (!next || !(await commitTimer(db, cur, next, []))) return c.json({ error: "A focus session is already running." }, 409);
     return c.json({ timer: timerView(next, nowMs) });
   });
@@ -218,18 +294,23 @@ export function createApp(opts: { now?: () => number } = {}) {
   });
 
   app.post("/api/targets", async (c) => {
-    const { title, chapterId } = await body<{ title?: string; chapterId?: string }>(c);
+    const { title, chapterId, duration, subjectId } = await body<{ title?: string; chapterId?: string; duration?: string; subjectId?: string }>(c);
     const t = today();
     const db = c.env.DB;
     if (((await db.prepare("SELECT COUNT(*) AS n FROM daily_targets WHERE day = ?").bind(t).first<{ n: number }>())?.n ?? 0) >= MAX_TARGETS) return c.json({ error: `That's ${MAX_TARGETS} targets already. Finish or remove one first.` }, 400);
     let label = title?.trim() ?? "";
+    let finalSubId = subjectId ?? null;
+    let finalDuration = duration?.trim() || "";
     if (chapterId) {
-      const row = await db.prepare("SELECT c.name AS chapter, s.name AS subject FROM chapters c JOIN subjects s ON s.id = c.subject_id WHERE c.id = ?").bind(chapterId).first<{ chapter: string; subject: string }>();
+      const row = await db.prepare("SELECT c.name AS chapter, s.name AS subject, s.id AS subId, p.confidence FROM chapters c JOIN subjects s ON s.id = c.subject_id JOIN progress p ON p.chapter_id = c.id WHERE c.id = ?").bind(chapterId).first<{ chapter: string; subject: string; subId: string; confidence: number }>();
       if (!row) return c.json({ error: "No such chapter." }, 404);
-      label = `${row.subject}: ${row.chapter}`;
+      if (!label) label = `${row.subject}: ${row.chapter}`;
+      finalSubId = row.subId;
+      if (!finalDuration) finalDuration = computeChapterDuration(row.confidence, row.subId);
     }
     if (!label) return c.json({ error: "Target needs a title." }, 400);
-    const r = await db.prepare("INSERT INTO daily_targets (day, chapter_id, title) VALUES (?, ?, ?)").bind(t, chapterId ?? null, label).run();
+    if (!finalDuration) finalDuration = "45m";
+    const r = await db.prepare("INSERT INTO daily_targets (day, chapter_id, subject_id, title, duration) VALUES (?, ?, ?, ?, ?)").bind(t, chapterId ?? null, finalSubId, label, finalDuration).run();
     return c.json({ id: r.meta.last_row_id }, 201);
   });
 
@@ -254,8 +335,38 @@ export function createApp(opts: { now?: () => number } = {}) {
     const planned = (await db.prepare("SELECT chapter_id AS id FROM daily_targets WHERE day = ? AND chapter_id IS NOT NULL").bind(t).all<{ id: string }>()).results.map((r) => r.id);
     const [pick] = suggest(await loadModel(db, t), t, await energyOn(db, t), 1, planned);
     if (!pick) return c.json({ error: "No other chapters to swap in." }, 409);
-    await db.prepare("UPDATE daily_targets SET chapter_id = ?, title = ? WHERE id = ?").bind(pick.chapterId, pick.title, target.id).run();
+    await db.prepare("UPDATE daily_targets SET chapter_id = ?, subject_id = ?, title = ?, duration = ? WHERE id = ?").bind(pick.chapterId, pick.subjectId ?? null, pick.title, computeChapterDuration(pick.confidence, pick.subjectId), target.id).run();
     return c.json({ ok: true });
+  });
+
+  // Save an optional 1-line note for the most recent focus session
+  app.post("/api/sessions/note", async (c) => {
+    const { note } = await body<{ note?: string }>(c);
+    const t = today();
+    const cleanNote = typeof note === "string" ? note.trim().slice(0, 250) : "";
+    if (!cleanNote) return c.json({ ok: true });
+    const latest = await c.env.DB.prepare("SELECT id FROM sessions WHERE day = ? ORDER BY id DESC LIMIT 1").bind(t).first<{ id: number }>();
+    if (latest) {
+      await c.env.DB.prepare("UPDATE sessions SET note = ? WHERE id = ?").bind(cleanNote, latest.id).run();
+    }
+    return c.json({ ok: true });
+  });
+
+  // Attach a doubt or note to a chapter
+  app.post("/api/chapters/:id/notes", async (c) => {
+    const id = c.req.param("id");
+    const { note } = await body<{ note?: string }>(c);
+    const db = c.env.DB;
+    if (!(await db.prepare("SELECT 1 AS ok FROM chapters WHERE id = ?").bind(id).first())) {
+      return c.json({ error: "No such chapter." }, 404);
+    }
+    const cleanNote = typeof note === "string" ? note.trim().slice(0, 500) : "";
+    if (!cleanNote) return c.json({ ok: true });
+    const cur = await db.prepare("SELECT notes FROM progress WHERE chapter_id = ?").bind(id).first<{ notes: string | null }>();
+    const prev = cur?.notes ? cur.notes + "\n" : "";
+    const updated = `${prev}• ${cleanNote}`;
+    await db.prepare("UPDATE progress SET notes = ? WHERE chapter_id = ?").bind(updated, id).run();
+    return c.json({ ok: true, notes: updated });
   });
 
   app.put("/api/active-phase", async (c) => {
@@ -335,6 +446,53 @@ export function createApp(opts: { now?: () => number } = {}) {
       db.prepare("INSERT INTO progress (chapter_id) VALUES (?)").bind(id),
     ]);
     return c.json({ id }, 201);
+  });
+
+  // Imports official CBSE Class 10 curriculum & rationalised NCERT chapters for one or all subjects.
+  app.post("/api/syllabus/import-official", async (c) => {
+    const { subjectId } = await body<{ subjectId?: string }>(c);
+    const db = c.env.DB;
+    const allSubjects = (await db.prepare("SELECT id FROM subjects").all<{ id: string }>()).results.map((r) => r.id);
+    if (subjectId && subjectId !== "all" && !allSubjects.includes(subjectId)) {
+      return c.json({ error: "No such subject." }, 404);
+    }
+    const targets = subjectId && subjectId !== "all" ? [subjectId] : allSubjects.filter((id) => id in OFFICIAL_CURRICULUM);
+    let totalImported = 0;
+    const statements: D1PreparedStatement[] = [];
+
+    for (const subId of targets) {
+      const official = OFFICIAL_CURRICULUM[subId];
+      if (!official || !official.length) continue;
+      const existing = (await db.prepare("SELECT id, name FROM chapters WHERE subject_id = ?").bind(subId).all<{ id: string; name: string }>()).results;
+      const existingNames = new Map(existing.map((e) => [e.name.toLowerCase().trim(), e.id]));
+      const max = await db.prepare("SELECT MAX(pos) AS m FROM chapters WHERE subject_id = ?").bind(subId).first<{ m: number | null }>();
+      let nextPos = (max?.m ?? 0) + 1;
+
+      for (const ch of official) {
+        const cleanName = ch.name.toLowerCase().trim();
+        const matchedId = [...existingNames.entries()].find(([name]) => name === cleanName || name.startsWith(cleanName) || cleanName.startsWith(name))?.[1];
+
+        if (matchedId) {
+          statements.push(
+            db.prepare("UPDATE chapters SET confirmed = 1, source = ? WHERE id = ?").bind(ch.source, matchedId)
+          );
+        } else {
+          const id = `${subId}-${crypto.randomUUID().slice(0, 8)}`;
+          statements.push(
+            db.prepare("INSERT INTO chapters (id, subject_id, name, pos, scope, confirmed, source) VALUES (?, ?, ?, ?, ?, 1, ?)")
+              .bind(id, subId, ch.name, nextPos++, ch.scope, ch.source)
+          );
+          statements.push(db.prepare("INSERT INTO progress (chapter_id) VALUES (?)").bind(id));
+          totalImported++;
+        }
+      }
+    }
+
+    const BATCH_SIZE = 80;
+    for (let i = 0; i < statements.length; i += BATCH_SIZE) {
+      await db.batch(statements.slice(i, i + BATCH_SIZE));
+    }
+    return c.json({ ok: true, imported: totalImported, subjects: targets.length });
   });
 
   // Deleting a chapter takes its revision passes and any daily targets with it.
@@ -441,6 +599,370 @@ export function createApp(opts: { now?: () => number } = {}) {
     return c.json({ ok: true }, 201);
   });
 
+  // --- Dynamic ICS / iCal Feed ---
+  app.get("/api/calendar/feed.ics", async (c) => {
+    if (!c.env.STUDY_PASSCODE || !c.env.SESSION_SECRET) {
+      return c.text("Server auth isn't configured.", 500);
+    }
+    const token = c.req.query("token") || c.req.query("passcode") || c.req.query("key") || "";
+    let authorized = false;
+
+    if (token) {
+      const db = c.env.DB;
+      const calTokenRow = await db.prepare("SELECT value FROM settings WHERE key = 'calendar_token'").first<{ value: string }>();
+      const savedToken = calTokenRow?.value;
+      if (savedToken && (await same(token, savedToken))) {
+        authorized = true;
+      } else if (c.env.STUDY_PASSCODE && (await same(token, c.env.STUDY_PASSCODE))) {
+        authorized = true;
+      } else if (c.env.APP_TOKEN && (await same(token, c.env.APP_TOKEN))) {
+        authorized = true;
+      }
+    } else {
+      authorized = await hasValidSession(c, Math.floor(now() / 1000));
+    }
+
+    if (!authorized) {
+      return c.text("Unauthorized: Calendar token required. Please subscribe using your secure token URL.", 401);
+    }
+
+    const t = today();
+    const nowMs = now();
+    const db = c.env.DB;
+
+    const [phaseRes, examRes, scheduleRes, deliverableRes, targetRes, externalEventsRes] = await db.batch<Row>([
+      db.prepare("SELECT id, name, scope, starts_on AS startsOn, ends_on AS endsOn, confirmed FROM phases ORDER BY pos"),
+      db.prepare("SELECT se.subject_id AS subjectId, se.phase_id AS phaseId, se.date, s.name AS subjectName, p.name AS phaseName FROM subject_exams se JOIN subjects s ON s.id = se.subject_id JOIN phases p ON p.id = se.phase_id ORDER BY se.date"),
+      db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time"),
+      db.prepare("SELECT id, name, subject, detail, due, status, viva_prep AS vivaPrep FROM deliverables WHERE due IS NOT NULL AND status != 'done' ORDER BY due"),
+      db.prepare("SELECT id, day, title, done, duration FROM daily_targets WHERE day >= ? ORDER BY day, id").bind(t),
+      db.prepare("SELECT summary, starts_at AS startsAt, ends_at AS endsAt FROM external_events WHERE starts_at >= ? AND is_study_block = 0 ORDER BY starts_at").bind(`${t}T00:00:00+05:30`),
+    ]);
+
+    const phases = phaseRes.results.map((p) => ({ ...p, confirmed: !!p.confirmed })) as any;
+    const subjectExams = examRes.results as any;
+    let scheduleBlocks = scheduleRes.results as ScheduleBlock[];
+    if (scheduleBlocks.length === 0) {
+      scheduleBlocks = DEFAULT_SCHEDULE_BLOCKS.map((b, i) => ({ ...b, id: i + 1 }));
+    }
+    const deliverables = deliverableRes.results.map((d) => ({ ...d, vivaPrep: !!d.vivaPrep })) as any;
+    const dailyTargets = targetRes.results.map((tg) => ({ ...tg, done: !!tg.done })) as any;
+    const externalEvents = (externalEventsRes.results || []) as any;
+
+    const icsContent = generateIcsFeed({
+      phases,
+      subjectExams,
+      scheduleBlocks,
+      deliverables,
+      dailyTargets,
+      externalEvents,
+      today: t,
+      nowMs,
+    });
+
+    c.header("Content-Type", "text/calendar; charset=utf-8");
+    c.header("Content-Disposition", 'inline; filename="study-calendar.ics"');
+    c.header("Cache-Control", "private, max-age=300");
+    return c.body(icsContent, 200);
+  });
+
+  // Calendar token endpoints
+  app.get("/api/calendar/token", async (c) => {
+    const db = c.env.DB;
+    let token = (await db.prepare("SELECT value FROM settings WHERE key = 'calendar_token'").first<{ value: string }>())?.value;
+    if (!token) {
+      token = "study_cal_" + crypto.randomUUID().replace(/-/g, "");
+      await db.prepare("INSERT INTO settings (key, value) VALUES ('calendar_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token).run();
+    }
+    return c.json({ token, feedPath: `/api/calendar/feed.ics?token=${token}` });
+  });
+
+  app.post("/api/calendar/token/reset", async (c) => {
+    const db = c.env.DB;
+    const token = "study_cal_" + crypto.randomUUID().replace(/-/g, "");
+    await db.prepare("INSERT INTO settings (key, value) VALUES ('calendar_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token).run();
+    return c.json({ token, feedPath: `/api/calendar/feed.ics?token=${token}` });
+  });
+
+  // --- Schedule Blocks & Time Shifting ---
+  app.patch("/api/schedule/blocks/:id", async (c) => {
+    const b = await body<{ title?: string; startTime?: string; endTime?: string; color?: string; category?: string; pos?: number }>(c);
+    const db = c.env.DB;
+    const id = c.req.param("id");
+    const cur = await db.prepare("SELECT id FROM schedule_blocks WHERE id = ?").bind(id).first();
+    if (!cur) return c.json({ error: "Schedule block not found." }, 404);
+
+    const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (b.startTime !== undefined && !timeRegex.test(b.startTime)) return c.json({ error: "Start time must be HH:MM format." }, 400);
+    if (b.endTime !== undefined && !timeRegex.test(b.endTime)) return c.json({ error: "End time must be HH:MM format." }, 400);
+
+    await db.prepare(
+      `UPDATE schedule_blocks SET
+         title = COALESCE(?, title),
+         start_time = COALESCE(?, start_time),
+         end_time = COALESCE(?, end_time),
+         color = COALESCE(?, color),
+         category = COALESCE(?, category),
+         pos = COALESCE(?, pos)
+       WHERE id = ?`
+    ).bind(
+      b.title?.trim() ?? null,
+      b.startTime ?? null,
+      b.endTime ?? null,
+      b.color ?? null,
+      b.category ?? null,
+      b.pos ?? null,
+      id
+    ).run();
+
+    return c.json({ ok: true });
+  });
+
+  app.post("/api/schedule/shift", async (c) => {
+    const { deltaMins, fromId } = await body<{ deltaMins?: number; fromId?: number }>(c);
+    if (typeof deltaMins !== "number" || deltaMins < -180 || deltaMins > 180 || deltaMins === 0) {
+      return c.json({ error: "deltaMins must be between -180 and 180 and non-zero." }, 400);
+    }
+    const db = c.env.DB;
+    const rows = (await db.prepare("SELECT id, start_time AS startTime, end_time AS endTime, pos FROM schedule_blocks ORDER BY pos, start_time").all<{ id: number; startTime: string; endTime: string; pos: number }>()).results;
+    if (rows.length === 0) return c.json({ ok: true });
+
+    let shouldShift = fromId === undefined;
+    const updates: { id: number; startTime: string; endTime: string }[] = [];
+
+    for (const r of rows) {
+      if (!shouldShift && r.id === fromId) shouldShift = true;
+      if (shouldShift) {
+        updates.push({
+          id: r.id,
+          startTime: shiftTimeStr(r.startTime, deltaMins),
+          endTime: shiftTimeStr(r.endTime, deltaMins),
+        });
+      }
+    }
+
+    if (updates.length > 0) {
+      await db.batch(
+        updates.map((u) =>
+          db.prepare("UPDATE schedule_blocks SET start_time = ?, end_time = ? WHERE id = ?")
+            .bind(u.startTime, u.endTime, u.id)
+        )
+      );
+    }
+
+    return c.json({ ok: true, shifted: updates.length });
+  });
+
+  app.post("/api/schedule/reset", async (c) => {
+    const db = c.env.DB;
+    await db.batch([
+      db.prepare("DELETE FROM schedule_blocks"),
+      ...DEFAULT_SCHEDULE_BLOCKS.map((b) =>
+        db.prepare("INSERT INTO schedule_blocks (title, category, start_time, end_time, color, pos) VALUES (?, ?, ?, ?, ?, ?)")
+          .bind(b.title, b.category, b.startTime, b.endTime, b.color, b.pos)
+      ),
+    ]);
+    return c.json({ ok: true });
+  });
+
+  // --- Google Calendar API v3 Two-Way Live Sync Endpoints ---
+  app.get("/api/google/status", async (c) => {
+    const db = c.env.DB;
+    const [syncRow, eventCountRes] = await db.batch<Row>([
+      db.prepare("SELECT id, calendar_id AS calendarId, last_synced_at AS lastSyncedAt, sync_token AS syncToken FROM google_sync WHERE id = 1"),
+      db.prepare("SELECT COUNT(*) AS count FROM external_events"),
+    ]);
+    const sync = syncRow.results[0] as { calendarId?: string; lastSyncedAt?: string; syncToken?: string } | undefined;
+    const creds = await getGoogleCredentials(db, c.env, new URL(c.req.url).origin);
+    const count = (eventCountRes.results[0]?.count as number) ?? 0;
+    return c.json({
+      connected: !!sync,
+      hasCredentials: !!creds,
+      calendarId: sync?.calendarId || "primary",
+      lastSyncedAt: sync?.lastSyncedAt || null,
+      syncToken: sync?.syncToken || null,
+      eventCount: count,
+      clientIdPreview: creds ? `${creds.clientId.slice(0, 8)}...` : null,
+    });
+  });
+
+  app.get("/api/google/auth/url", async (c) => {
+    const db = c.env.DB;
+    const origin = new URL(c.req.url).origin;
+    const creds = await getGoogleCredentials(db, c.env, origin);
+    if (!creds) {
+      return c.json({
+        error: "Google Client ID and Secret are not configured yet. Configure them in environment secrets or the Setup tab.",
+      }, 400);
+    }
+    const stateToken = crypto.randomUUID();
+    await db.prepare("INSERT INTO settings (key, value) VALUES ('google_oauth_state', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(stateToken).run();
+    const url = buildGoogleAuthUrl(creds, stateToken);
+    return c.json({ url });
+  });
+
+  app.get("/api/google/callback", async (c) => {
+    const db = c.env.DB;
+    const code = c.req.query("code");
+    const state = c.req.query("state");
+    const error = c.req.query("error");
+
+    if (error) {
+      return c.redirect(`/#schedule?sync_error=${encodeURIComponent(error)}`);
+    }
+    if (!code) {
+      return c.redirect("/#schedule?sync_error=missing_code");
+    }
+
+    const savedState = (await db.prepare("SELECT value FROM settings WHERE key = 'google_oauth_state'").first<{ value: string }>())?.value;
+    if (!savedState || savedState !== state) {
+      return c.redirect("/#schedule?sync_error=state_mismatch");
+    }
+
+    const origin = new URL(c.req.url).origin;
+    const creds = await getGoogleCredentials(db, c.env, origin);
+    if (!creds) {
+      return c.redirect("/#schedule?sync_error=missing_credentials");
+    }
+
+    try {
+      const tokens = await exchangeGoogleAuthCode(code, creds);
+      const expiresAt = now() + tokens.expiresIn * 1000;
+
+      await db.prepare(
+        `INSERT INTO google_sync (id, refresh_token, access_token, expires_at, calendar_id, last_synced_at, sync_token)
+         VALUES (1, ?, ?, ?, 'primary', NULL, NULL)
+         ON CONFLICT(id) DO UPDATE SET
+           refresh_token = excluded.refresh_token,
+           access_token = excluded.access_token,
+           expires_at = excluded.expires_at`
+      ).bind(tokens.refreshToken, tokens.accessToken, expiresAt).run();
+
+      // Immediately pull recent events
+      await pullGoogleEvents(db, c.env, now()).catch(() => null);
+
+      return c.redirect("/#schedule?sync=connected");
+    } catch (err: any) {
+      return c.redirect(`/#schedule?sync_error=${encodeURIComponent(err?.message || "oauth_failed")}`);
+    }
+  });
+
+  app.post("/api/google/setup", async (c) => {
+    const { clientId, clientSecret, redirectUri, refreshToken, calendarId } = await body<{
+      clientId?: string;
+      clientSecret?: string;
+      redirectUri?: string;
+      refreshToken?: string;
+      calendarId?: string;
+    }>(c);
+    const db = c.env.DB;
+
+    const stmts: D1PreparedStatement[] = [];
+    if (clientId?.trim()) {
+      stmts.push(db.prepare("INSERT INTO settings (key, value) VALUES ('google_client_id', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(clientId.trim()));
+    }
+    if (clientSecret?.trim()) {
+      stmts.push(db.prepare("INSERT INTO settings (key, value) VALUES ('google_client_secret', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(clientSecret.trim()));
+    }
+    if (redirectUri?.trim()) {
+      stmts.push(db.prepare("INSERT INTO settings (key, value) VALUES ('google_redirect_uri', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(redirectUri.trim()));
+    }
+    if (refreshToken?.trim()) {
+      stmts.push(
+        db.prepare(
+          `INSERT INTO google_sync (id, refresh_token, access_token, expires_at, calendar_id, last_synced_at, sync_token)
+           VALUES (1, ?, NULL, 0, ?, NULL, NULL)
+           ON CONFLICT(id) DO UPDATE SET
+             refresh_token = excluded.refresh_token,
+             calendar_id = excluded.calendar_id`
+        ).bind(refreshToken.trim(), calendarId?.trim() || "primary")
+      );
+    }
+    if (stmts.length > 0) {
+      await db.batch(stmts);
+    }
+
+    let syncedCount = 0;
+    if (refreshToken?.trim()) {
+      try {
+        const pullRes = await pullGoogleEvents(db, c.env, now());
+        syncedCount = pullRes.syncedCount;
+      } catch (err: any) {
+        return c.json({ ok: true, warning: `Credentials saved, but initial sync had an issue: ${err?.message}` });
+      }
+    }
+
+    return c.json({ ok: true, syncedCount });
+  });
+
+  app.post("/api/google/sync", async (c) => {
+    const db = c.env.DB;
+    try {
+      const res = await pullGoogleEvents(db, c.env, now());
+      return c.json({ ok: true, ...res });
+    } catch (err: any) {
+      return c.json({ error: err?.message || "Sync failed" }, 400);
+    }
+  });
+
+  app.post("/api/google/push", async (c) => {
+    const { blockId, date } = await body<{ blockId?: number; date?: string }>(c);
+    const db = c.env.DB;
+    const targetDate = date || today();
+
+    try {
+      if (blockId) {
+        const block = await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks WHERE id = ?").bind(blockId).first<ScheduleBlock>();
+        if (!block) return c.json({ error: "Schedule block not found." }, 404);
+        const res = await pushBlockToGoogle(db, c.env, block, targetDate, now());
+        return c.json({ ok: true, pushed: 1, eventId: res.eventId });
+      }
+
+      const blocks = (await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time").all<ScheduleBlock>()).results;
+      const res = await pushAllBlocksToGoogle(db, c.env, blocks, targetDate, now());
+      return c.json({ ok: true, pushed: res.pushed, eventIds: res.eventIds });
+    } catch (err: any) {
+      return c.json({ error: err?.message || "Push failed" }, 400);
+    }
+  });
+
+  app.post("/api/google/disconnect", async (c) => {
+    const db = c.env.DB;
+    await db.batch([
+      db.prepare("DELETE FROM google_sync WHERE id = 1"),
+      db.prepare("DELETE FROM external_events"),
+    ]);
+    return c.json({ ok: true });
+  });
+
+  app.get("/api/google/events", async (c) => {
+    const db = c.env.DB;
+    const targetDate = c.req.query("date") || today();
+    const rows = (await db.prepare(
+      "SELECT id, summary, description, starts_at AS startsAt, ends_at AS endsAt, is_study_block AS isStudyBlock, updated_at AS updatedAt FROM external_events WHERE starts_at >= ? AND starts_at <= ? ORDER BY starts_at"
+    ).bind(`${targetDate}T00:00:00+05:30`, `${targetDate}T23:59:59+05:30`).all<ExternalEvent>()).results;
+
+    const blocks = (await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time").all<ScheduleBlock>()).results;
+    const conflicts = detectScheduleConflicts(blocks, rows, targetDate);
+
+    return c.json({
+      date: targetDate,
+      events: rows.map((r) => ({ ...r, isStudyBlock: !!r.isStudyBlock })),
+      conflicts,
+    });
+  });
+
+  app.delete("/api/google/events/:id", async (c) => {
+    const id = c.req.param("id");
+    const db = c.env.DB;
+    try {
+      await deleteGoogleCalendarEvent(db, c.env, id, now());
+      return c.json({ ok: true });
+    } catch (err: any) {
+      return c.json({ error: err?.message || "Delete failed" }, 400);
+    }
+  });
+
   // Whole-database export, so a wiped database or a move to another host never loses progress.
   app.get("/api/export", async (c) => {
     const db = c.env.DB;
@@ -489,6 +1011,7 @@ export function createApp(opts: { now?: () => number } = {}) {
       delete b.tasks;
       b.chapters = b.chapters.map((ch: Row) => (ch.scope === "term1" ? { ...ch, scope: "unit1" } : ch));
     }
+    b.schedule_blocks ??= [];
     const tables = Object.entries(TABLES).filter(([t]) => b.version >= 5 || !LIFE_TABLES.includes(t));
     for (const [table, cols] of tables) {
       if (!Array.isArray(b[table])) return fail(`Backup is missing the ${table} list.`);

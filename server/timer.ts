@@ -57,8 +57,8 @@ export function stopTimer(t: Timer, nowMs: number): { timer: Timer; logs: Sessio
 }
 
 /** Starts a focus round on a settled timer, or returns null if one is already running. A break is replaced. */
-export function startFocus(t: Timer, subjectId: string, nowMs: number): Timer | null {
+export function startFocus(t: Timer, subjectId: string, nowMs: number, customFocusS = FOCUS_S): Timer | null {
   if (t.mode === "focus") return null;
   const day = todayIST(nowMs);
-  return { mode: "focus", subjectId, startedAt: nowMs, durationS: FOCUS_S, round: t.cycleDay === day ? t.round : 0, cycleDay: day };
+  return { mode: "focus", subjectId, startedAt: nowMs, durationS: customFocusS, round: t.cycleDay === day ? t.round : 0, cycleDay: day };
 }

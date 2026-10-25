@@ -15,9 +15,20 @@ type Opts = {
   secret?: string | null;
   /** STUDY_PASSCODE; null leaves it unset. */
   pin?: string | null;
+  /** Google OAuth Client ID */
+  googleClientId?: string | null;
+  /** Google OAuth Client Secret */
+  googleClientSecret?: string | null;
+  /** Google OAuth Redirect URI for SSO Login */
+  googleRedirectUri?: string | null;
+  /** Google OAuth Redirect URI for Calendar */
+  googleCalendarRedirectUri?: string | null;
+  /** Allowed Google Emails whitelist */
+  allowedGoogleEmails?: string | null;
   /** "bearer" (default) sends the token on every call; "none" sends nothing so tests can use cookies. */
   auth?: "bearer" | "none";
   now?: number;
+  fetchFn?: typeof fetch;
 };
 
 /** A real (local, in-memory) D1 database from the deployed wrangler.jsonc, with the project's migrations applied. */
@@ -29,10 +40,20 @@ export async function setup(opts: Opts = {}) {
     await db.batch(stmts.map((s) => db.prepare(s)));
   }
   let clock = opts.now ?? Date.parse("2026-10-22T06:00:00Z");
-  const app = createApp({ now: () => clock });
+  const app = createApp({ now: () => clock, fetchFn: opts.fetchFn });
   const pick = (v: string | null | undefined, dflt: string) => (v === undefined ? dflt : v ?? undefined);
   const token = pick(opts.token, TOKEN);
-  const env = { DB: db, APP_TOKEN: token, SESSION_SECRET: pick(opts.secret, "test-secret"), STUDY_PASSCODE: pick(opts.pin, PIN) };
+  const env = {
+    DB: db,
+    APP_TOKEN: token,
+    SESSION_SECRET: pick(opts.secret, "test-secret"),
+    STUDY_PASSCODE: pick(opts.pin, PIN),
+    GOOGLE_CLIENT_ID: opts.googleClientId ?? undefined,
+    GOOGLE_CLIENT_SECRET: opts.googleClientSecret ?? undefined,
+    GOOGLE_REDIRECT_URI: opts.googleRedirectUri ?? undefined,
+    GOOGLE_CALENDAR_REDIRECT_URI: opts.googleCalendarRedirectUri ?? undefined,
+    ALLOWED_GOOGLE_EMAILS: opts.allowedGoogleEmails ?? "advaita974@gmail.com",
+  };
   const sendToken = (opts.auth ?? "bearer") === "bearer" && token;
   /** Same call shape as Fastify's inject, with the auth header added unless a test overrides it. */
   const inject = (arg: string | { method?: string; url: string; payload?: unknown; headers?: Record<string, string> }) => {

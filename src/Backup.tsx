@@ -5,9 +5,9 @@ import type { Theme } from "./theme.ts";
 import { Btn, Card, H2 } from "./ui.tsx";
 
 const THEMES: { id: Theme; label: string }[] = [
-  { id: "system", label: "System" },
-  { id: "dark", label: "Dark" },
-  { id: "light", label: "Light" },
+  { id: "system", label: "System Default" },
+  { id: "dark", label: "Dark Mode" },
+  { id: "light", label: "Light Mode" },
 ];
 
 export function Backup({ reload, theme, setTheme }: { reload: () => Promise<void>; theme: Theme; setTheme: (t: Theme) => void }) {
@@ -24,7 +24,7 @@ export function Backup({ reload, theme, setTheme }: { reload: () => Promise<void
       a.click();
       URL.revokeObjectURL(a.href);
       try { localStorage.setItem("last-backup", new Date().toISOString()); } catch { /* optional */ }
-      setMsg("Backup downloaded.");
+      setMsg("Backup downloaded successfully.");
     } catch {
       setMsg("Couldn't create the backup. Check your connection and try again.");
     }
@@ -46,42 +46,43 @@ export function Backup({ reload, theme, setTheme }: { reload: () => Promise<void
 
   return (
     <>
-      <header>
-        <div className="text-xs uppercase tracking-[0.06em] text-muted lg:text-[13px]">Your data</div>
-        <h1 className="m-0 mt-0.5 text-[28px] font-semibold tracking-[-0.02em] lg:mt-1 lg:text-[30px]">Backup</h1>
+      <header className="border-b border-white/[0.08] pb-5">
+        <div className="text-xs font-medium text-zinc-400">Settings & State Management</div>
+        <h1 className="m-0 mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">Data Vault & Config</h1>
       </header>
-      <div className="flex max-w-3xl flex-col gap-4 lg:gap-6">
+      <div className="flex max-w-3xl flex-col gap-5 lg:gap-6">
         <Card labelledBy="backup-h">
-          <H2 id="backup-h">Backup and restore</H2>
-          <p className="mt-2 mb-1 text-[14px]">Your progress lives in the cloud database. Download a copy now and then, and before any big change.</p>
-          <p className="m-0 text-[13px] text-muted">{last ? `Last backup from this browser: ${new Date(last).toLocaleString("en-IN")}.` : "No backup made from this browser yet."}</p>
+          <H2 id="backup-h">Backup & Restore State</H2>
+          <p className="mt-2 mb-1 text-sm text-zinc-300 leading-relaxed">Your data resides in Cloudflare D1 with automatic persistence. Export snapshots regularly prior to major syllabus updates.</p>
+          <p className="m-0 text-xs text-zinc-500 font-mono">{last ? `Last exported snapshot: ${new Date(last).toLocaleString("en-IN")}` : "No export logged in this session."}</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Btn kind="primary" onClick={download}>Download backup</Btn>
-            <label className="flex h-11 cursor-pointer items-center rounded-xl border border-line bg-surface2 px-4 text-[14px] focus-within:outline-2 focus-within:outline-(--focus)">
-              Restore from file
+            <Btn kind="primary" onClick={download}>Download JSON Snapshot</Btn>
+            <label className="flex h-9 cursor-pointer items-center rounded-lg border border-white/15 bg-white/[0.05] px-4 text-xs font-medium text-zinc-200 hover:border-white/30 hover:bg-white/[0.08] transition-all focus-within:outline-2 focus-within:outline-sky-400">
+              Restore from File
               <input type="file" accept="application/json,.json" className="sr-only" onChange={(e) => { void restore(e.target.files?.[0]); e.target.value = ""; }} />
             </label>
           </div>
-          {msg && <p role="status" className="mt-3 mb-0 text-[13px]">{msg}</p>}
+          {msg && <p role="status" className="mt-3.5 mb-0 text-xs font-medium text-amber-400">{msg}</p>}
         </Card>
 
         <Card labelledBy="theme-h">
-          <H2 id="theme-h">Appearance</H2>
-          <div className="mt-3 inline-flex rounded-xl bg-surface2/60 p-1 border border-line/60" role="group" aria-label="Theme">
+          <H2 id="theme-h">Appearance & Theme</H2>
+          <div className="mt-4 inline-flex rounded-xl bg-white/[0.03] p-1 border border-white/[0.08]" role="group" aria-label="Theme">
             {THEMES.map((t) => (
-              <button key={t.id} type="button" aria-pressed={theme === t.id} onClick={() => setTheme(t.id)} className={`h-9 rounded-[9px] px-5 text-[14px] font-medium transition-all duration-150 ${theme === t.id ? "bg-accent text-ink shadow-[0_1px_3px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)]" : "text-muted hover:text-fg"}`}>
+              <button key={t.id} type="button" aria-pressed={theme === t.id} onClick={() => setTheme(t.id)} className={`h-8.5 rounded-lg px-4 text-xs font-medium transition-all ${theme === t.id ? "bg-white text-zinc-950 font-semibold shadow-xs" : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"}`}>
                 {t.label}
               </button>
             ))}
           </div>
-          <p className="mt-2 mb-0 text-[13px] text-muted">System follows your device.</p>
+          <p className="mt-2.5 mb-0 text-xs text-zinc-500">System mode automatically adapts to your operating system's color profile.</p>
         </Card>
 
         <Card labelledBy="device-h">
-          <H2 id="device-h">This device</H2>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <Btn kind="outline" onClick={() => signOut("/api/logout")}>Sign out</Btn>
-            <Btn kind="outline" onClick={() => { if (confirm("Sign out of every phone and computer, including this one?")) void signOut("/api/logout-all"); }}>Sign out of all devices</Btn>
+          <H2 id="device-h">Session Security</H2>
+          <p className="mt-2 mb-3 text-sm text-zinc-300 leading-relaxed">Sign out of this browser session, or invalidate all authenticated devices globally.</p>
+          <div className="flex flex-wrap gap-3">
+            <Btn kind="outline" onClick={() => signOut("/api/logout")}>Sign Out</Btn>
+            <Btn kind="outline" onClick={() => { if (confirm("Sign out of every phone and computer, including this one?")) void signOut("/api/logout-all"); }}>Revoke All Active Sessions</Btn>
           </div>
         </Card>
       </div>

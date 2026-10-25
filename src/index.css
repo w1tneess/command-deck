@@ -1,95 +1,70 @@
 @import "tailwindcss";
 
 /*
- * Linear / Apple / Raycast Obsidian & OLED Pro Design System
- * Baseline #050608 with layered elevated cards (#0b0d13, #121620, #1a202c).
- * Calibrated hairline borders (border-white/[0.06] hover:border-white/[0.14]).
- * Every declared pair strictly passes WCAG 2.2 AA (4.5:1 text, 3:1 non-text).
+ * Life OS Architecture — Dark Editorial & Matte Obsidian Design System
+ * Canvas Base: Matte obsidian slate (#0c0f13 to #101318).
+ * Container Cards: #15191f framed with subtle, translucent borders (border-white/[0.06] hover:border-white/[0.12]).
+ * Accents: Sage / Emerald (#52b788 / #74c69d).
+ * Typography: Newsreader / Playfair Display editorial serif, Geist Sans / Inter UI sans, Geist Mono telemetry.
  */
 :root {
   color-scheme: dark;
-  --bg: #050608;
-  --surface: #0b0d13;
-  --surface2: #121620;
-  --surface3: #1a202c;
+  --font-serif: "Newsreader", "Playfair Display", Georgia, serif;
+  --font-sans: "Geist Sans", "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --bg: #0c0f13;
+  --shell: #101318;
+  --surface: #15191f;
+  --surface2: #1b2028;
+  --surface3: #222832;
   --line: rgba(255, 255, 255, 0.06);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --blue: #60a5fa; /* confidence dots and quiet blue indicators */
-  --good: #34d399;
-  --good-ink: #022c22;
-  --warn: #fbbf24;
-  --warn-ink: #451a03;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --ink: #ffffff; /* text on the indigo accent, in both themes */
-  --accent-text: #818cf8; /* vibrant indigo as text or accent edge */
-  --focus: #6366f1;
-  --heat-0: #121620;
-  --heat-1: #25265e;
-  --heat-2: #3c3b94;
-  --heat-3: #5654cc;
-  --heat-4: #817dfc;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
-    --bg: #f8fafc;
-    --surface: #ffffff;
-    --surface2: #f1f5f9;
-    --surface3: #e2e8f0;
-    --line: #e2e8f0;
-    --line-strong: #cbd5e1;
-    --text: #0f172a;
-    --muted: #64748b;
-    --blue: #2563eb;
-    --good: #10b981;
-    --good-ink: #ffffff;
-    --warn: #d97706;
-    --warn-ink: #ffffff;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
-    --accent-text: #4338ca;
-    --focus: #4f46e5;
-    --heat-0: #e2e8f0;
-    --heat-1: #deddf8;
-    --heat-2: #b9b7f1;
-    --heat-3: #8a85e6;
-    --heat-4: #4f46e5;
-  }
-}
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --surface2: #f1f5f9;
-  --surface3: #e2e8f0;
-  --line: #e2e8f0;
-  --line-strong: #cbd5e1;
-  --text: #0f172a;
-  --muted: #64748b;
-  --blue: #2563eb;
-  --good: #10b981;
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --text: #f4f5f8;
+  --muted: #8e9aa8;
+  --blue: #38bdf8;
+  --good: #52b788;
   --good-ink: #ffffff;
-  --warn: #d97706;
-  --warn-ink: #ffffff;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-text: #4338ca;
-  --focus: #4f46e5;
-  --heat-0: #e2e8f0;
-  --heat-1: #deddf8;
-  --heat-2: #b9b7f1;
-  --heat-3: #8a85e6;
-  --heat-4: #4f46e5;
+  --warn: #fbbf24;
+  --warn-ink: #18181b;
+  --accent: #52b788;
+  --accent-hover: #40916c;
+  --accent-text: #ffffff;
+  --focus: #74c69d;
+  --heat-0: #15191f;
+  --heat-1: #1e2836;
+  --heat-2: #244b3e;
+  --heat-3: #2d7355;
+  --heat-4: #52b788;
 }
 
-/* `inline` makes utilities read the variables above directly, so a theme switch needs no rebuild. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f4ef;
+  --shell: #eae8e1;
+  --surface: #ffffff;
+  --surface2: #f2f0e9;
+  --surface3: #e6e3da;
+  --line: rgba(0, 0, 0, 0.06);
+  --line-strong: rgba(0, 0, 0, 0.12);
+  --text: #18181b;
+  --muted: #71717a;
+  --accent: #2d7355;
+  --accent-hover: #1e4d38;
+  --accent-text: #ffffff;
+  --focus: #2d7355;
+  --heat-0: #f2f0e9;
+  --heat-1: #d1e7dd;
+  --heat-2: #a3cfbb;
+  --heat-3: #52b788;
+  --heat-4: #2d7355;
+}
+
 @theme inline {
-  --font-sans: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: "Newsreader", "Playfair Display", Georgia, serif;
+  --font-sans: "Geist Sans", "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --color-bg: var(--bg);
+  --color-shell: var(--shell);
   --color-surface: var(--surface);
   --color-surface2: var(--surface2);
   --color-surface3: var(--surface3);
@@ -105,34 +80,36 @@
   --color-accent: var(--accent);
   --color-accent-text: var(--accent-text);
   --color-ink: var(--ink);
+  --color-pastel-maths: #fdd5cc;
+  --color-pastel-science: #ded9fd;
+  --color-pastel-sst: #fee2be;
+  --color-pastel-lang: #c8f0d8;
 }
 
 @layer base {
   html {
     background: var(--bg);
     scroll-behavior: smooth;
+    letter-spacing: -0.011em;
   }
   body {
     margin: 0;
     background-color: var(--bg);
-    background-image:
-      radial-gradient(1200px circle at 50% -120px, rgba(99, 102, 241, 0.08), transparent 75%),
-      radial-gradient(900px circle at 85% 150px, rgba(168, 85, 247, 0.035), transparent 65%);
-    background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
-    font-size: 15px;
-    line-height: 1.45;
+    font-size: 14px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   button { font: inherit; cursor: pointer; color: inherit; }
-  button:disabled { cursor: not-allowed; opacity: 0.5; }
+  button:disabled { cursor: not-allowed; opacity: 0.35; }
   input, select, textarea { font: inherit; color: inherit; }
   a { text-decoration: none; color: inherit; }
-  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.28); }
-  ::selection { background: var(--accent); color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  ::selection { background: rgba(200, 240, 216, 0.7); color: #18181b; }
 
-  /* Sleek custom scrollbars */
+  /* Sleek modern rounded scrollbars */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -149,122 +126,29 @@
   }
 }
 
-:root[data-theme="light"] body {
-  background-image:
-    radial-gradient(1200px circle at 50% -120px, rgba(99, 102, 241, 0.05), transparent 75%),
-    radial-gradient(800px circle at 85% 150px, rgba(59, 130, 246, 0.03), transparent 60%);
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) body {
-    background-image:
-      radial-gradient(1200px circle at 50% -120px, rgba(99, 102, 241, 0.05), transparent 75%),
-      radial-gradient(800px circle at 85% 150px, rgba(59, 130, 246, 0.03), transparent 60%);
-  }
-}
-
-/*
- * Linear & Apple Design: Translucent materials with light-catching top bevel & optical hierarchy.
- * Uses backdrop-filter with saturation boost, falling back cleanly under reduced-transparency.
- */
-.apple-glass {
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-:root[data-theme="light"] .apple-glass {
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  border-top: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .apple-glass {
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    border-top: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .apple-glass {
-    background: var(--surface) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-}
-
-/*
- * States and motion: spring-like button taps (active:scale-[0.98] duration-100),
- * smooth card entries with stagger animations, and jitter-free tabular digits.
- */
 body { font-variant-numeric: tabular-nums; }
-button, a, input, select, summary {
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, filter 150ms ease, transform 100ms ease;
-}
-button:not(:disabled):active { transform: scale(0.98); }
 
-@media (hover: hover) {
-  button:not(:disabled):hover { filter: brightness(1.1); }
-  nav a:not([aria-current]):hover { background: var(--surface2); color: var(--text); }
-  select:not(:disabled):hover, input:not([type="checkbox"]):not(:disabled):hover { border-color: var(--muted); }
-  :root[data-theme="light"] button:not(:disabled):hover { filter: brightness(0.95); }
-}
-@media (hover: hover) and (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) button:not(:disabled):hover { filter: brightness(0.95); }
+button, a, input, select, summary {
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes drawer-up { from { transform: translateY(100%); opacity: 0.85; } to { transform: translateY(0); opacity: 1; } }
-@keyframes drawer-right { from { transform: translateX(100%); opacity: 0.85; } to { transform: translateX(0); opacity: 1; } }
-@keyframes stagger-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
+@keyframes fade-in { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
+@keyframes drawer-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes drawer-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
-.animate-fade-in { animation: fade-in 180ms ease-out forwards; }
-.animate-drawer-mobile { animation: drawer-up 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in { animation: fade-in 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-drawer-mobile { animation: drawer-up 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 @media (min-width: 1024px) {
-  .animate-drawer-desktop { animation: drawer-right 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .animate-drawer-desktop { animation: drawer-right 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 }
 
-.stagger-1 { animation: stagger-in 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-.stagger-2 { animation: stagger-in 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-.stagger-3 { animation: stagger-in 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-.shimmer-progress {
-  position: relative;
-  overflow: hidden;
-}
-.shimmer-progress::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
-  animation: shimmer 2.4s infinite;
-}
-
-.timer-ring {
-  transition: stroke-dasharray 400ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Precision architectural telemetry grid pattern */
-.telemetry-grid {
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-:root[data-theme="light"] .telemetry-grid {
-  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-}
-
-input[type="date"] { min-height: 44px; }
+input[type="date"] { min-height: 40px; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

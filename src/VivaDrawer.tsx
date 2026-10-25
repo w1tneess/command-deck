@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Act, Chapter, Subject } from "./api.ts";
-import { Btn, ConfDots, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill } from "./ui.tsx";
+import { AppleEmoji, Btn, ConfDots, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill } from "./ui.tsx";
 
 type Flashcard = {
   question: string;
@@ -17,7 +17,7 @@ type ChapterStudyKit = {
 };
 
 /** Curated CBSE Class 10 High-Yield Knowledge Base for Science, Maths & Core Subjects */
-const VIVA_DATABASE: Record<string, ChapterStudyKit> = {
+export const VIVA_DATABASE: Record<string, ChapterStudyKit> = {
   // --- SCIENCE ---
   "Chemical Reactions and Equations": {
     summary: "Law of conservation of mass, balancing equations, redox reactions, corrosion and rancidity.",
@@ -323,42 +323,42 @@ export function VivaDrawer({
       role="dialog"
       aria-modal="true"
       aria-labelledby="viva-title"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 backdrop-blur-md lg:items-center p-0 lg:p-6 animate-fade-in"
+      className="fixed inset-0 z-50 flex justify-end bg-black/35 backdrop-blur-xs p-0 animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-[28px] border border-white/10 bg-[#0b0d13] shadow-[0_24px_64px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.08)] lg:rounded-[28px] overflow-hidden">
+      <div className="relative flex h-full w-full max-w-xl flex-col rounded-l-[28px] sm:rounded-l-[32px] border-l border-black/[0.08] bg-[#faf7f2] text-zinc-900 shadow-2xl overflow-hidden animate-drawer-desktop">
         {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4 lg:px-6">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-accent/20 text-accent-text border border-accent/30 shadow-[0_0_12px_rgba(99,102,241,0.25)]">
-              ⚡
+        <div className="flex items-center justify-between border-b border-black/[0.06] px-6 py-4 bg-white/95 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-full bg-amber-100 text-amber-900 border border-amber-200 shadow-xs">
+              <AppleEmoji emoji="⚡" size={18} />
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-text">
-                  {subject.name} · VIVA & RECALL
+                <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                  {subject.name} · Active Recall
                 </span>
-                <span className="text-white/20">/</span>
-                <span className="font-mono text-[10px] text-white/50">CLASS 10</span>
+                <span className="text-zinc-400 font-mono text-[10px]">/</span>
+                <span className="font-sans text-[11px] tracking-wider text-zinc-500">Class 10 CBSE</span>
               </div>
-              <h2 id="viva-title" className="m-0 text-base lg:text-lg font-semibold text-white tracking-tight">
+              <h2 id="viva-title" className="m-0 text-base sm:text-lg font-bold text-zinc-900 tracking-tight">
                 {chapter.name}
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
-              <span className="text-xs text-white/50">Confidence:</span>
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-black/[0.06] bg-[#f4efe8] px-3 py-1.5">
+              <span className="font-sans text-[11px] font-medium text-zinc-600">Confidence:</span>
               <ConfDots value={chapter.confidence} />
             </div>
             <button
               type="button"
               aria-label="Close viva modal"
               onClick={onClose}
-              className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all active:scale-95"
+              className="flex size-8 items-center justify-center rounded-full border border-black/[0.08] bg-white text-zinc-700 hover:bg-zinc-900 hover:text-white transition-all shadow-xs cursor-pointer"
             >
               ✕
             </button>
@@ -366,25 +366,25 @@ export function VivaDrawer({
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex border-b border-white/[0.08] bg-white/[0.02] px-6 pt-2">
+        <div className="flex border-b border-black/[0.06] bg-[#f4efe8]/60 px-6 gap-2 pt-2 pb-0">
           <button
             type="button"
             onClick={() => setTab("quiz")}
-            className={`border-b-2 px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider transition-all ${
+            className={`border-b-2 px-4 py-2.5 text-xs font-semibold tracking-wide transition-all ${
               tab === "quiz"
-                ? "border-accent text-accent-text"
-                : "border-transparent text-white/50 hover:text-white"
+                ? "border-zinc-950 text-zinc-950 font-bold"
+                : "border-transparent text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            Flashcard & Viva Deck ({kit.cards.length})
+            Flashcards ({kit.cards.length})
           </button>
           <button
             type="button"
             onClick={() => setTab("cheatsheet")}
-            className={`border-b-2 px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider transition-all ${
+            className={`border-b-2 px-4 py-2.5 text-xs font-semibold tracking-wide transition-all ${
               tab === "cheatsheet"
-                ? "border-accent text-accent-text"
-                : "border-transparent text-white/50 hover:text-white"
+                ? "border-zinc-950 text-zinc-950 font-bold"
+                : "border-transparent text-zinc-500 hover:text-zinc-900"
             }`}
           >
             Formulas & Keywords
@@ -392,15 +392,15 @@ export function VivaDrawer({
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-5 lg:p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-[#faf7f2]">
           {tab === "quiz" ? (
             <div className="flex flex-col gap-4">
               {/* Flashcard Header & Progress */}
-              <div className="flex items-center justify-between text-xs font-mono text-white/50">
-                <span>QUESTION {cardIndex + 1} OF {kit.cards.length}</span>
+              <div className="flex items-center justify-between text-[11px] font-mono tracking-wider text-zinc-500">
+                <span>QUESTION {String(cardIndex + 1).padStart(2, "0")} OF {String(kit.cards.length).padStart(2, "0")}</span>
                 {currentCard.boardYear && (
-                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-400 font-semibold">
-                    ⭐ {currentCard.boardYear}
+                  <span className="rounded-full border border-amber-300 bg-[#fee2be] px-2.5 py-0.5 text-amber-950 font-sans text-[11px] font-semibold shadow-2xs">
+                    ★ {currentCard.boardYear}
                   </span>
                 )}
               </div>
@@ -411,48 +411,50 @@ export function VivaDrawer({
                 role="button"
                 aria-label={revealed ? "Answer revealed. Click to hide." : "Question card. Click to reveal answer."}
                 onClick={() => setRevealed((r) => !r)}
-                className="group relative flex min-h-[220px] cursor-pointer flex-col justify-between rounded-2xl border border-white/10 bg-[#121620] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-white/20 transition-all duration-200"
+                className="group relative flex min-h-[220px] cursor-pointer flex-col justify-between rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm hover:border-black/20 transition-all text-zinc-900"
               >
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-accent-text">
-                      PROMPT
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Prompt Spec
                     </span>
-                    <span className="text-white/20">·</span>
-                    <span className="text-[11px] text-white/40">Click or tap Space to reveal</span>
+                    <span className="text-zinc-300">·</span>
+                    <span className="font-mono text-[10px] text-zinc-500">Click or Space to flip</span>
                   </div>
-                  <p className="m-0 text-[15px] sm:text-base font-medium leading-relaxed text-white">
+                  <p className="m-0 text-base sm:text-[17px] font-semibold leading-relaxed text-zinc-900">
                     {currentCard.question}
                   </p>
                 </div>
 
                 {revealed ? (
-                  <div className="mt-4 border-t border-white/10 pt-4 animate-fade-in">
-                    <div className="font-mono text-[10px] font-semibold uppercase tracking-wider text-good mb-1.5 flex items-center gap-1.5">
-                      <span>✓ EXAMINER'S MODEL ANSWER & KEY POINTS</span>
+                  <div className="mt-5 border-t border-black/[0.06] pt-4.5 animate-fade-in">
+                    <div className="font-sans text-[11px] font-bold uppercase tracking-wider text-emerald-800 mb-2 flex items-center gap-1.5">
+                      <span>✓ Examiner Model Answer & PYQ Rubric</span>
                     </div>
-                    <p className="m-0 text-[14px] leading-relaxed text-white/90 whitespace-pre-line">
-                      {currentCard.answer}
-                    </p>
-                    {currentCard.keywords && currentCard.keywords.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {currentCard.keywords.map((kw) => (
-                          <span
-                            key={kw}
-                            className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[11px] text-white/70"
-                          >
-                            #{kw}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="rounded-2xl bg-[#c8f0d8]/35 border border-emerald-200/60 p-4 text-emerald-950">
+                      <p className="m-0 text-sm leading-relaxed whitespace-pre-line font-sans font-medium">
+                        {currentCard.answer}
+                      </p>
+                      {currentCard.keywords && currentCard.keywords.length > 0 && (
+                        <div className="mt-3.5 flex flex-wrap gap-1.5">
+                          {currentCard.keywords.map((kw) => (
+                            <span
+                              key={kw}
+                              className="rounded-full border border-emerald-300 bg-white px-2.5 py-0.5 font-sans text-[11px] font-semibold text-emerald-900 shadow-2xs"
+                            >
+                              #{kw}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
-                  <div className="mt-4 flex items-center justify-between text-xs text-white/40 border-t border-white/5 pt-3">
-                    <span className="group-hover:text-white/80 transition-colors">
-                      🔍 Tap anywhere to reveal board answer
+                  <div className="mt-5 flex items-center justify-between font-sans text-xs text-zinc-500 border-t border-black/[0.04] pt-3">
+                    <span className="group-hover:text-zinc-900 transition-colors font-medium">
+                      Click to reveal examiner answer
                     </span>
-                    <span className="font-mono text-[11px] text-accent-text">CLICK TO FLIP</span>
+                    <span className="text-zinc-400 uppercase tracking-wider text-[10px] font-mono">Flip Card ↵</span>
                   </div>
                 )}
               </div>
@@ -463,37 +465,40 @@ export function VivaDrawer({
                   type="button"
                   disabled={kit.cards.length <= 1}
                   onClick={prevCard}
-                  className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 font-mono text-xs font-semibold text-white/80 hover:bg-white/10 disabled:opacity-30 transition-all active:scale-95"
+                  aria-label="Previous question flashcard"
+                  className="flex h-10 items-center gap-2 rounded-full border border-black/[0.08] bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-950 hover:text-white disabled:opacity-30 transition-all tracking-wide cursor-pointer shadow-xs active:scale-95"
                 >
-                  ← PREV
+                  ← Prev
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setRevealed((r) => !r)}
-                  className="flex h-10 items-center justify-center rounded-xl border border-accent/40 bg-accent/20 px-4 font-mono text-xs font-semibold text-accent-text hover:bg-accent/30 transition-all active:scale-95"
+                  aria-label={revealed ? "Hide examiner model answer" : "Reveal examiner model answer"}
+                  className="flex h-10 items-center justify-center rounded-full border border-transparent bg-zinc-950 px-5 text-xs font-semibold text-white hover:bg-zinc-800 transition-all tracking-wide shadow-sm cursor-pointer active:scale-95"
                 >
-                  {revealed ? "HIDE ANSWER" : "REVEAL ANSWER"}
+                  {revealed ? "Hide Answer" : "Reveal Answer"}
                 </button>
 
                 <button
                   type="button"
                   disabled={kit.cards.length <= 1}
                   onClick={nextCard}
-                  className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 font-mono text-xs font-semibold text-white/80 hover:bg-white/10 disabled:opacity-30 transition-all active:scale-95"
+                  aria-label="Next question flashcard"
+                  className="flex h-10 items-center gap-2 rounded-full border border-black/[0.08] bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-950 hover:text-white disabled:opacity-30 transition-all tracking-wide cursor-pointer shadow-xs active:scale-95"
                 >
-                  NEXT →
+                  Next →
                 </button>
               </div>
 
               {/* 3-Point Self-Grade Scale to Auto-Update Confidence */}
-              <div className="mt-2 rounded-2xl border border-white/10 bg-[#0e1117] p-4">
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                    SELF-GRADE RECALL & AUTO-UPDATE CONFIDENCE
+              <div className="mt-2 rounded-3xl border border-black/[0.06] bg-white p-4 shadow-xs">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Self-Evaluation & Confidence
                   </span>
                   {gradeFeedback && (
-                    <span className="font-mono text-xs font-semibold text-good animate-fade-in">
+                    <span className="font-sans text-xs font-bold text-emerald-700 animate-fade-in">
                       ✓ {gradeFeedback}
                     </span>
                   )}
@@ -504,51 +509,52 @@ export function VivaDrawer({
                     type="button"
                     disabled={savingGrade}
                     onClick={() => handleGrade(1, "Needs Work (Confidence 1)")}
-                    className="flex flex-col items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 p-2.5 hover:bg-red-500/20 active:scale-95 transition-all"
+                    aria-label={`Grade confidence 1: Needs Work for ${chapter.name}`}
+                    className="flex flex-col items-center justify-center rounded-2xl border border-rose-200 bg-rose-50/70 p-2.5 hover:bg-rose-100 transition-all cursor-pointer active:scale-95"
                   >
-                    <span className="text-sm">🔴</span>
-                    <span className="mt-1 font-semibold text-xs text-red-400">Needs Work</span>
-                    <span className="font-mono text-[10px] text-red-300/60">Conf 1 · Review</span>
+                    <span className="font-sans text-xs font-bold text-rose-800 uppercase">[1] Needs Work</span>
+                    <span className="font-mono text-[9px] text-rose-600 uppercase tracking-wider mt-0.5">Conf 1 · Review</span>
                   </button>
 
                   <button
                     type="button"
                     disabled={savingGrade}
                     onClick={() => handleGrade(3, "Almost Ready (Confidence 3)")}
-                    className="flex flex-col items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 hover:bg-amber-500/20 active:scale-95 transition-all"
+                    aria-label={`Grade confidence 3: Almost Ready for ${chapter.name}`}
+                    className="flex flex-col items-center justify-center rounded-2xl border border-amber-200 bg-amber-50/70 p-2.5 hover:bg-amber-100 transition-all cursor-pointer active:scale-95"
                   >
-                    <span className="text-sm">🟡</span>
-                    <span className="mt-1 font-semibold text-xs text-amber-400">Almost Ready</span>
-                    <span className="font-mono text-[10px] text-amber-300/60">Conf 3 · Solid</span>
+                    <span className="font-sans text-xs font-bold text-amber-800 uppercase">[3] Almost Ready</span>
+                    <span className="font-mono text-[9px] text-amber-600 uppercase tracking-wider mt-0.5">Conf 3 · Solid</span>
                   </button>
 
                   <button
                     type="button"
                     disabled={savingGrade}
                     onClick={() => handleGrade(5, "Board Ready (Confidence 5)")}
-                    className="flex flex-col items-center justify-center rounded-xl border border-good/30 bg-good/10 p-2.5 hover:bg-good/20 active:scale-95 transition-all"
+                    aria-label={`Grade confidence 5: Board Ready for ${chapter.name}`}
+                    className="flex flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50/70 p-2.5 hover:bg-emerald-100 transition-all cursor-pointer active:scale-95"
                   >
-                    <span className="text-sm">🟢</span>
-                    <span className="mt-1 font-semibold text-xs text-good">Board Ready</span>
-                    <span className="font-mono text-[10px] text-good/60">Conf 5 · Mastered</span>
+                    <span className="font-sans text-xs font-bold text-emerald-800 uppercase">[5] Board Ready</span>
+                    <span className="font-mono text-[9px] text-emerald-600 uppercase tracking-wider mt-0.5">Conf 5 · Mastered</span>
                   </button>
                 </div>
               </div>
 
               {/* Revision Passes Toggles */}
-              <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] p-3">
-                <span className="font-mono text-xs text-white/60">Revision Passes:</span>
+              <div className="flex items-center justify-between rounded-3xl border border-black/[0.06] bg-white p-4 shadow-xs">
+                <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Revision Passes:</span>
                 <div className="flex items-center gap-1.5">
                   {PASS_NAMES.map((name, i) => (
                     <button
                       key={name}
                       type="button"
                       aria-pressed={!!chapter.passes[i]}
+                      aria-label={`Revision Pass ${i + 1}: ${name} for ${chapter.name}`}
                       onClick={() => act("PUT", `/api/chapters/${chapter.id}/passes/${i + 1}`, { done: !chapter.passes[i] })}
-                      className={`h-8 rounded-lg border px-2.5 font-mono text-xs transition-all active:scale-95 ${
+                      className={`h-8 rounded-full border px-3 font-mono text-xs transition-all uppercase cursor-pointer active:scale-95 ${
                         chapter.passes[i]
-                          ? "border-good bg-good/20 text-good font-semibold shadow-[0_0_8px_rgba(52,211,153,0.2)]"
-                          : "border-white/10 bg-white/5 text-white/50 hover:text-white"
+                          ? "border-emerald-300 bg-[#c8f0d8] text-emerald-950 font-bold shadow-2xs"
+                          : "border-black/[0.08] bg-[#f4efe8] text-zinc-600 hover:text-zinc-950 hover:bg-[#ece5dc]"
                       }`}
                     >
                       {chapter.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}
@@ -560,30 +566,30 @@ export function VivaDrawer({
           ) : (
             /* Cheat-sheet View */
             <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-accent-text block mb-1">
-                  CHAPTER BLUEPRINT
+              <div className="rounded-3xl border border-black/[0.06] bg-white p-5 shadow-xs">
+                <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1.5">
+                  Chapter Blueprint
                 </span>
-                <p className="m-0 text-sm leading-relaxed text-white/80">
+                <p className="m-0 text-sm leading-relaxed text-zinc-800 font-medium">
                   {kit.summary}
                 </p>
               </div>
 
               {kit.formulas.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                    CORE FORMULAS & LAWS
+                <div className="flex flex-col gap-2.5">
+                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Core Formulas & Laws
                   </span>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2.5">
                     {kit.formulas.map((f) => (
                       <div
                         key={f.title}
-                        className="rounded-xl border border-white/10 bg-[#121620] p-3.5 flex flex-col gap-1 shadow-sm"
+                        className="rounded-2xl border border-black/[0.05] bg-white p-4 flex flex-col gap-1.5 shadow-2xs"
                       >
-                        <span className="font-medium text-xs text-accent-text uppercase tracking-wider">
+                        <span className="text-xs font-bold text-zinc-900 tracking-wide">
                           {f.title}
                         </span>
-                        <code className="font-mono text-[13px] text-white bg-black/40 rounded-lg px-2.5 py-1.5 border border-white/5 block">
+                        <code className="font-mono text-xs text-zinc-900 bg-[#f4efe8] rounded-xl px-3 py-2 border border-black/[0.04] block">
                           {f.detail}
                         </code>
                       </div>
@@ -593,17 +599,17 @@ export function VivaDrawer({
               )}
 
               {kit.keywords.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                    CRITICAL BOARD KEYWORDS (MANDATORY IN ANSWERS)
+                <div className="flex flex-col gap-2.5">
+                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Critical Board Keywords (Mandatory in Answers)
                   </span>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {kit.keywords.map((kw) => (
                       <span
                         key={kw}
-                        className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-1 font-mono text-xs text-accent-text font-medium"
+                        className="rounded-full border border-black/[0.08] bg-white px-3 py-1 font-sans text-xs font-semibold text-zinc-800 shadow-2xs"
                       >
-                        {kw}
+                        #{kw}
                       </span>
                     ))}
                   </div>
@@ -614,12 +620,12 @@ export function VivaDrawer({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-white/[0.08] bg-[#090b10] px-6 py-3 text-xs text-white/40">
-          <span className="font-mono">Shortcuts: Esc (close) · Space (flip) · Arrow Keys (nav)</span>
+        <div className="flex items-center justify-between border-t border-black/[0.06] bg-white px-6 py-3.5 font-sans text-xs text-zinc-500">
+          <span>Esc (close) · Space (flip) · Arrow Keys (nav)</span>
           <button
             type="button"
             onClick={onClose}
-            className="font-mono text-xs font-semibold text-white/70 hover:text-white"
+            className="rounded-full border border-transparent bg-zinc-950 px-4 py-1.5 font-sans text-xs font-semibold text-white hover:bg-zinc-800 uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95"
           >
             Done
           </button>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { inScope, type Scope } from "../server/logic.ts";
 import type { Act, Chapter, State, Subject } from "./api.ts";
 import { activeOf } from "./model.ts";
-import { ConfDots, PASS_SHORT, Pill } from "./ui.tsx";
+import { AppleEmoji, ConfDots, PASS_SHORT, Pill, ScopeTag, SubjectIcon } from "./ui.tsx";
 
 type FilterTab = "all" | "blindspots" | "pyqs" | "pb1" | "mastered";
 
@@ -44,43 +44,44 @@ export function RevisionMatrix({
   return (
     <div className="flex flex-col gap-6">
       {/* Matrix Controls & Telemetry Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0e1117] p-4 lg:p-5 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-accent-text">
-            <span>Syllabus Blind Spot Radar</span>
-            <span className="text-white/20">/</span>
-            <span className="text-white/50">{totalChapters} Total Chapters</span>
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-surface/80 p-4 lg:p-5 backdrop-blur-md shadow-sm">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted">
+            <span className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+            <span>Syllabus Radar</span>
+            <span className="text-zinc-600">/</span>
+            <span className="text-zinc-400">{totalChapters} Total Chapters</span>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-white/70">
+          <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-zinc-300">
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-good shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
               <span>{masteredChapters} Mastered</span>
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.8)]" />
-              <span className="text-red-400 font-semibold">{blindSpotChapters} Urgent Blind Spots</span>
+              <span className="size-2 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
+              <span className="text-rose-400 font-semibold">{blindSpotChapters} Urgent Blind Spots</span>
             </span>
           </div>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Matrix filters">
+        <div className="flex flex-wrap gap-1 rounded-xl border border-white/[0.08] bg-surface/50 p-1" role="group" aria-label="Matrix filters">
           {[
             { id: "all", label: "All Chapters" },
-            { id: "blindspots", label: "⚠️ Blind Spots" },
-            { id: "pyqs", label: "📝 Needs PYQs" },
-            { id: "pb1", label: "🎯 PB1 Priority" },
-            { id: "mastered", label: "✓ Mastered" },
+            { id: "blindspots", label: "Blind Spots" },
+            { id: "pyqs", label: "Needs PYQs" },
+            { id: "pb1", label: "PB1 Priority" },
+            { id: "mastered", label: "Mastered" },
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
               aria-pressed={filter === tab.id}
               onClick={() => setFilter(tab.id as FilterTab)}
-              className={`h-9 rounded-xl border px-3 font-mono text-xs font-medium transition-all active:scale-95 ${
+              className={`h-8 rounded-lg border px-3 text-xs font-medium transition-all tracking-wide ${
                 filter === tab.id
-                  ? "border-accent bg-accent text-white font-semibold shadow-[0_0_12px_rgba(99,102,241,0.4)]"
-                  : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                  ? "border-white/20 bg-white text-zinc-950 font-semibold shadow-sm"
+                  : "border-transparent bg-transparent text-zinc-400 hover:text-white hover:bg-white/[0.04]"
               }`}
             >
               {tab.label}
@@ -98,18 +99,21 @@ export function RevisionMatrix({
           return (
             <div
               key={subject.id}
-              className="flex flex-col rounded-[22px] border border-white/10 bg-[#090b10] p-4 lg:p-5 shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]"
+              className="flex flex-col rounded-2xl border border-white/[0.08] bg-surface/80 p-4 lg:p-5 backdrop-blur-md shadow-sm"
             >
               {/* Subject Matrix Header */}
-              <div className="flex items-baseline justify-between border-b border-white/[0.08] pb-3 mb-3">
-                <div>
-                  <h3 className="m-0 text-base font-semibold text-white tracking-tight">{subject.name}</h3>
-                  <div className="font-mono text-xs text-white/50 mt-0.5">
-                    {matching.length} of {subject.chapters.length} chapters · {subject.progressPct}% progress
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-3 mb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <SubjectIcon id={subject.id} size={18} />
+                  <div>
+                    <h3 className="m-0 text-sm sm:text-base font-semibold text-white tracking-tight">{subject.name}</h3>
+                    <div className="font-mono text-[11px] text-muted mt-0.5">
+                      {matching.length}/{subject.chapters.length} chapters · {subject.progressPct}% progress
+                    </div>
                   </div>
                 </div>
                 {examDate && (
-                  <span className="font-mono text-[11px] rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-white/70">
+                  <span className="font-mono text-[10px] rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-zinc-300">
                     Exam: {examDate}
                   </span>
                 )}
@@ -117,11 +121,11 @@ export function RevisionMatrix({
 
               {/* Subject Chapters Heatmap List */}
               {matching.length === 0 ? (
-                <div className="py-8 text-center font-mono text-xs text-white/40 border border-dashed border-white/10 rounded-xl">
-                  No chapters match this filter
+                <div className="py-8 text-center font-mono text-[11px] text-muted border border-dashed border-white/10 rounded-xl">
+                  No chapters matching current filter
                 </div>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2.5">
                   {matching.map((c, idx) => {
                     const passesCount = c.passes.filter(Boolean).length;
                     const isMastered = passesCount === 3 || c.confidence === 5;
@@ -129,23 +133,23 @@ export function RevisionMatrix({
 
                     // Color theme for tile
                     const tileBorder = isMastered
-                      ? "border-good/30 hover:border-good/60 bg-good/[0.03]"
+                      ? "border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.04]"
                       : isBlindSpot
-                      ? "border-red-500/30 hover:border-red-500/60 bg-red-500/[0.04]"
-                      : "border-accent/20 hover:border-accent/50 bg-white/[0.02]";
+                      ? "border-rose-500/25 hover:border-rose-500/50 bg-rose-500/[0.04]"
+                      : "border-white/[0.06] hover:border-white/15 bg-white/[0.02]";
 
                     return (
                       <div
                         key={c.id}
                         onMouseEnter={() => setHoveredChapter({ chapter: c, subject })}
-                        className={`group relative flex flex-col justify-between rounded-xl border ${tileBorder} p-3 transition-all duration-150 hover:bg-white/[0.05]`}
+                        className={`group relative flex flex-col justify-between rounded-xl border ${tileBorder} p-3.5 transition-all hover:bg-white/[0.04]`}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-start gap-2 min-w-0">
-                            <span className="font-mono text-[11px] text-white/40 shrink-0 mt-0.5">
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            <span className="font-mono text-xs text-muted shrink-0 mt-0.5">
                               {String(idx + 1).padStart(2, "0")}
                             </span>
-                            <span className="text-[13.5px] font-medium text-white leading-snug truncate">
+                            <span className="text-[13px] font-medium text-zinc-100 leading-snug truncate">
                               {c.name}
                             </span>
                           </div>
@@ -154,14 +158,15 @@ export function RevisionMatrix({
                             type="button"
                             aria-label={`Open Viva and Active Recall for ${c.name}`}
                             onClick={() => onOpenViva(c, subject)}
-                            className="shrink-0 flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/20 px-2 py-0.5 font-mono text-[10px] font-bold text-accent-text hover:bg-accent/30 transition-all active:scale-95"
+                            className="shrink-0 flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-amber-300 hover:bg-amber-500/20 transition-all uppercase tracking-wider"
                           >
-                            ⚡ VIVA
+                            <AppleEmoji emoji="⚡" size={11} />
+                            <span>Viva</span>
                           </button>
                         </div>
 
                         {/* Tile Footer: Passes & Confidence */}
-                        <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.05] pt-2">
+                        <div className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-2.5">
                           <div className="flex items-center gap-1">
                             {PASS_SHORT.map((short, pIdx) => {
                               const done = !!c.passes[pIdx];
@@ -171,10 +176,10 @@ export function RevisionMatrix({
                                   type="button"
                                   title={`Toggle ${short} pass`}
                                   onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${pIdx + 1}`, { done: !done })}
-                                  className={`flex size-5 items-center justify-center rounded text-[10px] font-mono transition-all active:scale-90 ${
+                                  className={`flex size-6 items-center justify-center rounded-md text-[10px] font-mono transition-all ${
                                     done
-                                      ? "bg-good text-black font-bold shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-                                      : "bg-white/10 text-white/50 hover:bg-white/20"
+                                      ? "bg-emerald-500 text-zinc-950 font-bold shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+                                      : "bg-surface border border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"
                                   }`}
                                 >
                                   {short}
@@ -184,9 +189,7 @@ export function RevisionMatrix({
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-[10px] text-white/40 uppercase">
-                              {c.scope}
-                            </span>
+                            <ScopeTag scope={c.scope} />
                             <ConfDots value={c.confidence} />
                           </div>
                         </div>

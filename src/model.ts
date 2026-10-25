@@ -1,6 +1,9 @@
 import { studyQueue } from "../server/planner.ts";
+import { computeChapterDuration } from "../server/logic.ts";
 import type { Chapter, Phase, State, Subject } from "./api.ts";
 import { fmtShort, plural } from "./ui.tsx";
+
+export { computeChapterDuration };
 
 /** The phase the app is focused on (the server picks it: manual choice, else the first that hasn't ended). */
 export const activeOf = (state: State): Phase => state.phases.find((p) => p.id === state.activePhaseId) ?? state.phases[0];
@@ -12,10 +15,11 @@ export function chapterIndex(state: State) {
   return index;
 }
 
-/** Study queue for the active phase, shaped by today's energy check-in. */
-export function studyQueueFor(state: State, n = 5) {
+/** Study queue for the active phase, shaped by today's energy check-in, with optional subject filter. */
+export function studyQueueFor(state: State, n = 5, subjectId?: string | null) {
   const phase = activeOf(state);
-  const candidates = state.subjects.flatMap((subject) =>
+  const subjects = subjectId ? state.subjects.filter((s) => s.id === subjectId) : state.subjects;
+  const candidates = subjects.flatMap((subject) =>
     subject.chapters.map((chapter) => ({
       chapterId: chapter.id, subjectId: subject.id, priority: subject.priority, confidence: chapter.confidence,
       lastRevised: chapter.lastRevised, status: chapter.status, scope: chapter.scope, examDate: subject.examDates[phase.id] ?? null,

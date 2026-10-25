@@ -8,6 +8,7 @@ export type Chapter = {
   lastRevised: string | null; practiceDone: number;
   /** Date each revision pass was finished, or null: [Concept, PYQs and Exemplar, Sample papers]. */
   passes: (string | null)[];
+  notes?: string;
 };
 export type Subject = {
   id: string; name: string; grp: string; priority: number;
@@ -25,7 +26,7 @@ export type Phase = {
   id: string; name: string; scope: Scope; startsOn: string; endsOn: string;
   confirmed: boolean; daysLeft: number; studyDaysLeft: number;
 };
-export type Target = { id: number; title: string; chapterId: string | null; subjectId: string | null; done: boolean };
+export type Target = { id: number; title: string; chapterId: string | null; subjectId: string | null; duration?: string | null; done: boolean };
 export type TimerView = {
   mode: TimerMode; subjectId: string | null; startedAt: number | null; durationS: number; round: number; cycleDay: string | null;
   /** When the current mode ends (epoch ms), and the server clock when this was sent, to cancel out clock drift. */
@@ -36,11 +37,45 @@ export type Habit = { id: number; name: string; kind: "tick" | "count"; goal: nu
 export type Capture = { id: number; text: string; kind: "note" | "todo"; done: boolean; createdAt: string };
 export type Milestone = { id: number; projectId: number; title: string; done: boolean };
 export type Project = { id: number; name: string; detail: string; milestones: Milestone[] };
+export type ScheduleBlock = {
+  id: number;
+  title: string;
+  category: "morning" | "school" | "revision" | "practice" | "winddown" | "custom";
+  startTime: string; // "HH:MM"
+  endTime: string;   // "HH:MM"
+  color: string;
+  pos: number;
+};
+export type ExternalEvent = {
+  id: string;
+  summary: string;
+  description: string | null;
+  startsAt: string;
+  endsAt: string;
+  isStudyBlock: boolean;
+  updatedAt: string;
+};
+export type GoogleSyncStatus = {
+  connected: boolean;
+  calendarId: string;
+  lastSyncedAt: string | null;
+  syncToken: string | null;
+};
+export type ScheduleConflict = {
+  blockId: number;
+  blockTitle: string;
+  blockStart: string;
+  blockEnd: string;
+  eventId: string;
+  eventSummary: string;
+  eventStart: string;
+  eventEnd: string;
+};
 export type Routine = { day: string; sleep: number | null; kickoffAt: string | null; wins: string; tomorrow: string; shutdownAt: string | null };
 export type State = {
   today: string; phases: Phase[]; activePhaseId: string | null; autoPhase: boolean;
   subjects: Subject[]; deliverables: Deliverable[];
-  sessions: { day: string; subjectId: string; minutes: number }[];
+  sessions: { day: string; subjectId: string; minutes: number; note?: string | null }[];
   /** Study minutes per day for the last 90 days. */
   heat: { day: string; minutes: number }[];
   targets: Target[]; checkin: Energy | null; checkins: { day: string; energy: Energy }[]; timer: TimerView;
@@ -50,6 +85,11 @@ export type State = {
   captures: Capture[]; projects: Project[];
   routine: Routine; routines: { day: string; sleep: number | null }[];
   review: { weekStart: string; note: string };
+  scheduleBlocks: ScheduleBlock[];
+  calendarToken: string;
+  googleSync: GoogleSyncStatus;
+  externalEvents: ExternalEvent[];
+  scheduleConflicts: ScheduleConflict[];
 };
 
 export class AuthError extends Error {}

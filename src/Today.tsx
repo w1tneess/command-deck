@@ -1,845 +1,914 @@
 import { useId, useRef, useState } from "react";
-import { ENERGIES, type Energy } from "../server/planner.ts";
-import type { Act, Chapter, Phase, State, Subject } from "./api.ts";
-import { FocusCard, type FocusModel } from "./Focus.tsx";
-import { activeOf, chapterIndex, reasonFor, studyQueueFor, whenOf } from "./model.ts";
-import { Evening, Morning } from "./Routine.tsx";
-import { Btn, Card, Check, ConfDots, H2, PassPills, Pill, daysBetween, fmtLong, fmtShort, fmtWeekdayDate } from "./ui.tsx";
-import { VivaDrawer } from "./VivaDrawer.tsx";
+import type { Act, Chapter, State, Subject } from "./api.ts";
+import { type FocusModel } from "./Focus.tsx";
+import { AppleEmoji, AppleText, Check, ICONS, Icon, plural } from "./ui.tsx";
+import { studyQueueFor, reasonFor, computeChapterDuration, activeOf } from "./model.ts";
+import { guessSubject, addDaysToToday } from "./Capture.tsx";
+import { getTargetGCalUrl, getDeliverableGCalUrl, formatIstEventTime } from "./calendar-utils.ts";
+import { CalendarModal } from "./CalendarModal.tsx";
 
-const ENERGY_LABEL: Record<Energy, string> = { low: "Low", ok: "OK", high: "High" };
-const ENERGY_NOTE = "Low puts lighter chapters first. High puts the hardest first.";
-
-export function Today({
-  state,
-  act,
-  focus,
-  onOpenZen,
-}: {
+interface TodayProps {
   state: State;
   act: Act;
   focus: FocusModel;
   onOpenZen?: () => void;
-}) {
-  const [viva, setViva] = useState<{ chapter: Chapter; subject: Subject } | null>(null);
-
-  return (
-    <>
-      <Header state={state} act={act} />
-      <Hero state={state} act={act} />
-
-      {/* Energy-Aware Adaptive Schedule Alert */}
-      {state.checkin === "low" && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-500/30 bg-cyan-950/25 p-4 text-cyan-200 backdrop-blur-md shadow-xs animate-fade-in">
-          <div className="flex items-center gap-3">
-            <span className="flex size-7 items-center justify-center rounded-xl bg-cyan-500/20 text-base text-cyan-300">
-              ⚡
-            </span>
-            <div className="text-xs leading-relaxed">
-              <span className="font-semibold uppercase font-mono tracking-wider text-cyan-300">
-                Low Energy Protocol Active:
-              </span>{" "}
-              <span>
-                Schedule recommendations automatically adapted to prioritize lighter revision chapters (Pass 1 concept notes & recall) over heavy problem-solving sets.
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => act("POST", "/api/checkin", { energy: "ok" })}
-            className="shrink-0 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-xs font-medium text-cyan-300 hover:bg-cyan-500/20 active:scale-95 transition-all"
-          >
-            Reset to Standard
-          </button>
-        </div>
-      )}
-
-      <DailyMomentum state={state} focus={focus} />
-
-      <div className="flex flex-wrap items-start gap-4 lg:gap-6">
-        <div className="flex min-w-0 flex-[3_1_460px] flex-col gap-4 lg:gap-6">
-          <Morning state={state} act={act} />
-          <Targets
-            state={state}
-            act={act}
-            focus={focus}
-            onOpenViva={(c, s) => setViva({ chapter: c, subject: s })}
-          />
-          <Queue
-            state={state}
-            act={act}
-            onOpenViva={(c, s) => setViva({ chapter: c, subject: s })}
-          />
-          <Evening key={state.routine.day} state={state} act={act} />
-        </div>
-
-        {/* On a phone this column holds energy & quick habits, which sit above the targets. */}
-        <div className="order-first flex min-w-0 flex-[2_1_320px] flex-col gap-4 lg:order-none lg:gap-6">
-          <div className="hidden lg:block">
-            <FocusCard focus={focus} state={state} onOpenZen={onOpenZen} />
-          </div>
-          <Energy state={state} act={act} />
-          <DailyHabitsWidget state={state} act={act} />
-        </div>
-      </div>
-
-      {/* Quick Viva & Active Recall Drawer */}
-      {viva && (
-        <VivaDrawer
-          chapter={viva.chapter}
-          subject={viva.subject}
-          act={act}
-          onClose={() => setViva(null)}
-        />
-      )}
-    </>
-  );
+  onOpenViva?: (chapter: Chapter, subject: Subject) => void;
+  onOpenCommandBar?: () => void;
 }
 
-function Header({ state, act }: { state: State; act: Act }) {
-  const upcoming = state.phases.find((p) => state.today <= p.endsOn) ?? activeOf(state);
-  return (
-    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line/60 pb-5">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2 font-mono text-xs text-muted">
-          <span className="inline-flex size-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--accent)]" />
-          <span className="uppercase tracking-widest">{fmtWeekdayDate(state.today)}</span>
-          <span className="text-line-strong">/</span>
-          <span className="text-accent-text font-semibold">IST TELEMETRY</span>
-        </div>
-        <h1 className="m-0 text-[32px] sm:text-[36px] font-bold tracking-tight text-fg">
-          Mission Control
-        </h1>
-      </div>
-      <label className="flex items-center gap-2.5">
-        <span className="hidden font-mono text-xs font-semibold uppercase tracking-wider text-muted lg:inline">Phase Protocol:</span>
-        <select
-          aria-label="Phase"
-          title={state.autoPhase ? "Following the calendar" : "Chosen by you"}
-          value={state.autoPhase ? "auto" : (state.activePhaseId ?? "auto")}
-          onChange={(e) => act("PUT", "/api/active-phase", { phaseId: e.target.value === "auto" ? null : e.target.value })}
-          className="h-10 rounded-xl border border-line/90 bg-surface2/80 px-3.5 font-mono text-xs font-medium text-fg shadow-xs transition-colors hover:border-line-strong lg:h-11 lg:px-4 lg:text-[13px]"
-        >
-          <option value="auto">Auto-Track: {upcoming.name}</option>
-          {state.phases.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-      </label>
-    </header>
+const SUBJECT_COLORS: Record<string, string> = {
+  science: "#38bdf8",
+  physics: "#38bdf8",
+  chemistry: "#facc15",
+  biology: "#2dd4bf",
+  maths: "#f87171",
+  social: "#fb923c",
+  english: "#60a5fa",
+  bengali: "#c084fc",
+  it: "#e879f9",
+};
+
+const ROUTINE_BLOCKS = [
+  { time: "05:30", label: "Wake up + Freshen up" },
+  { time: "06:00", label: "Study (Deep Focus)" },
+  { time: "08:45 - 14:30", label: "School Hours" },
+  { time: "14:30", label: "Lunch + Rest" },
+  { time: "15:30 - 17:00", label: "Afternoon Study Slot" },
+  { time: "17:30 - 19:30", label: "Tuition / Evening Study" },
+  { time: "20:00", label: "Dinner + Family" },
+  { time: "21:00", label: "Wind Down / Revision" },
+  { time: "22:30", label: "Sleep" },
+];
+
+export function Today({ state, act, onOpenViva }: TodayProps) {
+  const activePhase = activeOf(state);
+
+  // IST Date & Greeting
+  const istHour = Number(
+    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Kolkata" }).format(
+      new Date()
+    )
   );
-}
+  const greeting =
+    istHour < 12 ? "Good morning, Advaita" : istHour < 17 ? "Good afternoon, Advaita" : "Good evening, Advaita";
 
-function Hero({ state, act }: { state: State; act: Act }) {
-  const phase = activeOf(state);
-  const over = state.today > phase.endsOn;
-  const started = !over && phase.daysLeft <= 0;
-  const big = over ? "Over" : String(started ? Math.max(0, daysTo(state.today, phase)) : phase.daysLeft);
-  const unit = over ? "Completed" : started ? "days remaining" : "days until kickoff";
+  const todayISTFormatted = new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  }).format(new Date());
 
-  // Calculate elapsed percentage within phase
-  const totalDays = Math.max(1, daysBetween(phase.startsOn, phase.endsOn));
-  const elapsedDays = Math.max(0, Math.min(totalDays, daysBetween(phase.startsOn, state.today)));
-  const phasePct = Math.round((elapsedDays / totalDays) * 100);
+  // 1. Study Queue (Top 5 Priority)
+  const topQueue = studyQueueFor(state, 5);
 
-  return (
-    <section
-      aria-label="Countdown telemetry"
-      className="telemetry-grid relative overflow-hidden flex flex-wrap items-stretch justify-between gap-6 rounded-[26px] border border-white/10 bg-[#090b10] p-6 text-white shadow-[0_20px_50px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] lg:rounded-[28px] lg:p-8"
-    >
-      {/* Precision corner vignette and ambient glow */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-accent/10 via-transparent to-transparent" />
-      <div className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-accent/15 blur-3xl" />
+  // Calendar Modal state
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
-      {/* Main Mission Display */}
-      <div className="relative z-10 flex min-w-[260px] flex-1 flex-col justify-between gap-6">
-        {/* Top telemetry header */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur-md">
-            <span className="size-2 rounded-full bg-good shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse" />
-            <span>ACTIVE ORBIT · {phase.name}</span>
-          </div>
-          <span className="font-mono text-xs text-white/50">
-            {phase.confirmed ? "CONFIRMED DATES" : "APPROXIMATE SCHEDULE"}
-          </span>
-          <span className="ml-auto hidden font-mono text-xs text-white/40 xl:inline">
-            COORDINATES: IST (UTC+5:30)
-          </span>
-        </div>
+  // 2. Add Target Form State
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDuration, setNewTaskDuration] = useState("45m");
+  const newTaskInputId = useId();
+  const addTaskBusy = useRef(false);
 
-        {/* Big countdown lockup */}
-        <div className="flex flex-col gap-1.5 my-1">
-          <div className="flex items-baseline gap-4">
-            <span className="font-mono text-[76px] sm:text-[92px] lg:text-[108px] font-bold leading-none tracking-tighter tabular-nums drop-shadow-[0_4px_30px_rgba(255,255,255,0.15)] text-white">
-              {big}
-            </span>
-            <div className="flex flex-col">
-              <span className="font-mono text-sm sm:text-base font-semibold uppercase tracking-widest text-accent-text">
-                {unit}
-              </span>
-              <span className="font-mono text-xs text-white/60">
-                {fmtShort(phase.startsOn)} → {fmtLong(phase.endsOn)}
-              </span>
-            </div>
-          </div>
-        </div>
+  // 3. Quick Capture State
+  const [captureText, setCaptureText] = useState("");
+  const [activeDoubtId, setActiveDoubtId] = useState<number | null>(null);
+  const captureBusy = useRef(false);
+  const captureInputId = useId();
 
-        {/* Precision laser progress rail */}
-        <div className="flex flex-col gap-2 max-w-xl">
-          <div className="flex items-center justify-between font-mono text-xs text-white/60">
-            <span className="uppercase tracking-wider">TIMELINE ELAPSED</span>
-            <span className="text-white/90 font-semibold">{phasePct}%</span>
-          </div>
-          <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/10 border border-white/5">
-            <div
-              className="h-full bg-gradient-to-r from-accent via-[#818cf8] to-good transition-all duration-500 ease-out shadow-[0_0_12px_rgba(99,102,241,0.8)]"
-              style={{ width: `${phasePct}%` }}
-            />
-          </div>
-          <div className="flex justify-between font-mono text-[10px] text-white/40">
-            <span>START: {fmtShort(phase.startsOn)}</span>
-            <span>END: {fmtShort(phase.endsOn)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Flight roster on Desktop */}
-      <div className="relative z-10 hidden min-w-[280px] flex-[0_0_320px] flex-col justify-between border-l border-white/10 pl-6 lg:flex">
-        <div className="flex items-center justify-between pb-3 border-b border-white/10">
-          <span className="font-mono text-xs font-semibold uppercase tracking-wider text-white/60">Phase Matrix</span>
-          <span className="font-mono text-[11px] text-white/40">{state.phases.length} Phases</span>
-        </div>
-        <ol className="m-0 list-none flex flex-col gap-2 p-0 py-3">
-          {state.phases.map((p: Phase) => {
-            const isActive = p.id === phase.id;
-            return (
-              <li
-                key={p.id}
-                aria-current={isActive ? "true" : undefined}
-                onClick={() => {
-                  if (!isActive) void act("PUT", "/api/active-phase", { phaseId: p.id });
-                }}
-                className={`group flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 transition-all duration-200 ${
-                  isActive
-                    ? "border border-accent/40 bg-accent/20 text-white shadow-[0_0_16px_rgba(99,102,241,0.25),inset_0_1px_0_rgba(255,255,255,0.15)] font-semibold"
-                    : "border border-transparent bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className={`size-1.5 rounded-full ${isActive ? "bg-good shadow-[0_0_8px_rgba(52,211,153,1)]" : "bg-white/30"}`} />
-                  <span className="text-[13.5px]">{p.name}</span>
-                </div>
-                <span className="font-mono text-xs text-white/50 group-hover:text-white/80">{whenOf(p)}</span>
-              </li>
-            );
-          })}
-        </ol>
-        <div className="pt-2 text-[11px] font-mono text-white/40 text-right">
-          CLICK TO HOT-SWAP PHASE
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/** Glanceable telemetry cards summarizing today's key study metrics and concentric focus session rings. */
-function DailyMomentum({ state, focus }: { state: State; focus: FocusModel }) {
-  const doneTargets = state.targets.filter((t) => t.done).length;
-  const totalTargets = state.targets.length;
-  const targetPct = totalTargets > 0 ? Math.round((doneTargets / totalTargets) * 100) : 0;
-
-  const todayFocusMins = state.sessions
+  // 4. Metrics
+  const todayMins = state.sessions
     .filter((s) => s.day === state.today)
     .reduce((acc, s) => acc + s.minutes, 0);
+  const studyTimeFormatted = `${Math.floor(todayMins / 60)}h ${todayMins % 60}m`;
+  const completedTargetsCount = state.targets.filter((t) => t.done).length;
 
-  const doneHabits = state.habits.filter((h) => h.today >= h.goal).length;
-  const totalHabits = state.habits.length;
+  // Target Actions
+  const handleToggleTarget = async (id: number, currentDone: boolean) => {
+    await act("PATCH", `/api/targets/${id}`, { done: !currentDone });
+  };
 
-  return (
-    <section aria-label="Daily momentum" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-4">
-      {/* 01 / Targets */}
-      <div className="group relative overflow-hidden flex flex-col justify-between rounded-[22px] border border-line/80 bg-surface/85 backdrop-blur-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-line-strong hover:bg-surface2/60 transition-all duration-200 lg:p-5">
-        <div className="flex items-center justify-between text-muted">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-muted group-hover:text-fg transition-colors">01 / TARGETS</span>
-          <span className="font-mono text-xs font-semibold text-accent-text">{targetPct}%</span>
-        </div>
-        <div className="mt-3 flex items-baseline gap-1.5">
-          <span className="font-mono text-3xl font-bold tracking-tight text-fg lg:text-4xl">{doneTargets}</span>
-          <span className="font-mono text-xs text-muted">/ {totalTargets}</span>
-        </div>
-        <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-surface3/60 border border-line/40">
-          <div className="h-full bg-gradient-to-r from-accent to-accent-text transition-all duration-300 ease-out shadow-[0_0_8px_rgba(99,102,241,0.5)]" style={{ width: `${targetPct}%` }} />
-        </div>
-      </div>
+  const handleDeleteTarget = async (id: number) => {
+    await act("DELETE", `/api/targets/${id}`);
+  };
 
-      {/* 02 / Focus Time with Concentric Visual Session Rings */}
-      <div className="group relative overflow-hidden flex flex-col justify-between rounded-[22px] border border-line/80 bg-surface/85 backdrop-blur-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-line-strong hover:bg-surface2/60 transition-all duration-200 lg:p-5">
-        <div className="flex items-center justify-between text-muted">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-muted group-hover:text-fg transition-colors">02 / FOCUS ENGINE</span>
-          {focus.running && <span className="flex size-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--accent)]" title="Focus session running" />}
-        </div>
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-baseline gap-1">
-            <span className="font-mono text-3xl font-bold tracking-tight text-fg lg:text-4xl">
-              {todayFocusMins >= 60 ? `${Math.floor(todayFocusMins / 60)}h ${todayFocusMins % 60}m` : `${todayFocusMins}m`}
-            </span>
-          </div>
-          {/* Animated concentric session rings: 90m (inner), 180m (mid), 240m (outer) */}
-          <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90 shrink-0" aria-label="Visual session rings: 90m, 180m, 240m daily targets">
-            {/* 90m ring (r=11) */}
-            <circle cx="22" cy="22" r="11" fill="none" stroke="var(--line)" strokeWidth="2.5" opacity="0.4" />
-            <circle cx="22" cy="22" r="11" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeDasharray={2 * Math.PI * 11} strokeDashoffset={2 * Math.PI * 11 * (1 - Math.min(1, todayFocusMins / 90))} strokeLinecap="round" />
-            {/* 180m ring (r=15) */}
-            <circle cx="22" cy="22" r="15" fill="none" stroke="var(--line)" strokeWidth="2.5" opacity="0.4" />
-            <circle cx="22" cy="22" r="15" fill="none" stroke="#818cf8" strokeWidth="2.5" strokeDasharray={2 * Math.PI * 15} strokeDashoffset={2 * Math.PI * 15 * (1 - Math.min(1, todayFocusMins / 180))} strokeLinecap="round" />
-            {/* 240m ring (r=19) */}
-            <circle cx="22" cy="22" r="19" fill="none" stroke="var(--line)" strokeWidth="2.5" opacity="0.4" />
-            <circle cx="22" cy="22" r="19" fill="none" stroke="var(--good)" strokeWidth="2.5" strokeDasharray={2 * Math.PI * 19} strokeDashoffset={2 * Math.PI * 19 * (1 - Math.min(1, todayFocusMins / 240))} strokeLinecap="round" />
-          </svg>
-        </div>
-        <span className="mt-2.5 truncate text-xs text-muted font-medium">
-          {focus.running ? `${focus.label} running` : `${state.sessions.filter((s) => s.day === state.today).length} cycles completed`}
-        </span>
-      </div>
-
-      {/* 03 / Habits */}
-      <div className="group relative overflow-hidden flex flex-col justify-between rounded-[22px] border border-line/80 bg-surface/85 backdrop-blur-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-line-strong hover:bg-surface2/60 transition-all duration-200 lg:p-5">
-        <div className="flex items-center justify-between text-muted">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-muted group-hover:text-fg transition-colors">03 / HABIT PROTOCOL</span>
-          <span className="font-mono text-xs text-good font-semibold">{doneHabits === totalHabits && totalHabits > 0 ? "ALL CLEAR" : ""}</span>
-        </div>
-        <div className="mt-3 flex items-baseline gap-1.5">
-          <span className="font-mono text-3xl font-bold tracking-tight text-fg lg:text-4xl">{doneHabits}</span>
-          <span className="font-mono text-xs text-muted">/ {totalHabits}</span>
-        </div>
-        <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-surface3/60 border border-line/40">
-          <div className="h-full bg-good transition-all duration-300 ease-out shadow-[0_0_8px_rgba(52,211,153,0.5)]" style={{ width: `${totalHabits > 0 ? (doneHabits / totalHabits) * 100 : 0}%` }} />
-        </div>
-      </div>
-
-      {/* 04 / Routine */}
-      <div className="group relative overflow-hidden flex flex-col justify-between rounded-[22px] border border-line/80 bg-surface/85 backdrop-blur-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-line-strong hover:bg-surface2/60 transition-all duration-200 lg:p-5">
-        <div className="flex items-center justify-between text-muted">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-muted group-hover:text-fg transition-colors">04 / SYSTEM STATE</span>
-          {state.routine.sleep ? <span className="font-mono text-xs text-accent-text font-semibold">{state.routine.sleep}/5 SLEEP</span> : null}
-        </div>
-        <div className="mt-3">
-          <div className="truncate text-base font-semibold text-fg lg:text-lg">
-            {state.routine.shutdownAt ? "Shut down" : state.routine.kickoffAt ? "Active cycle" : "Standby"}
-          </div>
-        </div>
-        <span className="mt-3.5 truncate text-xs text-muted font-medium">
-          {state.checkin ? `Energy: ${ENERGY_LABEL[state.checkin]}` : "Check-in pending"}
-        </span>
-      </div>
-    </section>
-  );
-}
-
-/** Days left in a phase that has already begun. */
-const daysTo = (today: string, p: Phase) => Math.round((Date.parse(p.endsOn) - Date.parse(today)) / 86_400_000);
-
-function Targets({
-  state,
-  act,
-  focus,
-  onOpenViva,
-}: {
-  state: State;
-  act: Act;
-  focus: FocusModel;
-  onOpenViva: (c: Chapter, s: Subject) => void;
-}) {
-  const index = chapterIndex(state);
-  const [adding, setAdding] = useState(false);
-  const done = state.targets.filter((t) => t.done).length;
-  const allDone = done > 0 && done === state.targets.length;
-
-  return (
-    <Card labelledBy="targets-h">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-baseline gap-3">
-          <H2 id="targets-h">Daily targets</H2>
-          <span className="font-mono text-[12px] font-semibold text-muted tracking-wider uppercase">
-            [ {done} / {state.targets.length} COMPLETE ]
-          </span>
-        </div>
-        <Btn kind={adding ? "secondary" : "primary"} aria-expanded={adding} onClick={() => setAdding((a) => !a)}>
-          {adding ? "Cancel" : "+ Add target"}
-        </Btn>
-      </div>
-
-      {/* Continuous progress indicator */}
-      {state.targets.length > 0 && (
-        <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-surface3/60 border border-line/40">
-          <div
-            className={`h-full transition-all duration-500 ease-out ${allDone ? "bg-good shadow-[0_0_8px_rgba(52,211,153,0.7)]" : "bg-gradient-to-r from-accent to-accent-text shadow-[0_0_8px_rgba(99,102,241,0.6)]"}`}
-            style={{ width: `${(done / state.targets.length) * 100}%` }}
-          />
-        </div>
-      )}
-
-      {/* Celebratory banner */}
-      {allDone && (
-        <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-good/30 bg-good/10 px-3.5 py-2.5 text-[13px] font-medium text-good">
-          <span className="text-base">🎉</span>
-          <span>All daily targets finished for today. Outstanding momentum!</span>
-        </div>
-      )}
-
-      {adding && <AddTarget state={state} act={act} onDone={() => setAdding(false)} />}
-
-      {state.targets.length === 0 && (
-        <p className="m-0 border-t border-line py-4 text-[14px] text-muted">Nothing planned. Add a target to start the day.</p>
-      )}
-
-      <div className="flex flex-col gap-2">
-        {state.targets.map((t, idx) => {
-          const hit = t.chapterId ? index.get(t.chapterId) : undefined;
-          const subjectId = hit ? hit.subject.id : t.subjectId;
-          const subjectName = hit ? hit.subject.name : undefined;
-          const needleRole = idx === 0 || idx === 1 ? "Big 3 · Academic" : idx === 2 ? "Big 3 · Personal" : undefined;
-          const isLightWork = hit ? hit.chapter.confidence >= 3 || !!hit.chapter.passes[0] : false;
-
-          return (
-            <TargetRow
-              key={t.id}
-              id={t.id}
-              done={t.done}
-              name={hit ? hit.chapter.name : t.title}
-              sub={hit ? reasonFor(hit.chapter) : "Custom target"}
-              subject={subjectName}
-              needleRole={needleRole}
-              isLightWork={isLightWork}
-              swappable={!!t.chapterId && !t.done}
-              act={act}
-              onViva={hit ? () => onOpenViva(hit.chapter, hit.subject) : undefined}
-              onFocus={
-                subjectId
-                  ? () => {
-                      focus.setSubject(subjectId);
-                      if (!focus.running) void focus.start();
-                    }
-                  : undefined
-              }
-            />
-          );
-        })}
-      </div>
-
-      <div className="mt-3 border-t border-line/60 pt-3 text-[13px] text-muted">
-        Three suggested a day, up to eight with your own. Click Focus to launch a Pomodoro round.
-      </div>
-    </Card>
-  );
-}
-
-function TargetRow({
-  id,
-  done,
-  name,
-  sub,
-  subject,
-  needleRole,
-  isLightWork,
-  swappable,
-  act,
-  onFocus,
-  onViva,
-}: {
-  id: number;
-  done: boolean;
-  name: string;
-  sub: string;
-  subject?: string;
-  needleRole?: string;
-  isLightWork?: boolean;
-  swappable: boolean;
-  act: Act;
-  onFocus?: () => void;
-  onViva?: () => void;
-}) {
-  const [more, setMore] = useState(false);
-  return (
-    <div
-      className={`group relative flex flex-wrap items-center gap-3 rounded-2xl border px-3.5 py-3 transition-all duration-200 ${
-        done
-          ? "border-line/40 bg-surface2/25 opacity-70"
-          : "border-line/70 bg-surface2/45 hover:border-line-strong hover:bg-surface2/75 hover:shadow-[0_4px_16px_rgba(0,0,0,0.14)]"
-      }`}
-    >
-      <button
-        type="button"
-        aria-label={`${done ? "Mark not done" : "Mark done"}: ${name}`}
-        aria-pressed={done}
-        onClick={() => act("PATCH", `/api/targets/${id}`, { done: !done })}
-        className="flex size-9 shrink-0 items-center justify-center border-0 bg-transparent p-0 transition-transform active:scale-90"
-      >
-        <Check on={done} />
-      </button>
-
-      <div className="min-w-0 flex-1 basis-[180px]">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-[15px] font-medium leading-snug transition-colors ${done ? "text-muted line-through" : "text-fg"}`}>{name}</span>
-          {subject && (
-            <span className="rounded-md bg-accent/10 border border-accent/25 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent-text uppercase tracking-wider">
-              {subject}
-            </span>
-          )}
-          {needleRole && !done && (
-            <span className={`rounded-md border px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider ${
-              needleRole.includes("Academic")
-                ? "border-accent/30 bg-accent/10 text-accent-text"
-                : "border-good/30 bg-good/10 text-good"
-            }`}>
-              {needleRole}
-            </span>
-          )}
-          {isLightWork && !done && (
-            <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[10px] text-cyan-300">
-              🍃 Light Revision
-            </span>
-          )}
-        </div>
-        <div className="text-xs text-muted mt-0.5">{sub}</div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {onViva && !done && (
-          <button
-            type="button"
-            title="Open quick recall & viva prep"
-            onClick={onViva}
-            className="inline-flex h-8 items-center gap-1 rounded-xl border border-accent/40 bg-accent/15 px-2.5 font-mono text-xs font-semibold text-accent-text transition-all hover:bg-accent/25 active:scale-95 shadow-2xs"
-          >
-            ⚡ Viva
-          </button>
-        )}
-
-        {onFocus && !done && (
-          <button
-            type="button"
-            title="Start focus timer on this subject"
-            onClick={onFocus}
-            className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-xl border border-accent/40 bg-accent/15 px-3 text-xs font-semibold text-accent-text transition-all hover:bg-accent hover:text-white hover:shadow-[0_0_12px_rgba(99,102,241,0.4)] active:scale-95"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-            <span>Focus</span>
-          </button>
-        )}
-
-        <button
-          type="button"
-          aria-label={`More actions for ${name}`}
-          aria-expanded={more}
-          onClick={() => setMore((m) => !m)}
-          className="flex size-9 shrink-0 items-center justify-center rounded-lg border-0 bg-transparent text-muted hover:text-fg hover:bg-surface3/40 lg:hidden"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <circle cx="5" cy="12" r="1.8" />
-            <circle cx="12" cy="12" r="1.8" />
-            <circle cx="19" cy="12" r="1.8" />
-          </svg>
-        </button>
-
-        <div className={`${more ? "flex basis-full justify-end pt-1" : "hidden"} gap-1.5 lg:flex lg:basis-auto`}>
-          {swappable && (
-            <Btn kind="ghost" className="h-8 px-2.5 text-xs hover:bg-surface3/60" onClick={() => act("POST", `/api/targets/${id}/swap`)}>
-              Swap
-            </Btn>
-          )}
-          <Btn kind="ghost" className="h-8 px-2.5 text-xs text-muted hover:text-warn hover:bg-surface3/60" aria-label={`Remove ${name}`} onClick={() => act("DELETE", `/api/targets/${id}`)}>
-            Remove
-          </Btn>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Add a chapter from the syllabus, or type a target of your own. */
-function AddTarget({ state, act, onDone }: { state: State; act: Act; onDone: () => void }) {
-  const uid = useId();
-  const chapterIdKey = `${uid}-chapter`;
-  const textIdKey = `${uid}-text`;
-  const [chapterId, setChapterId] = useState("");
-  const [text, setText] = useState("");
-  const [saving, setSaving] = useState(false);
-  const busy = useRef(false);
-  const planned = new Set(state.targets.map((t) => t.chapterId));
-
-  const submit = async () => {
-    if (busy.current) return;
-    const trimmed = text.trim();
-    if (!chapterId && !trimmed) return;
-    busy.current = true;
-    setSaving(true);
+  const handleAddTask = async () => {
+    if (addTaskBusy.current) return;
+    const title = newTaskTitle.trim();
+    if (!title) {
+      setIsAddingTask(false);
+      return;
+    }
+    addTaskBusy.current = true;
     try {
-      const ok = await act("POST", "/api/targets", chapterId ? { chapterId } : { title: trimmed });
-      if (ok) {
-        setChapterId("");
-        setText("");
-        onDone();
-      }
+      await act("POST", "/api/targets", { title, duration: newTaskDuration });
+      setNewTaskTitle("");
+      setIsAddingTask(false);
     } finally {
-      busy.current = false;
-      setSaving(false);
+      addTaskBusy.current = false;
     }
   };
 
-  return (
-    <form className="mb-3 flex flex-wrap items-end gap-3 border-t border-line/60 py-4" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-      <label htmlFor={chapterIdKey} className="flex min-w-[200px] flex-[1_1_220px] flex-col gap-1.5 text-[13px] font-medium text-muted">
-        Chapter from syllabus
-        <select
-          id={chapterIdKey}
-          value={chapterId}
-          disabled={saving || !!text.trim()}
-          onChange={(e) => setChapterId(e.target.value)}
-          className="h-11 rounded-xl border border-line bg-surface2/60 px-3.5 text-[15px] text-fg disabled:opacity-50 focus:border-accent focus:bg-surface2 transition-all"
-        >
-          <option value="">Pick a chapter</option>
-          {state.subjects.filter((s) => s.chapters.length).map((s) => (
-            <optgroup key={s.id} label={s.name}>
-              {s.chapters.filter((c) => !planned.has(c.id)).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </optgroup>
-          ))}
-        </select>
-      </label>
-      <label htmlFor={textIdKey} className="flex min-w-[200px] flex-[1_1_220px] flex-col gap-1.5 text-[13px] font-medium text-muted">
-        Or write your own
-        <input
-          id={textIdKey}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Finish the Maths lab file"
-          disabled={saving || !!chapterId}
-          className="h-11 rounded-xl border border-line bg-surface2/60 px-3.5 text-[15px] text-fg disabled:opacity-50 focus:border-accent focus:bg-surface2 transition-all placeholder:text-muted/60"
-        />
-      </label>
-      <Btn type="submit" kind="primary" disabled={saving || (!chapterId && !text.trim())}>
-        {saving ? "Adding…" : "Add target"}
-      </Btn>
-    </form>
+  const handleAddQueueChapter = async (q: typeof topQueue[0]) => {
+    if (addTaskBusy.current) return;
+    addTaskBusy.current = true;
+    try {
+      const duration = computeChapterDuration(q.confidence, q.subjectId);
+      await act("POST", "/api/targets", {
+        chapterId: q.chapterId,
+        subjectId: q.subjectId,
+        duration,
+        title: `${q.subject.name}: ${q.chapter.name}`,
+      });
+    } finally {
+      addTaskBusy.current = false;
+    }
+  };
+
+  // Habit Actions
+  const handleToggleHabit = async (habitId: number, currentToday: number, goal: number) => {
+    const nextVal = currentToday >= goal ? 0 : goal;
+    await act("POST", "/api/habit-entry", { habitId, day: state.today, value: nextVal });
+  };
+
+  const habitsDoneCount = state.habits.filter((h) => h.today >= h.goal).length;
+
+  // Capture Actions
+  const handleSaveCapture = async () => {
+    const text = captureText.trim();
+    if (!text || captureBusy.current) return;
+    captureBusy.current = true;
+    try {
+      await act("POST", "/api/captures", { text, kind: "todo" });
+      setCaptureText("");
+    } finally {
+      captureBusy.current = false;
+    }
+  };
+
+  const convertCaptureToTask = async (c: State["captures"][0]) => {
+    if (captureBusy.current) return;
+    captureBusy.current = true;
+    try {
+      const clean = c.text.replace(/#(task|note|doubt)/gi, "").trim();
+      await act("POST", "/api/targets", { title: clean || c.text, duration: "45m" });
+      await act("PATCH", `/api/captures/${c.id}`, { done: true });
+    } finally {
+      captureBusy.current = false;
+    }
+  };
+
+  const convertCaptureToDeliverable = async (c: State["captures"][0]) => {
+    if (captureBusy.current) return;
+    captureBusy.current = true;
+    try {
+      const clean = c.text.replace(/#(task|note|doubt)/gi, "").trim();
+      const sub = guessSubject(c.text, state.subjects);
+      const due = addDaysToToday(state.today, 3);
+      await act("POST", "/api/deliverables", { name: clean || c.text, subject: sub, due, detail: "Captured from Inbox" });
+      await act("PATCH", `/api/captures/${c.id}`, { done: true });
+    } finally {
+      captureBusy.current = false;
+    }
+  };
+
+  // Deliverables: compute overdue and days left
+  const getDeliverableDaysLeft = (due: string | null): number | null => {
+    if (!due) return null;
+    const dueMs = Date.parse(due + "T00:00:00Z");
+    const todayMs = Date.parse(state.today + "T00:00:00Z");
+    return Math.round((dueMs - todayMs) / (1000 * 60 * 60 * 24));
+  };
+
+  const sortedDeliverables = [...state.deliverables].sort((a, b) => {
+    if (a.status === "done" && b.status !== "done") return 1;
+    if (b.status === "done" && a.status !== "done") return -1;
+    const aDays = getDeliverableDaysLeft(a.due);
+    const bDays = getDeliverableDaysLeft(b.due);
+    if (aDays !== null && bDays !== null) return aDays - bDays;
+    if (aDays !== null) return -1;
+    if (bDays !== null) return 1;
+    return 0;
+  });
+
+  const overdueDeliverables = sortedDeliverables.filter(
+    (d) => d.status !== "done" && d.due && d.due < state.today
   );
-}
-
-function Queue({
-  state,
-  act,
-  onOpenViva,
-}: {
-  state: State;
-  act: Act;
-  onOpenViva: (c: Chapter, s: Subject) => void;
-}) {
-  const picks = studyQueueFor(state);
-  const phase = activeOf(state);
-  const over = state.today > phase.endsOn;
-  const plannedSet = new Set(state.targets.map((t) => t.chapterId).filter(Boolean));
-  const canPlanMore = state.targets.length < 8;
 
   return (
-    <Card labelledBy="queue-h">
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-baseline gap-3">
-          <H2 id="queue-h">Study Queue</H2>
-          <span className="font-mono text-xs text-muted">RANKED BY CONFIDENCE & EXAM SCHEDULE</span>
+    <div className="flex flex-col gap-6 w-full max-w-[1440px] mx-auto animate-fade-in text-zinc-100 pb-16">
+      {/* ========================================================================= */}
+      {/* 1. ATMOSPHERIC HERO BANNER (Single clean headline, zero duplicate quotes)   */}
+      {/* ========================================================================= */}
+      <section
+        aria-label="Daily Overview"
+        className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-6 sm:p-8 lg:p-10 min-h-[180px] sm:min-h-[200px] flex flex-col justify-between shadow-2xl"
+        style={{
+          backgroundImage: "url('/hero-mountains.jpg')",
+          backgroundPosition: "center 35%",
+          backgroundSize: "cover",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0f13]/95 via-[#0c0f13]/75 to-black/40 z-0" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col gap-1 max-w-xl">
+            <span className="font-sans text-xs sm:text-sm font-medium text-zinc-300 tracking-wide">
+              {greeting}
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white leading-[1.15] tracking-tight whitespace-pre-line mt-1">
+              Same mind.{"\n"}Bigger plans.
+            </h1>
+          </div>
+
+          <div className="shrink-0 self-start md:self-center flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="rounded-2xl border border-white/[0.1] bg-[#15191f]/85 backdrop-blur-md px-4 py-2.5 shadow-xl flex items-center gap-3">
+              <AppleEmoji emoji="📅" size={16} />
+              <div className="flex flex-col">
+                <span className="font-mono text-xs font-semibold text-white">{todayISTFormatted}</span>
+                <span className="font-sans text-[11px] text-zinc-400">{activePhase.name}</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/[0.1] bg-[#15191f]/85 backdrop-blur-md px-4 py-2.5 shadow-xl flex items-center gap-3">
+              <AppleEmoji emoji="⏱️" size={16} />
+              <div className="flex flex-col">
+                <span className="font-mono text-xs font-semibold text-white">{studyTimeFormatted}</span>
+                <span className="font-sans text-[11px] text-zinc-400">Study Logged Today</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <span className="font-mono text-xs text-muted">
-          ENERGY: <span className="font-semibold text-accent-text uppercase">{ENERGY_LABEL[state.checkin ?? "ok"]}</span>
-        </span>
-      </div>
+      </section>
 
-      {picks.length === 0 ? (
-        <p className="m-0 border-t border-line/60 py-4 text-[14px] text-muted">
-          {over ? "This phase is over. Switch phase above to plan the next one." : "Nothing left in scope. Add chapters under Syllabus, or switch phase."}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-2 pt-1">
-          {picks.map((q, i) => {
-            const isPlanned = plannedSet.has(q.chapterId);
-            const isLightWork = q.chapter.confidence >= 3 || !!q.chapter.passes[0];
+      {/* ========================================================================= */}
+      {/* 2. ONE PRIMARY PANEL + FOCUSED SECONDARY COMPANIONS                        */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* ----------------------------------------------------------------------- */}
+        {/* PRIMARY PANEL (7 Cols on desktop): The Daily Focus & Execution Cockpit   */}
+        {/* Combines Today's Targets + Live Study Queue into One Seamless Center    */}
+        {/* ----------------------------------------------------------------------- */}
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          <section
+            aria-labelledby="primary-cockpit-h"
+            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.4)] flex flex-col gap-6 transition-all"
+          >
+            {/* Primary Panel Header */}
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400">
+                  <AppleEmoji emoji="🎯" size={18} />
+                </span>
+                <div>
+                  <h2 id="primary-cockpit-h" className="font-sans font-bold text-lg text-white">
+                    Today's Targets & Action Cockpit
+                  </h2>
+                  <p className="m-0 text-xs text-zinc-400 mt-0.5">
+                    Your scheduled focus targets and instant next-up syllabus chapters
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-zinc-300 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-lg">
+                  {completedTargetsCount}/{state.targets.length} Done
+                </span>
+              </div>
+            </div>
 
-            return (
-              <div
-                key={q.chapterId}
-                className="group flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line/60 bg-surface2/40 p-3.5 transition-all hover:border-line-strong hover:bg-surface2/75 hover:shadow-[0_2px_12px_rgba(0,0,0,0.12)]"
-              >
-                <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-surface3/60 font-mono text-xs font-semibold text-muted transition-colors group-hover:bg-accent/15 group-hover:text-accent-text">
-                    {i + 1}
+            {/* Target Items Checklist */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-sans text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                  Active Focus Targets
+                </span>
+                {state.targets.length > 0 && (
+                  <span className="text-[11px] font-mono text-zinc-500">
+                    Auto-scheduled avoiding school & tuition
                   </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[15px] font-medium leading-snug">{q.chapter.name}</div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                      <Pill>{q.subject.name}</Pill>
-                      <ConfDots value={q.chapter.confidence} />
-                      {isLightWork ? (
-                        <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.2 font-mono text-[10px] text-cyan-300">
-                          🍃 Light Revision
-                        </span>
-                      ) : (
-                        <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.2 font-mono text-[10px] text-amber-400">
-                          🔥 Deep Focus
-                        </span>
-                      )}
+                )}
+              </div>
+
+              {state.targets.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-white/[0.1] bg-white/[0.01] p-6 text-center">
+                  <p className="m-0 text-xs text-zinc-400">
+                    No targets scheduled yet for today.
+                  </p>
+                  <p className="m-0 text-[11px] text-zinc-500 mt-1">
+                    Select a high-yield chapter from the recommended queue below, or add a custom task.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {state.targets.map((task) => {
+                    const chapter = task.chapterId ? state.subjects.flatMap((s) => s.chapters).find((c) => c.id === task.chapterId) : null;
+                    const taskDur = task.duration || (chapter ? computeChapterDuration(chapter.confidence, task.subjectId ?? undefined) : "45m");
+                    return (
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-[#0c0f14]/70 border border-white/[0.06] hover:border-white/[0.14] transition-all group"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTarget(task.id, task.done)}
+                          aria-label={`Toggle target ${task.title}`}
+                          className="flex items-center gap-3 min-w-0 flex-1 text-left bg-transparent border-0 p-0 cursor-pointer"
+                        >
+                          <Check on={task.done} />
+                          <span
+                            className={`text-xs sm:text-[13px] font-sans font-medium tracking-wide truncate ${
+                              task.done ? "text-zinc-500 line-through" : "text-zinc-100 group-hover:text-white"
+                            }`}
+                          >
+                            <AppleText text={task.title} size={14} />
+                          </span>
+                        </button>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-mono text-[11px] text-zinc-400 bg-white/[0.04] border border-white/[0.08] px-2 py-0.5 rounded-md tabular-nums">
+                            {taskDur}
+                          </span>
+                          <a
+                            href={getTargetGCalUrl(task, state.today, {
+                              externalEvents: state.externalEvents,
+                              otherTargets: state.targets,
+                            })}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Add target ${task.title} to Google Calendar`}
+                            title="Add target to Google Calendar (respects tuition and school)"
+                            className="text-zinc-400 hover:text-sky-400 p-1.5 rounded-lg hover:bg-white/[0.06] transition-all flex items-center cursor-pointer"
+                          >
+                            <AppleEmoji emoji="📅" size={13} />
+                          </a>
+                          <button
+                            type="button"
+                            aria-label={`Delete target ${task.title}`}
+                            onClick={() => handleDeleteTarget(task.id)}
+                            className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-rose-400 font-mono text-xs p-1 transition-all cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add Custom Task Form */}
+              {isAddingTask ? (
+                <div className="flex flex-col gap-2.5 pt-3 border-t border-white/[0.06]">
+                  <label htmlFor={newTaskInputId} className="sr-only">Task title</label>
+                  <input
+                    id={newTaskInputId}
+                    type="text"
+                    autoFocus
+                    placeholder="Enter custom study target or revision topic..."
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void handleAddTask();
+                      if (e.key === "Escape") setIsAddingTask(false);
+                    }}
+                    className="w-full rounded-xl border border-white/[0.12] bg-[#0c0f13] px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-400 transition-all"
+                  />
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-sans text-zinc-400">Duration:</span>
+                      <select
+                        aria-label="Task duration"
+                        value={newTaskDuration}
+                        onChange={(e) => setNewTaskDuration(e.target.value)}
+                        className="rounded-lg border border-white/[0.1] bg-[#0c0f13] px-2.5 py-1 text-xs text-zinc-200 focus:outline-none"
+                      >
+                        <option value="30m">30m</option>
+                        <option value="45m">45m</option>
+                        <option value="50m">50m</option>
+                        <option value="1h 00m">1h 00m</option>
+                        <option value="1h 15m">1h 15m</option>
+                        <option value="1h 30m">1h 30m</option>
+                        <option value="2h 00m">2h 00m</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingTask(false)}
+                        className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddTask}
+                        className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md active:scale-95 transition-all cursor-pointer"
+                      >
+                        Add Target
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-2">
+              ) : (
+                <div className="pt-1">
                   <button
                     type="button"
-                    title="Quick Viva and Active Recall"
-                    onClick={() => onOpenViva(q.chapter, q.subject)}
-                    className="inline-flex h-8 items-center gap-1 rounded-xl border border-accent/40 bg-accent/15 px-2.5 font-mono text-xs font-semibold text-accent-text hover:bg-accent/25 transition-all active:scale-95 shadow-2xs"
+                    onClick={() => setIsAddingTask(true)}
+                    className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-emerald-400 font-sans transition-all cursor-pointer py-1"
                   >
-                    ⚡ Viva
-                  </button>
-
-                  <PassPills passes={q.chapter.passes} />
-
-                  {isPlanned ? (
-                    <span className="inline-flex items-center gap-1 rounded-xl border border-good/40 bg-good/10 px-3 py-1.5 text-xs font-medium text-good shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                      <span>✓</span> Planned
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={!canPlanMore}
-                      title={canPlanMore ? "Add to today's daily targets" : "Daily targets limit reached (max 8)"}
-                      onClick={() => act("POST", "/api/targets", { chapterId: q.chapterId })}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-line bg-surface2/90 px-3 text-xs font-medium text-fg transition-all hover:border-accent hover:bg-surface3 hover:text-accent-text active:scale-95 disabled:opacity-40"
-                    >
-                      <span className="text-[13px] font-bold">+</span> Plan today
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </Card>
-  );
-}
-
-function Energy({ state, act }: { state: State; act: Act }) {
-  return (
-    <section aria-label="Energy check-in" className="flex items-center gap-2 lg:flex-col lg:items-stretch lg:gap-3.5 lg:rounded-[24px] lg:border lg:border-line/80 lg:bg-surface/85 lg:backdrop-blur-xl lg:px-6 lg:py-5.5 lg:shadow-[0_4px_24px_-1px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]">
-      <div className="hidden lg:flex items-center justify-between">
-        <h2 className="m-0 text-[16px] font-semibold tracking-[-0.015em]">Energy Calibration</h2>
-        <span className="font-mono text-[11px] text-muted uppercase">SYSTEM PROTOCOL</span>
-      </div>
-      <span className="w-[52px] text-[13px] text-muted lg:hidden">Energy</span>
-      <div className="flex flex-1 gap-1.5 rounded-xl bg-surface2/60 p-1 border border-line/60" role="group" aria-label="Energy today">
-        {ENERGIES.map((e) => (
-          <button
-            key={e}
-            type="button"
-            aria-pressed={state.checkin === e}
-            onClick={() => act("POST", "/api/checkin", { energy: e })}
-            className={`h-10 flex-1 rounded-[10px] text-[13.5px] font-medium transition-all duration-150 ${
-              state.checkin === e
-                ? "bg-gradient-to-b from-[#6366f1] to-[#4f46e5] text-white shadow-[0_2px_12px_rgba(99,102,241,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] font-semibold"
-                : "text-muted hover:text-fg hover:bg-surface3/50"
-            }`}
-          >
-            {ENERGY_LABEL[e]}
-          </button>
-        ))}
-      </div>
-      <p className="m-0 hidden text-[13px] text-muted lg:block leading-relaxed">{ENERGY_NOTE}</p>
-    </section>
-  );
-}
-
-/** Compact habits check-off widget directly in the Today command center. */
-function DailyHabitsWidget({ state, act }: { state: State; act: Act }) {
-  if (state.habits.length === 0) return null;
-  const doneToday = state.habits.filter((h) => h.today >= h.goal).length;
-
-  return (
-    <Card labelledBy="today-habits-h">
-      <div className="mb-3 flex items-baseline justify-between">
-        <H2 id="today-habits-h">Today's Habits</H2>
-        <span className="rounded-full border border-line/60 bg-surface2/80 px-2.5 py-0.5 font-mono text-xs font-medium text-muted">
-          {doneToday} of {state.habits.length} done
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {state.habits.map((h) => {
-          const done = h.today >= h.goal;
-          return (
-            <div
-              key={h.id}
-              className={`flex items-center justify-between gap-3 rounded-2xl border p-3 transition-all ${
-                done
-                  ? "border-line/40 bg-surface2/25 opacity-80"
-                  : "border-line/60 bg-surface2/45 hover:border-line-strong hover:bg-surface2/75 hover:shadow-[0_2px_12px_rgba(0,0,0,0.1)]"
-              }`}
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={done}
-                  aria-label={`${h.name}: ${done ? "done" : "not done"}`}
-                  onClick={() => act("PUT", `/api/habits/${h.id}/log`, { value: done ? 0 : h.goal })}
-                  className="flex size-9 shrink-0 items-center justify-center border-0 bg-transparent p-0 transition-transform active:scale-90"
-                >
-                  <Check on={done} />
-                </button>
-                <div className="min-w-0">
-                  <div className={`truncate text-[14.5px] font-medium leading-snug ${done ? "text-muted line-through" : "text-fg"}`}>{h.name}</div>
-                  <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted">
-                    {h.streak > 0 ? (
-                      <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.2 font-medium text-amber-500 dark:text-amber-400">
-                        🔥 {h.streak}d streak
-                      </span>
-                    ) : (
-                      <span>Start today</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {h.kind === "count" && (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    aria-label={`One fewer for ${h.name}`}
-                    disabled={h.today === 0}
-                    onClick={() => act("PUT", `/api/habits/${h.id}/log`, { value: Math.max(0, h.today - 1) })}
-                    className="flex size-8 items-center justify-center rounded-xl border border-line bg-surface2 text-sm font-semibold transition-all hover:bg-surface3 active:scale-95 disabled:opacity-30"
-                  >
-                    −
-                  </button>
-                  <span className={`w-10 text-center font-mono text-xs ${done ? "font-semibold text-good" : "text-muted"}`}>
-                    {h.today}/{h.goal}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label={`One more for ${h.name}`}
-                    onClick={() => act("PUT", `/api/habits/${h.id}/log`, { value: h.today + 1 })}
-                    className="flex size-8 items-center justify-center rounded-xl border border-line bg-surface2 text-sm font-semibold transition-all hover:bg-surface3 active:scale-95"
-                  >
-                    +
+                    <span className="text-sm font-bold">+</span>
+                    <span>Add custom target</span>
                   </button>
                 </div>
               )}
             </div>
-          );
-        })}
+
+            {/* Recommended Study Queue Integrated Into Primary Cockpit */}
+            <div className="flex flex-col gap-3 pt-5 border-t border-white/[0.08]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-5 items-center justify-center rounded-md bg-amber-500/10 text-amber-400">
+                    <AppleEmoji emoji="⚡" size={13} />
+                  </span>
+                  <span className="font-sans text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                    Recommended Study Queue (Priority Syllabus)
+                  </span>
+                </div>
+                <span className="font-mono text-[11px] text-zinc-500">
+                  {topQueue.length} priority chapters
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                {topQueue.length === 0 ? (
+                  <div className="text-xs text-zinc-500 py-3 text-center">
+                    All active phase syllabus chapters are currently mastered!
+                  </div>
+                ) : (
+                  topQueue.map((q) => {
+                    const inToday = state.targets.some((t) => t.chapterId === q.chapterId);
+                    const durationEst = computeChapterDuration(q.confidence, q.subjectId);
+                    const subColor = SUBJECT_COLORS[q.subjectId] || "#38bdf8";
+
+                    return (
+                      <div
+                        key={q.chapterId}
+                        className="flex flex-col gap-2 rounded-2xl border border-white/[0.05] bg-[#0c0f14]/50 p-3.5 hover:border-white/[0.12] transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="size-2 rounded-full shrink-0"
+                                style={{ backgroundColor: subColor }}
+                              />
+                              <span className="font-sans text-xs font-semibold text-zinc-200 truncate">
+                                {q.subject.name} · {q.chapter.name}
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-sans text-zinc-400 mt-0.5">
+                              {reasonFor(q.chapter)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="rounded-md bg-white/[0.04] border border-white/10 px-2 py-0.5 font-mono text-[10px] text-zinc-300 inline-flex items-center gap-1">
+                              <AppleEmoji emoji="⏱️" size={11} />
+                              <span>{durationEst}</span>
+                            </span>
+                            {q.needsFreshMind && (
+                              <span className="rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-300 inline-flex items-center gap-1">
+                                <AppleEmoji emoji="⚠️" size={11} />
+                                <span>Fresh Mind</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
+                          <span className="font-mono text-[11px] text-zinc-500">
+                            Confidence {q.confidence}/5
+                          </span>
+
+                          <div className="flex items-center gap-2">
+                            {inToday ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg">
+                                <span>✓</span> In Today's Targets
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => void handleAddQueueChapter(q)}
+                                aria-label={`Add ${q.subject.name}: ${q.chapter.name} to Today`}
+                                className="h-7 rounded-lg border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-3 font-sans text-xs font-semibold text-sky-300 transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>+</span>
+                                <span>Add to Today</span>
+                              </button>
+                            )}
+
+                            {onOpenViva && (
+                              <button
+                                type="button"
+                                aria-label={`Launch Oral Exam Viva for ${q.subject.name}: ${q.chapter.name}`}
+                                onClick={() => onOpenViva(q.chapter, q.subject)}
+                                className="h-7 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 font-mono text-xs font-semibold text-amber-300 transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                              >
+                                <AppleEmoji emoji="⚡" size={11} />
+                                <span>Viva</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* ----------------------------------------------------------------------- */}
+        {/* SECONDARY PANELS (5 Cols on desktop): Focused Companions                 */}
+        {/* Deliverables Watchdog, Habits, Schedule, Quick Capture                   */}
+        {/* ----------------------------------------------------------------------- */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          {/* Secondary Panel 1: School Deliverables Watchdog (Flags Overdue & Urgent) */}
+          <section
+            aria-labelledby="card-deliverables-h"
+            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400">
+                  <AppleEmoji emoji="📋" size={15} />
+                </span>
+                <div>
+                  <h2 id="card-deliverables-h" className="font-sans font-semibold text-base text-white">
+                    Deliverables Watchdog
+                  </h2>
+                  <p className="m-0 text-[11px] text-zinc-400">
+                    Pre-Boards 1 submissions & lab practicals
+                  </p>
+                </div>
+              </div>
+              <a href="#deliverables" className="font-sans text-xs text-zinc-400 hover:text-white transition-all">
+                View All →
+              </a>
+            </div>
+
+            {/* Overdue Alert Banner if any overdue items exist */}
+            {overdueDeliverables.length > 0 && (
+              <div
+                role="alert"
+                className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-3 text-xs text-rose-200 flex items-start gap-2.5 shadow-sm"
+              >
+                <AppleEmoji emoji="⚠️" size={16} />
+                <div className="flex flex-col min-w-0">
+                  <span className="font-semibold text-rose-300">
+                    {plural(overdueDeliverables.length, "deliverable")} overdue!
+                  </span>
+                  <span className="text-[11px] text-rose-200/90 mt-0.5 truncate">
+                    {overdueDeliverables.map((d) => d.name).join(", ")}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Deliverables List */}
+            <div className="flex flex-col gap-2.5">
+              {sortedDeliverables.slice(0, 5).map((item) => {
+                const daysLeft = getDeliverableDaysLeft(item.due);
+                const isOverdue = item.status !== "done" && daysLeft !== null && daysLeft < 0;
+                const isUrgent = item.status !== "done" && daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center justify-between gap-3 p-2.5 rounded-xl border transition-all ${
+                      isOverdue
+                        ? "border-rose-500/40 bg-rose-950/20 shadow-2xs"
+                        : isUrgent
+                          ? "border-amber-500/30 bg-amber-950/15"
+                          : "border-white/[0.04] bg-[#0c0f14]/50 hover:border-white/[0.1]"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-sans text-xs font-semibold truncate ${item.status === "done" ? "text-zinc-500 line-through" : isOverdue ? "text-rose-200 font-bold" : "text-zinc-200"}`}>
+                          {item.name}
+                        </span>
+                        {isOverdue && (
+                          <span className="px-1.5 py-0.2 rounded bg-rose-500/25 text-rose-300 border border-rose-500/50 text-[9px] font-mono font-bold animate-pulse inline-flex items-center gap-1">
+                            <AppleEmoji emoji="⚠️" size={10} />
+                            <span>Overdue ({plural(-daysLeft!, "day")} late)</span>
+                          </span>
+                        )}
+                        {isUrgent && (
+                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-mono font-bold animate-pulse inline-flex items-center gap-1">
+                            <AppleEmoji emoji="⚡" size={10} />
+                            <span>&lt;72h</span>
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-mono text-[10px] text-zinc-400 uppercase">
+                        {item.subject} {item.due ? `· Due ${item.due}` : ""}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.vivaPrep && (
+                        <span className="font-mono text-[10px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                          Viva
+                        </span>
+                      )}
+                      <a
+                        href={getDeliverableGCalUrl(item, state.today)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Add deliverable ${item.name} to Google Calendar`}
+                        title="Add to Google Calendar (Morning Handover 08:00 AM)"
+                        className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors flex items-center cursor-pointer"
+                      >
+                        <AppleEmoji emoji="📅" size={12} />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Secondary Panel 2: Habits Consistency */}
+          <section
+            aria-labelledby="card-habits-h"
+            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                  <AppleEmoji emoji="🔥" size={15} />
+                </span>
+                <div>
+                  <h2 id="card-habits-h" className="font-sans font-semibold text-base text-white">
+                    Habits Matrix
+                  </h2>
+                  <p className="m-0 text-[11px] text-zinc-400">
+                    Daily consistency streaks
+                  </p>
+                </div>
+              </div>
+              <span className="font-mono text-xs text-zinc-400 tabular-nums">
+                {habitsDoneCount}/{state.habits.length} Done
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {state.habits.map((habit) => {
+                const done = habit.today >= habit.goal;
+                return (
+                  <div
+                    key={habit.id}
+                    onClick={() => handleToggleHabit(habit.id, habit.today, habit.goal)}
+                    className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Check on={done} />
+                      <span
+                        className={`text-xs font-sans tracking-wide truncate ${
+                          done ? "text-zinc-500 line-through" : "text-zinc-200 group-hover:text-white"
+                        }`}
+                      >
+                        <AppleText text={habit.name} size={13} />
+                      </span>
+                    </div>
+                    {habit.streak > 0 && (
+                      <span className="font-mono text-[10px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md shrink-0 inline-flex items-center gap-1">
+                        <AppleEmoji emoji="🔥" size={10} />
+                        <span>{habit.streak}d</span>
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Secondary Panel 3: Routine & Schedule Timeline */}
+          <section
+            aria-labelledby="card-routine-h"
+            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                  <AppleEmoji emoji="⏱️" size={15} />
+                </span>
+                <div>
+                  <h2 id="card-routine-h" className="font-sans font-semibold text-base text-white">
+                    Routine & Time Slots
+                  </h2>
+                  <p className="m-0 text-[11px] text-zinc-400">
+                    Real free study slots avoiding school & tuition
+                  </p>
+                </div>
+              </div>
+              <a href="#schedule" className="font-sans text-xs text-zinc-400 hover:text-white">
+                Schedule →
+              </a>
+            </div>
+
+            {/* If tuition / external events exist today */}
+            {state.externalEvents && state.externalEvents.length > 0 && (
+              <div className="p-3 rounded-xl border border-sky-500/20 bg-sky-950/20 text-xs flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-[11px] text-sky-300 font-semibold">
+                  <span className="flex items-center gap-1.5">
+                    <AppleEmoji emoji="📅" size={12} />
+                    <span>Tuition / External Calendar</span>
+                  </span>
+                  <span className="font-mono text-zinc-400">
+                    {state.externalEvents.length} event{state.externalEvents.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+                {state.externalEvents.slice(0, 2).map((ev) => (
+                  <div key={ev.id} className="flex items-center justify-between gap-2 text-[11px] font-mono text-zinc-300">
+                    <span className="truncate">{ev.summary}</span>
+                    <span className="text-zinc-400 shrink-0">{ev.startsAt.slice(11, 16)}–{ev.endsAt.slice(11, 16)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Vertical Routine */}
+            <div className="relative flex flex-col gap-3 pl-4 ml-1.5 border-l border-white/[0.1]">
+              {(state.scheduleBlocks && state.scheduleBlocks.length > 0
+                ? state.scheduleBlocks.map((b) => ({
+                    time: `${b.startTime} - ${b.endTime}`,
+                    label: b.title,
+                    id: String(b.id),
+                  }))
+                : ROUTINE_BLOCKS.map((rb, idx) => ({
+                    time: rb.time,
+                    label: rb.label,
+                    id: String(idx),
+                  }))
+              ).map((rb) => (
+                <div key={rb.id} className="relative flex items-center gap-3 text-xs">
+                  <span className="absolute -left-[21px] size-2 rounded-full border border-black bg-zinc-400" />
+                  <span className="font-mono text-[11px] text-zinc-400 w-24 shrink-0 tabular-nums">
+                    {rb.time}
+                  </span>
+                  <span className="font-sans text-zinc-200 truncate">{rb.label}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Secondary Panel 4: Quick Capture Buffer */}
+          <section
+            aria-labelledby="card-capture-h"
+            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-zinc-400 font-semibold text-sm">+</span>
+                <h2 id="card-capture-h" className="font-sans font-semibold text-base text-white">
+                  Quick Capture Buffer
+                </h2>
+              </div>
+              <span className="font-mono text-xs text-zinc-400">
+                {state.captures.filter((c) => !c.done).length} open
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor={captureInputId} className="sr-only">Quick capture thought or task</label>
+              <textarea
+                id={captureInputId}
+                rows={2}
+                value={captureText}
+                onChange={(e) => setCaptureText(e.target.value)}
+                placeholder="Write thought... (#task, #note, #doubt)"
+                className="w-full resize-none rounded-xl border border-white/[0.08] bg-[#0c0f13] p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500 transition-all"
+              />
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  {[
+                    { tag: "#task", color: "text-sky-300 bg-sky-500/10 border-sky-500/30" },
+                    { tag: "#note", color: "text-emerald-300 bg-emerald-500/10 border-emerald-500/30" },
+                    { tag: "#doubt", color: "text-amber-300 bg-amber-500/10 border-amber-500/30" },
+                  ].map(({ tag, color }) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setCaptureText((cur) => (cur.includes(tag) ? cur : `${cur} ${tag}`.trim()))}
+                      className={`h-5 rounded border px-1.5 font-mono text-[9px] uppercase font-bold tracking-wider cursor-pointer ${color}`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveCapture}
+                  className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            {/* Recent Captures */}
+            {state.captures.length > 0 && (
+              <div className="flex flex-col gap-2 pt-3 border-t border-white/[0.06]">
+                {state.captures.slice(0, 3).map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex flex-col gap-1.5 p-2 rounded-xl bg-[#0c0f14]/50 border border-white/[0.04] text-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2.5">
+                      <span className={`font-sans truncate ${c.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>
+                        {c.text}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Delete capture"
+                        onClick={() => act("DELETE", `/api/captures/${c.id}`)}
+                        className="text-zinc-500 hover:text-rose-400 font-mono text-xs px-1 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {!c.done && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/[0.04]">
+                        <button
+                          type="button"
+                          onClick={() => void convertCaptureToTask(c)}
+                          className="h-5 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 font-mono text-[9px] text-sky-300 hover:bg-sky-500/20 transition-all cursor-pointer"
+                        >
+                          → Target
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void convertCaptureToDeliverable(c)}
+                          className="h-5 rounded border border-indigo-500/30 bg-indigo-500/10 px-1.5 font-mono text-[9px] text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer"
+                        >
+                          → Deliverable
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveDoubtId(activeDoubtId === c.id ? null : c.id)}
+                          className="h-5 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 font-mono text-[9px] text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
+                        >
+                          → Doubt
+                        </button>
+                      </div>
+                    )}
+
+                    {activeDoubtId === c.id && (
+                      <div className="mt-1 flex items-center gap-1.5 p-1 rounded bg-amber-500/10 border border-amber-500/20">
+                        <select
+                          id={`doubt-select-today-${c.id}`}
+                          aria-label="Choose chapter for doubt"
+                          defaultValue=""
+                          onChange={async (e) => {
+                            const chId = e.target.value;
+                            if (!chId) return;
+                            await act("POST", `/api/chapters/${chId}/notes`, { note: `[Doubt] ${c.text}` });
+                            await act("PATCH", `/api/captures/${c.id}`, { done: true });
+                            setActiveDoubtId(null);
+                          }}
+                          className="h-6 text-[10px] bg-[#121622] border border-amber-500/40 text-amber-100 rounded px-1.5 font-mono flex-1 focus:outline-none"
+                        >
+                          <option value="" disabled>Select chapter to link doubt...</option>
+                          {state.subjects.map((s) => (
+                            <optgroup key={s.id} label={s.name}>
+                              {s.chapters.map((ch) => (
+                                <option key={ch.id} value={ch.id}>{ch.name}</option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                        <button type="button" onClick={() => setActiveDoubtId(null)} className="text-xs text-zinc-400 hover:text-white px-1">✕</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
 
-      <div className="mt-3 border-t border-line/60 pt-3 text-right">
-        <a href="#habits" className="text-xs font-medium text-accent-text hover:underline">
-          View habit history →
-        </a>
-      </div>
-    </Card>
+      {showCalendarModal && (
+        <CalendarModal state={state} act={act} onClose={() => setShowCalendarModal(false)} />
+      )}
+    </div>
   );
 }

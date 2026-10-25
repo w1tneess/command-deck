@@ -46,7 +46,7 @@ export function RevisionMatrix({
       {/* Matrix Controls & Telemetry Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-surface/80 p-4 lg:p-5 backdrop-blur-md shadow-sm">
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted">
+          <div className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted">
             <span className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
             <span>Syllabus Radar</span>
             <span className="text-zinc-600">/</span>
@@ -107,13 +107,13 @@ export function RevisionMatrix({
                   <SubjectIcon id={subject.id} size={18} />
                   <div>
                     <h3 className="m-0 text-sm sm:text-base font-semibold text-white tracking-tight">{subject.name}</h3>
-                    <div className="font-mono text-[11px] text-muted mt-0.5">
+                    <div className="font-mono text-xs text-muted mt-0.5">
                       {matching.length}/{subject.chapters.length} chapters · {subject.progressPct}% progress
                     </div>
                   </div>
                 </div>
                 {examDate && (
-                  <span className="font-mono text-[10px] rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-zinc-300">
+                  <span className="font-mono text-[11px] rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-zinc-300">
                     Exam: {examDate}
                   </span>
                 )}
@@ -121,7 +121,7 @@ export function RevisionMatrix({
 
               {/* Subject Chapters Heatmap List */}
               {matching.length === 0 ? (
-                <div className="py-8 text-center font-mono text-[11px] text-muted border border-dashed border-white/10 rounded-xl">
+                <div className="py-8 text-center font-mono text-xs text-muted border border-dashed border-white/10 rounded-xl">
                   No chapters matching current filter
                 </div>
               ) : (
@@ -158,7 +158,7 @@ export function RevisionMatrix({
                             type="button"
                             aria-label={`Open Viva and Active Recall for ${c.name}`}
                             onClick={() => onOpenViva(c, subject)}
-                            className="shrink-0 flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-amber-300 hover:bg-amber-500/20 transition-all uppercase tracking-wider"
+                            className="shrink-0 flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 transition-all uppercase tracking-wider"
                           >
                             <AppleEmoji emoji="⚡" size={11} />
                             <span>Viva</span>
@@ -176,7 +176,7 @@ export function RevisionMatrix({
                                   type="button"
                                   title={`Toggle ${short} pass`}
                                   onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${pIdx + 1}`, { done: !done })}
-                                  className={`flex size-6 items-center justify-center rounded-md text-[10px] font-mono transition-all ${
+                                  className={`flex size-6 items-center justify-center rounded-md text-[11px] font-mono transition-all ${
                                     done
                                       ? "bg-emerald-500 text-zinc-950 font-bold shadow-[0_0_8px_rgba(52,211,153,0.3)]"
                                       : "bg-surface border border-white/10 text-zinc-400 hover:border-white/20 hover:text-white"

@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from "react";
 import type { Act, State } from "./api.ts";
 import { Deliverables } from "./Deliverables.tsx";
-import { Card, H2, fmtShort } from "./ui.tsx";
+import { Card, H2, fmtShort, PageHeader } from "./ui.tsx";
 
 const DAY = 86_400_000;
 const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
@@ -34,17 +34,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
 
   return (
     <>
-      <header>
-        <div className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-wider text-muted">
-          <span className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-          <span>Retrospective</span>
-          <span className="text-zinc-600">/</span>
-          <span className="text-zinc-300 font-semibold">Weekly Analytics</span>
-        </div>
-        <h1 className="m-0 mt-1.5 text-[28px] sm:text-[34px] font-bold tracking-tight text-white">
-          Performance Review
-        </h1>
-      </header>
+      <PageHeader eyebrow="Weekly review" title="Performance" />
 
       <div className="flex flex-wrap items-start gap-4 lg:gap-6 mt-2">
         <div className="flex min-w-0 flex-[3_1_480px] flex-col gap-4 lg:gap-6">
@@ -66,7 +56,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
                     style={{ height: Math.max(6, Math.round((w.min / 180) * 150)) }}
                   />
                   <span className="font-mono text-xs uppercase tracking-wider text-zinc-300">{weekday(w.day)}</span>
-                  <span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${energyStyle(w.energy)}`}>
+                  <span className={`rounded-full border px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider ${energyStyle(w.energy)}`}>
                     {w.energy ? ENERGY[w.energy] : "–"}
                   </span>
                 </div>
@@ -83,7 +73,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
             <table className="mt-3.5 w-full border-collapse text-left text-sm">
               <caption className="sr-only">Study time, habits done and sleep rating for each of the last 7 days</caption>
               <thead>
-                <tr className="font-mono text-[10px] text-muted uppercase tracking-wider border-b border-white/[0.06]">
+                <tr className="font-mono text-[11px] text-muted uppercase tracking-wider border-b border-white/[0.06]">
                   <th scope="col" className="pb-2.5 font-medium">Day</th>
                   <th scope="col" className="pb-2.5 font-medium">Study Hours</th>
                   <th scope="col" className="pb-2.5 font-medium">Habits</th>
@@ -182,14 +172,14 @@ function Heatmap({ id, title, today, values, levelOf, text }: HeatProps) {
     <Card labelledBy={id}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <H2 id={id}>{title}</H2>
-        <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted uppercase tracking-wider">
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted uppercase tracking-wider">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((l) => <span key={l} className="size-3.5 rounded-[3px] border border-white/5" style={{ background: `var(--heat-${l})` }} />)}
           <span>More</span>
         </div>
       </div>
       <div className="mt-4 flex gap-2.5 overflow-x-auto pb-1">
-        <div className="grid grid-rows-[repeat(7,28px)] items-center gap-1 font-mono text-[9px] uppercase text-muted" aria-hidden="true">
+        <div className="grid grid-rows-[repeat(7,28px)] items-center gap-1 font-mono text-[11px] uppercase text-muted" aria-hidden="true">
           <span>Mon</span><span /><span>Wed</span><span /><span>Fri</span><span /><span>Sun</span>
         </div>
         <div role="img" aria-label={`${title}, darker is more`} className="grid grid-flow-col grid-rows-[repeat(7,28px)] auto-cols-[28px] gap-1">

@@ -1,63 +1,202 @@
 @import "tailwindcss";
 
 /*
- * Life OS Architecture — Dark Editorial & Matte Obsidian Design System
- * Canvas Base: Matte obsidian slate (#0c0f13 to #101318).
- * Container Cards: #15191f framed with subtle, translucent borders (border-white/[0.06] hover:border-white/[0.12]).
- * Accents: Sage / Emerald (#52b788 / #74c69d).
- * Typography: Newsreader / Playfair Display editorial serif, Geist Sans / Inter UI sans, Geist Mono telemetry.
+ * Design tokens. One definition per token via light-dark(): `color-scheme: light dark` follows the device,
+ * and data-theme="light" / "dark" (set by theme.ts) force one side. Components use the semantic utilities
+ * (bg-surface, text-fg, text-muted, border-line, bg-accent...). The raw zinc/white/hue overrides further
+ * down are a compatibility layer that makes any remaining Tailwind palette class flip with the theme too.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
   --font-serif: "Newsreader", "Playfair Display", Georgia, serif;
   --font-sans: "Geist Sans", "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --bg: light-dark(#f5f4ef, #0c0f13);
+  --shell: light-dark(#ebe9e1, #101318);
+  --surface: light-dark(#ffffff, #15191f);
+  --surface2: light-dark(#f4f2eb, #1b2028);
+  --surface3: light-dark(#e8e5db, #222832);
+  --line: light-dark(rgba(24, 24, 27, 0.08), rgba(255, 255, 255, 0.07));
+  --line-strong: light-dark(rgba(24, 24, 27, 0.16), rgba(255, 255, 255, 0.14));
+  --text: light-dark(#18181b, #f4f5f8);
+  --ink: var(--text);
+  --muted: light-dark(#63636c, #9aa5b4);
+  --blue: light-dark(#0369a1, #38bdf8);
+  --good: light-dark(#2d7355, #52b788);
+  --good-ink: #ffffff;
+  --warn: light-dark(#b45309, #fbbf24);
+  --warn-ink: light-dark(#ffffff, #18181b);
+  --danger: light-dark(#be123c, #fb7185);
+  --accent: light-dark(#2d7355, #52b788);
+  --accent-hover: light-dark(#1e4d38, #74c69d);
+  --accent-text: light-dark(#ffffff, #07130d);
+  --focus: light-dark(#2d7355, #74c69d);
+  --heat-0: light-dark(#f2f0e9, #1b2028);
+  --heat-1: light-dark(#d1e7dd, #1f3a31);
+  --heat-2: light-dark(#a3cfbb, #276048);
+  --heat-3: light-dark(#52b788, #2d7355);
+  --heat-4: light-dark(#2d7355, #52b788);
+
+  /* Neutral scale mirrored for light: text-zinc-400 stays "muted text", bg-zinc-800 stays "raised chip". */
+  --color-white: light-dark(#18181b, #ffffff);
+  --color-zinc-50: light-dark(#18181b, #fafafa);
+  --color-zinc-100: light-dark(#27272a, #f4f4f5);
+  --color-zinc-200: light-dark(#3f3f46, #e4e4e7);
+  --color-zinc-300: light-dark(#52525b, #d4d4d8);
+  --color-zinc-400: light-dark(#5f5f68, #a1a1aa);
+  --color-zinc-500: light-dark(#6b6b74, #71717a);
+  --color-zinc-600: light-dark(#a1a1aa, #52525b);
+  --color-zinc-700: light-dark(#d4d4d8, #3f3f46);
+  --color-zinc-800: light-dark(#e4e4e7, #27272a);
+  --color-zinc-900: light-dark(#f4f4f5, #18181b);
+  --color-zinc-950: light-dark(#fafafa, #09090b);
+
+  /* Accent hues: light text shades darken in light mode, dark tinted fills become pale. */
+  --color-emerald-200: light-dark(#065f46, #a7f3d0);
+  --color-emerald-300: light-dark(#047857, #6ee7b7);
+  --color-emerald-400: light-dark(#047857, #34d399);
+  --color-emerald-900: light-dark(#d1fae5, #064e3b);
+  --color-emerald-950: light-dark(#d1fae5, #022c22);
+  --color-sky-200: light-dark(#075985, #bae6fd);
+  --color-sky-300: light-dark(#0369a1, #7dd3fc);
+  --color-sky-400: light-dark(#0369a1, #38bdf8);
+  --color-sky-900: light-dark(#e0f2fe, #0c4a6e);
+  --color-sky-950: light-dark(#e0f2fe, #082f49);
+  --color-indigo-200: light-dark(#3730a3, #c7d2fe);
+  --color-indigo-300: light-dark(#4338ca, #a5b4fc);
+  --color-indigo-400: light-dark(#4338ca, #818cf8);
+  --color-indigo-900: light-dark(#e0e7ff, #312e81);
+  --color-indigo-950: light-dark(#e0e7ff, #1e1b4b);
+  --color-amber-200: light-dark(#92400e, #fde68a);
+  --color-amber-300: light-dark(#b45309, #fcd34d);
+  --color-amber-400: light-dark(#b45309, #fbbf24);
+  --color-amber-900: light-dark(#fef3c7, #78350f);
+  --color-amber-950: light-dark(#fef3c7, #451a03);
+  --color-rose-200: light-dark(#9f1239, #fecdd3);
+  --color-rose-300: light-dark(#be123c, #fda4af);
+  --color-rose-400: light-dark(#be123c, #fb7185);
+  --color-rose-900: light-dark(#ffe4e6, #881337);
+  --color-rose-950: light-dark(#ffe4e6, #4c0519);
+  --color-teal-200: light-dark(#115e59, #99f6e4);
+  --color-teal-300: light-dark(#0f766e, #5eead4);
+  --color-teal-400: light-dark(#0f766e, #2dd4bf);
+  --color-teal-900: light-dark(#ccfbf1, #134e4a);
+  --color-teal-950: light-dark(#ccfbf1, #042f2e);
+  --color-purple-200: light-dark(#6b21a8, #e9d5ff);
+  --color-purple-300: light-dark(#7e22ce, #d8b4fe);
+  --color-purple-400: light-dark(#7e22ce, #c084fc);
+  --color-purple-900: light-dark(#f3e8ff, #581c87);
+  --color-purple-950: light-dark(#f3e8ff, #3b0764);
+  --color-cyan-200: light-dark(#155e75, #a5f3fc);
+  --color-cyan-300: light-dark(#0e7490, #67e8f9);
+  --color-cyan-400: light-dark(#0e7490, #22d3ee);
+  --color-cyan-900: light-dark(#cffafe, #164e63);
+  --color-cyan-950: light-dark(#cffafe, #083344);
+  --color-orange-200: light-dark(#9a3412, #fed7aa);
+  --color-orange-300: light-dark(#c2410c, #fdba74);
+  --color-orange-400: light-dark(#c2410c, #fb923c);
+  --color-orange-900: light-dark(#ffedd5, #7c2d12);
+  --color-orange-950: light-dark(#ffedd5, #431407);
+  --color-lime-200: light-dark(#3f6212, #d9f99d);
+  --color-lime-300: light-dark(#4d7c0f, #bef264);
+  --color-lime-400: light-dark(#4d7c0f, #a3e635);
+  --color-lime-900: light-dark(#ecfccb, #365314);
+  --color-lime-950: light-dark(#ecfccb, #1a2e05);
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+/* Fixed cream/pastel surfaces (viva flashcards, subject chips) keep the dark-theme token values in both themes.
+   light-dark() inside a custom property resolves once at :root, so the dark side is restated here. */
+.paper {
+  color-scheme: dark;
   --bg: #0c0f13;
   --shell: #101318;
   --surface: #15191f;
   --surface2: #1b2028;
   --surface3: #222832;
-  --line: rgba(255, 255, 255, 0.06);
-  --line-strong: rgba(255, 255, 255, 0.12);
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.14);
   --text: #f4f5f8;
-  --muted: #8e9aa8;
+  --muted: #9aa5b4;
   --blue: #38bdf8;
   --good: #52b788;
-  --good-ink: #ffffff;
   --warn: #fbbf24;
   --warn-ink: #18181b;
+  --danger: #fb7185;
   --accent: #52b788;
-  --accent-hover: #40916c;
-  --accent-text: #ffffff;
+  --accent-hover: #74c69d;
+  --accent-text: #07130d;
   --focus: #74c69d;
-  --heat-0: #15191f;
-  --heat-1: #1e2836;
-  --heat-2: #244b3e;
+  --heat-0: #1b2028;
+  --heat-1: #1f3a31;
+  --heat-2: #276048;
   --heat-3: #2d7355;
   --heat-4: #52b788;
+  --color-white: #ffffff;
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22;
+  --color-sky-200: #bae6fd;
+  --color-sky-300: #7dd3fc;
+  --color-sky-400: #38bdf8;
+  --color-sky-900: #0c4a6e;
+  --color-sky-950: #082f49;
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-300: #a5b4fc;
+  --color-indigo-400: #818cf8;
+  --color-indigo-900: #312e81;
+  --color-indigo-950: #1e1b4b;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+  --color-rose-200: #fecdd3;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-900: #881337;
+  --color-rose-950: #4c0519;
+  --color-teal-200: #99f6e4;
+  --color-teal-300: #5eead4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-900: #134e4a;
+  --color-teal-950: #042f2e;
+  --color-purple-200: #e9d5ff;
+  --color-purple-300: #d8b4fe;
+  --color-purple-400: #c084fc;
+  --color-purple-900: #581c87;
+  --color-purple-950: #3b0764;
+  --color-cyan-200: #a5f3fc;
+  --color-cyan-300: #67e8f9;
+  --color-cyan-400: #22d3ee;
+  --color-cyan-900: #164e63;
+  --color-cyan-950: #083344;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-900: #7c2d12;
+  --color-orange-950: #431407;
+  --color-lime-200: #d9f99d;
+  --color-lime-300: #bef264;
+  --color-lime-400: #a3e635;
+  --color-lime-900: #365314;
+  --color-lime-950: #1a2e05;
 }
-
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #f5f4ef;
-  --shell: #eae8e1;
-  --surface: #ffffff;
-  --surface2: #f2f0e9;
-  --surface3: #e6e3da;
-  --line: rgba(0, 0, 0, 0.06);
-  --line-strong: rgba(0, 0, 0, 0.12);
-  --text: #18181b;
-  --muted: #71717a;
-  --accent: #2d7355;
-  --accent-hover: #1e4d38;
-  --accent-text: #ffffff;
-  --focus: #2d7355;
-  --heat-0: #f2f0e9;
-  --heat-1: #d1e7dd;
-  --heat-2: #a3cfbb;
-  --heat-3: #52b788;
-  --heat-4: #2d7355;
-}
+:root[data-theme="dark"] { color-scheme: dark; }
 
 @theme inline {
   --font-serif: "Newsreader", "Playfair Display", Georgia, serif;
@@ -77,9 +216,17 @@
   --color-good-ink: var(--good-ink);
   --color-warn: var(--warn);
   --color-warn-ink: var(--warn-ink);
+  --color-danger: var(--danger);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
   --color-accent-text: var(--accent-text);
   --color-ink: var(--ink);
+  --color-on-solid: #ffffff;
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
   --color-pastel-maths: #fdd5cc;
   --color-pastel-science: #ded9fd;
   --color-pastel-sst: #fee2be;
@@ -107,7 +254,7 @@
   input, select, textarea { font: inherit; color: inherit; }
   a { text-decoration: none; color: inherit; }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-  ::selection { background: rgba(200, 240, 216, 0.7); color: #18181b; }
+  ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--text); }
 
   /* Sleek modern rounded scrollbars */
   ::-webkit-scrollbar {

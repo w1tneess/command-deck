@@ -2,7 +2,7 @@ import { useState } from "react";
 import { call } from "./api.ts";
 import { signOut } from "./session.ts";
 import type { Theme } from "./theme.ts";
-import { Btn, Card, H2 } from "./ui.tsx";
+import { Btn, Card, H2, PageHeader } from "./ui.tsx";
 
 const THEMES: { id: Theme; label: string }[] = [
   { id: "system", label: "System Default" },
@@ -46,10 +46,7 @@ export function Backup({ reload, theme, setTheme }: { reload: () => Promise<void
 
   return (
     <>
-      <header className="border-b border-white/[0.08] pb-5">
-        <div className="text-xs font-medium text-zinc-400">Settings & State Management</div>
-        <h1 className="m-0 mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">Data Vault & Config</h1>
-      </header>
+      <PageHeader eyebrow="Settings" title="Appearance & data" sub="Theme, backup and restore." />
       <div className="flex max-w-3xl flex-col gap-5 lg:gap-6">
         <Card labelledBy="backup-h">
           <H2 id="backup-h">Backup & Restore State</H2>

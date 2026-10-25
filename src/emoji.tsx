@@ -294,7 +294,7 @@ export function AppleEmojiPicker({
     <div
       role="dialog"
       aria-label="Apple Emoji Picker"
-      className="flex flex-col rounded-2xl border border-white/10 bg-[#121620] p-4 text-zinc-100 shadow-2xl w-full max-w-sm sm:max-w-md animate-fade-in"
+      className="flex flex-col rounded-2xl border border-white/10 bg-surface p-4 text-zinc-100 shadow-2xl w-full max-w-sm sm:max-w-md animate-fade-in"
     >
       {/* Header & Search Bar */}
       <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
@@ -324,7 +324,7 @@ export function AppleEmojiPicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search Apple emojis (e.g. fire, books, zen, study)..."
-          className="w-full h-9 rounded-xl border border-white/[0.1] bg-[#0c0f14] px-3 text-xs text-white placeholder:text-zinc-500 focus:border-sky-400 focus:outline-none transition-all"
+          className="w-full h-9 rounded-xl border border-white/[0.1] bg-bg px-3 text-xs text-white placeholder:text-zinc-500 focus:border-sky-400 focus:outline-none transition-all"
         />
         {search && (
           <button
@@ -400,7 +400,7 @@ export function AppleEmojiPicker({
       </div>
 
       {/* Footer Preview / Selected Info */}
-      <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400">
+      <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
         <span>Click an emoji to apply</span>
         {value && (
           <div className="flex items-center gap-1.5 font-medium text-white">

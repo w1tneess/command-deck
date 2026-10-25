@@ -124,7 +124,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 py-8 text-center select-none">
-      <div className="w-full rounded-3xl border border-white/10 bg-[#0c0f18]/90 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl flex flex-col items-center">
+      <div className="w-full rounded-3xl border border-white/10 bg-bg/90 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl flex flex-col items-center">
         <BrandLogo size={48} className="mb-3" />
         <h1 className="m-0 text-xl font-bold tracking-tight text-white">Study OS</h1>
         <p className="mt-1 mb-5 text-xs text-zinc-400">Class 10 CBSE & Life OS Dashboard</p>
@@ -170,7 +170,7 @@ export function PinGate({ onDone }: { onDone: () => void }) {
         {/* Visual Divider */}
         <div className="relative my-5 flex w-full items-center justify-center">
           <div className="w-full border-t border-white/[0.08]" />
-          <span className="absolute bg-[#0c0f18] px-3 text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
+          <span className="absolute bg-bg px-3 text-xs font-medium tracking-wider text-zinc-500 uppercase">
             or enter passcode
           </span>
         </div>

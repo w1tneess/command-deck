@@ -7,7 +7,7 @@ export { AppleEmoji, AppleText, AppleEmojiPicker, getAppleEmojiUrl } from "./emo
 export function BrandLogo({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
     <div
-      className={`relative flex items-center justify-center rounded-[3px] bg-[#090b10] border border-white/10 shadow-sm overflow-hidden shrink-0 group ${className}`}
+      className={`relative flex items-center justify-center rounded-[3px] bg-bg border border-white/10 shadow-sm overflow-hidden shrink-0 group ${className}`}
       style={{ width: size, height: size }}
     >
       <svg
@@ -30,7 +30,7 @@ export function BrandLogo({ size = 32, className = "" }: { size?: number; classN
 /** Icon paths for the dashboard navigation and actions in clean minimalist 24x24 geometry. */
 export const ICONS = {
   today: "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
-  syllabus: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M4 19.5B2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z",
+  syllabus: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z",
   habits: "M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12",
   week: "M18 20V10 M12 20V4 M6 20v-6",
   deliverables: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M8 2h8v4H8z M9 13l2 2 4-4",
@@ -76,7 +76,7 @@ export function Card({ children, className = "", labelledBy }: { children: React
   return (
     <section
       aria-labelledby={labelledBy}
-      className={`min-w-0 rounded-2xl bg-[#15191f] border border-white/[0.06] hover:border-white/[0.12] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] text-zinc-100 transition-all duration-200 ${className}`}
+      className={`min-w-0 rounded-2xl bg-surface border border-white/[0.06] hover:border-white/[0.12] p-5 sm:p-6 shadow-sm text-zinc-100 transition-all duration-200 ${className}`}
     >
       {children}
     </section>
@@ -90,9 +90,9 @@ export const H2 = ({ id, children, big = false }: { id?: string; children: React
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "secondary" | "ghost" | "outline" };
 const BTN = {
   primary:
-    "bg-[#52b788] hover:bg-[#40916c] text-white font-medium shadow-xs active:scale-[0.98] border border-transparent",
+    "bg-accent hover:bg-accent-hover text-accent-text font-medium shadow-xs active:scale-[0.98] border border-transparent",
   secondary:
-    "bg-[#1c222b] hover:bg-[#252d38] text-zinc-200 border border-white/[0.08] active:bg-[#15191f]",
+    "bg-surface2 hover:bg-surface3 text-zinc-200 border border-white/[0.08] active:bg-surface",
   outline:
     "bg-transparent hover:bg-white/[0.05] text-zinc-300 border border-white/[0.12] active:bg-white/[0.08]",
   ghost:
@@ -112,18 +112,18 @@ export function Btn({ kind = "secondary", className = "", type = "button", ...re
 
 export function Pill({ children, accent = false, className = "" }: { children: ReactNode; accent?: boolean; className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-[11px] font-medium tracking-normal transition-all duration-150 ${accent ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300 font-semibold shadow-xs" : "border-white/[0.08] bg-white/[0.04] text-zinc-300"} ${className}`}>{children}</span>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-xs font-medium tracking-normal transition-all duration-150 ${accent ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300 font-semibold shadow-xs" : "border-white/[0.08] bg-white/[0.04] text-zinc-300"} ${className}`}>{children}</span>
   );
 }
 
 /** High-contrast, clean geometric milestone badge. */
 export function ScopeTag({ scope, className = "" }: { scope: Scope; className?: string }) {
   const styles: Record<Scope, string> = {
-    unit1: "border-emerald-200 bg-[#c8f0d8] text-emerald-950",
-    unit2: "border-indigo-200 bg-[#ded9fd] text-indigo-950",
-    pb1: "border-orange-200 bg-[#fdd5cc] text-orange-950",
-    pb2: "border-amber-200 bg-[#fee2be] text-amber-950",
-    board: "border-zinc-300 bg-zinc-900 text-white",
+    unit1: "border-emerald-200 bg-[#c8f0d8] text-emerald-950 paper",
+    unit2: "border-indigo-200 bg-[#ded9fd] text-indigo-950 paper",
+    pb1: "border-orange-200 bg-[#fdd5cc] text-orange-950 paper",
+    pb2: "border-amber-200 bg-[#fee2be] text-amber-950 paper",
+    board: "border-line-strong bg-fg text-bg",
   };
   const label: Record<Scope, string> = {
     unit1: "UNIT 1",
@@ -134,8 +134,8 @@ export function ScopeTag({ scope, className = "" }: { scope: Scope; className?: 
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider ${
-        styles[scope] ?? "border-black/10 bg-[#f4efe8] text-zinc-800"
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-wider ${
+        styles[scope] ?? "border-black/10 bg-[#f4efe8] text-zinc-800 paper"
       } ${className}`}
     >
       {label[scope] ?? scope}
@@ -168,9 +168,9 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
       {PASS_SHORT.map((name, i) => (
         <span
           key={name}
-          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider transition-all duration-150 ${
+          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-150 ${
             passes[i]
-              ? "border-emerald-200 bg-[#c8f0d8] text-emerald-900 font-semibold"
+              ? "border-emerald-200 bg-[#c8f0d8] text-emerald-900 font-semibold paper"
               : "border-black/[0.06] bg-black/[0.02] text-zinc-400 font-medium"
           }`}
         >
@@ -204,9 +204,9 @@ export function PassToggles({
               e.stopPropagation();
               onToggle(i);
             }}
-            className={`min-h-[26px] rounded-full border px-2.5 font-mono text-[10px] uppercase font-semibold tracking-wider transition-all duration-150 active:scale-95 ${
+            className={`min-h-[26px] rounded-full border px-2.5 font-mono text-[11px] uppercase font-semibold tracking-wider transition-all duration-150 active:scale-95 ${
               done
-                ? "border-emerald-300 bg-[#c8f0d8] text-emerald-900"
+                ? "border-emerald-300 bg-[#c8f0d8] text-emerald-900 paper"
                 : "border-black/[0.08] bg-white text-zinc-600 hover:border-black/20 hover:text-zinc-900 hover:bg-black/[0.02]"
             }`}
           >
@@ -220,7 +220,7 @@ export function PassToggles({
 
 /** Precision rounded circular checkbox with emerald check indicator. */
 export const Check = ({ on }: { on: boolean }) => (
-  <span className={`flex size-5 items-center justify-center rounded-full border transition-all duration-150 text-[11px] ${on ? "border-[#52b788] bg-[#52b788] text-white font-bold shadow-xs" : "border-white/20 bg-transparent text-transparent hover:border-white/40"}`}>
+  <span className={`flex size-5 shrink-0 items-center justify-center rounded-full border transition-all duration-150 text-xs ${on ? "border-accent bg-accent text-accent-text font-bold shadow-xs" : "border-white/20 bg-transparent text-transparent hover:border-white/40"}`}>
     {on && "✓"}
   </span>
 );
@@ -238,16 +238,16 @@ export interface SubjectPastel {
 
 /**
  * Pastel Subject Palette Mapping:
- * - Mathematics: Soft Peach / Coral (`bg-[#fdd5cc] text-zinc-800 border border-orange-200/40`)
- * - Science: Soft Lavender (`bg-[#ded9fd] text-zinc-800 border border-indigo-200/40`)
- * - Social Science: Warm Honey Cream (`bg-[#fee2be] text-zinc-800 border border-amber-200/40`)
- * - Languages & IT: Mint / Celadon (`bg-[#c8f0d8] text-zinc-800 border border-emerald-200/40`)
+ * - Mathematics: Soft Peach / Coral (`bg-[#fdd5cc] text-zinc-800 border border-orange-200/40 paper`)
+ * - Science: Soft Lavender (`bg-[#ded9fd] text-zinc-800 border border-indigo-200/40 paper`)
+ * - Social Science: Warm Honey Cream (`bg-[#fee2be] text-zinc-800 border border-amber-200/40 paper`)
+ * - Languages & IT: Mint / Celadon (`bg-[#c8f0d8] text-zinc-800 border border-emerald-200/40 paper`)
  */
 export function getSubjectPastel(subjectId: string): SubjectPastel {
   const id = subjectId.toLowerCase();
   if (id === "maths" || id.includes("math")) {
     return {
-      bg: "bg-[#fdd5cc]",
+      bg: "bg-[#fdd5cc] paper",
       text: "text-zinc-800",
       border: "border-orange-200/40",
       badgeBg: "bg-white/80",
@@ -259,7 +259,7 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
   }
   if (id === "physics" || id === "chemistry" || id === "biology" || id === "science") {
     return {
-      bg: "bg-[#ded9fd]",
+      bg: "bg-[#ded9fd] paper",
       text: "text-zinc-800",
       border: "border-indigo-200/40",
       badgeBg: "bg-white/80",
@@ -271,7 +271,7 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
   }
   if (id === "history" || id === "civics" || id === "geography" || id === "economics" || id === "political-science" || id === "sst") {
     return {
-      bg: "bg-[#fee2be]",
+      bg: "bg-[#fee2be] paper",
       text: "text-zinc-800",
       border: "border-amber-200/40",
       badgeBg: "bg-white/80",
@@ -282,7 +282,7 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
     };
   }
   return {
-    bg: "bg-[#c8f0d8]",
+    bg: "bg-[#c8f0d8] paper",
     text: "text-zinc-800",
     border: "border-emerald-200/40",
     badgeBg: "bg-white/80",
@@ -497,9 +497,23 @@ export function SubjectBadge({ id, label, className = "" }: { id: string; label?
   const pastel = getSubjectPastel(id);
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-[11px] font-semibold ${pastel.bg} ${pastel.border} ${pastel.text} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-xs font-semibold ${pastel.bg} ${pastel.border} ${pastel.text} ${className}`}>
       {conf?.svg && <span className="size-3 shrink-0">{conf.svg}</span>}
       <span>{label ?? id}</span>
     </span>
+  );
+}
+
+/** One page header for every screen: eyebrow, title, optional line of help, and actions on the right. */
+export function PageHeader({ eyebrow, title, sub, children }: { eyebrow?: string; title: string; sub?: string; children?: ReactNode }) {
+  return (
+    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
+      <div className="min-w-0">
+        {eyebrow && <div className="text-xs font-medium text-muted">{eyebrow}</div>}
+        <h1 className="m-0 mt-1 text-2xl sm:text-[28px] font-semibold tracking-tight text-fg">{title}</h1>
+        {sub && <p className="m-0 mt-1 text-sm text-muted">{sub}</p>}
+      </div>
+      {children}
+    </header>
   );
 }

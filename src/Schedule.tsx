@@ -3,7 +3,7 @@ import type { Act, ScheduleBlock, State } from "./api.ts";
 import { CalendarModal } from "./CalendarModal.tsx";
 import { GoogleSyncModal } from "./GoogleSyncModal.tsx";
 import { getScheduleBlockGCalUrl } from "./calendar-utils.ts";
-import { AppleEmoji, AppleText, Btn, Card, H2 } from "./ui.tsx";
+import { AppleEmoji, AppleText, Btn, Card, H2, PageHeader } from "./ui.tsx";
 
 function getIstTimeMinutes(): { currentMinutes: number; timeStr: string } {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -142,7 +142,8 @@ export function Schedule({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto w-full">
+    <div className="space-y-6 max-w-4xl w-full">
+      <PageHeader eyebrow="Today, IST" title="Schedule" sub="Time blocks for the day. Shift them when plans slip." />
       {/* Hero Header & Google Calendar Integration Banner */}
       <Card labelledBy={`${uid}-hero-h`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
@@ -152,8 +153,8 @@ export function Schedule({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <H2 id={`${uid}-hero-h`}>Daily Schedule & Time-Blocking Board</H2>
-                <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono text-emerald-400 font-bold">
+                <H2 id={`${uid}-hero-h`}>Today's blocks</H2>
+                <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[11px] font-mono text-emerald-400 font-bold">
                   IST LIVE
                 </span>
               </div>
@@ -170,7 +171,7 @@ export function Schedule({
               className={`flex items-center justify-center gap-2 rounded-xl font-sans font-semibold text-xs py-2.5 px-3.5 shadow-md active:scale-95 transition-all cursor-pointer shrink-0 ${
                 state.googleSync?.connected
                   ? "bg-emerald-500 hover:bg-emerald-400 text-zinc-950"
-                  : "bg-indigo-600 hover:bg-indigo-500 text-white"
+                  : "bg-indigo-600 hover:bg-indigo-500 text-on-solid"
               }`}
             >
               <AppleEmoji emoji={state.googleSync?.connected ? "🔄" : "🔗"} size={15} />
@@ -189,10 +190,10 @@ export function Schedule({
         </div>
 
         {/* Quick-Tap Time Shifting Toolbar (For real-world study delays) */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-[#121622] p-3 text-xs">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface p-3 text-xs">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-semibold text-zinc-300 text-xs">Real-World Study Delay?</span>
-            <span className="text-[11px] text-zinc-500 hidden sm:inline">Tap to shift all tracks forward</span>
+            <span className="text-xs text-zinc-500 hidden sm:inline">Tap to shift all tracks forward</span>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -248,7 +249,7 @@ export function Schedule({
               <div className="font-semibold text-xs text-amber-300">
                 {state.scheduleConflicts.length} Schedule Conflict{state.scheduleConflicts.length > 1 ? "s" : ""} with Google Calendar
               </div>
-              <div className="text-[11px] text-amber-200/80 font-mono mt-0.5">
+              <div className="text-xs text-amber-200/80 font-mono mt-0.5">
                 "{state.scheduleConflicts[0].eventSummary}" clashes with study block "{state.scheduleConflicts[0].blockTitle}" ({state.scheduleConflicts[0].blockStart}–{state.scheduleConflicts[0].blockEnd}).
               </div>
             </div>
@@ -276,7 +277,7 @@ export function Schedule({
             <button
               type="button"
               onClick={() => setShowGoogleSyncModal(true)}
-              className="text-[11px] text-indigo-400 hover:text-indigo-300 font-mono cursor-pointer"
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-mono cursor-pointer"
             >
               Sync Details →
             </button>
@@ -286,16 +287,16 @@ export function Schedule({
             {state.externalEvents.map((ev) => (
               <div
                 key={ev.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-[#0c1017] p-2.5 text-xs"
+                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-bg p-2.5 text-xs"
               >
                 <div className="min-w-0">
                   <div className="font-semibold text-white truncate">
                     <AppleText text={ev.summary} size={12} />
                   </div>
-                  <div className="font-mono text-[11px] text-zinc-400 mt-0.5">
+                  <div className="font-mono text-xs text-zinc-400 mt-0.5">
                     {ev.startsAt.slice(11, 16)} – {ev.endsAt.slice(11, 16)} IST
                     {ev.isStudyBlock && (
-                      <span className="ml-1.5 rounded px-1 py-0.2 bg-indigo-500/20 text-indigo-300 text-[9px] font-bold">
+                      <span className="ml-1.5 rounded px-1 py-0.2 bg-indigo-500/20 text-indigo-300 text-[11px] font-bold">
                         Study Block
                       </span>
                     )}
@@ -353,12 +354,12 @@ export function Schedule({
               key={block.id}
               className={`relative rounded-2xl border p-4.5 transition-all ${
                 isCurrent
-                  ? `border-emerald-500/40 bg-[#121824] ring-2 ring-emerald-500/30 shadow-[0_0_24px_rgba(16,185,129,0.15)]`
-                  : `border-white/[0.08] bg-[#0e1117] hover:border-white/15`
+                  ? `border-emerald-500/40 bg-surface ring-2 ring-emerald-500/30 shadow-[0_0_24px_rgba(16,185,129,0.15)]`
+                  : `border-white/[0.08] bg-bg hover:border-white/15`
               }`}
             >
               {isCurrent && (
-                <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-sans font-bold text-emerald-400 uppercase tracking-wider">
+                <div className="mb-3 flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-sans font-bold text-emerald-400 uppercase tracking-wider">
                   <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Now Active</span>
                 </div>
@@ -377,7 +378,7 @@ export function Schedule({
                       <h3 className="m-0 font-sans text-sm font-semibold text-white truncate">
                         <AppleText text={block.title} size={15} />
                       </h3>
-                      <span className={`rounded-md px-1.5 py-0.5 font-mono text-[10px] uppercase font-semibold ${style.badge}`}>
+                      <span className={`rounded-md px-1.5 py-0.5 font-mono text-[11px] uppercase font-semibold ${style.badge}`}>
                         {block.category}
                       </span>
                     </div>
@@ -430,7 +431,7 @@ export function Schedule({
               {/* Progress bar through current active block */}
               {isCurrent && (
                 <div className="mt-3.5 pt-3 border-t border-emerald-500/20 flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center text-[11px] font-sans text-zinc-300">
+                  <div className="flex justify-between items-center text-xs font-sans text-zinc-300">
                     <span>Block Elapsed: {elapsedMins}m / {durMins}m</span>
                     <span className="font-mono text-emerald-400 font-semibold">{pct}%</span>
                   </div>

@@ -3,7 +3,7 @@ import { SCOPES, inScope, type Scope } from "../server/logic.ts";
 import type { Act, Chapter, State, Subject } from "./api.ts";
 import { activeOf, chaptersLabel, startedCount } from "./model.ts";
 import { RevisionMatrix } from "./RevisionMatrix.tsx";
-import { AppleEmoji, Btn, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill, ScopeTag, SubjectBadge, SubjectIcon, plural } from "./ui.tsx";
+import { AppleEmoji, Btn, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill, ScopeTag, SubjectBadge, SubjectIcon, plural, PageHeader } from "./ui.tsx";
 import { VivaDrawer } from "./VivaDrawer.tsx";
 
 const SCOPE_LABEL: Record<Scope, string> = { unit1: "Unit 1", unit2: "Unit 2", pb1: "PB1", pb2: "PB2", board: "Boards" };
@@ -35,18 +35,7 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
 
   return (
     <>
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
-        <div>
-          <div className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-wider text-muted">
-            <span className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-            <span>Curriculum</span>
-            <span className="text-zinc-600">/</span>
-            <span className="text-zinc-300 font-semibold">Class 10 CBSE Engine</span>
-          </div>
-          <h1 className="m-0 mt-1.5 text-[28px] sm:text-[34px] font-bold tracking-tight text-white">
-            Syllabus Architecture
-          </h1>
-        </div>
+      <PageHeader eyebrow="Class 10 CBSE" title="Syllabus">
 
         {/* View Switcher & Scope Level Selector */}
         <div className="flex flex-col gap-2.5 lg:items-end">
@@ -114,9 +103,9 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
               </div>
             )}
           </div>
-          <div className="font-mono text-[11px] text-muted">A phase covers its own scope level and all previous milestones.</div>
+          <div className="font-mono text-xs text-muted">A phase covers its own scope level and all previous milestones.</div>
         </div>
-      </header>
+      </PageHeader>
 
       {/* Revision Matrix View vs Detailed Subject Tree View */}
       {viewMode === "matrix" ? (
@@ -154,7 +143,7 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
                 if (!members.length) return null;
                 return (
                   <div key={g.label} className="flex flex-col gap-1">
-                    {members.length > 1 && <div className="px-3 pt-2.5 pb-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted">{g.label}</div>}
+                    {members.length > 1 && <div className="px-3 pt-2.5 pb-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted">{g.label}</div>}
                     {members.map((s) => (
                       <button
                         key={s.id}
@@ -166,7 +155,7 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
                         <SubjectIcon id={s.id} size={15} className="mt-0.5" />
                         <div className="flex-1 min-w-0">
                           <span className="text-xs font-semibold tracking-wide text-zinc-200 group-hover:text-white">{members.length > 1 ? s.name : g.label}</span>
-                          <span className="block font-mono text-[11px] text-muted">{chaptersLabel(s)}</span>
+                          <span className="block font-mono text-xs text-muted">{chaptersLabel(s)}</span>
                           {s.chapters.length > 0 && (
                             <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                               <span className="block h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${s.progressPct}%` }} />
@@ -329,12 +318,12 @@ function SubjectCard({
       {totalChapters > 0 && (
         <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">CBSE Verified</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">CBSE Verified</span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-base font-bold text-white tabular-nums">{verifiedCount}</span>
-              <span className="font-mono text-[11px] text-muted">/ {totalChapters}</span>
+              <span className="font-mono text-xs text-muted">/ {totalChapters}</span>
               {verifiedCount === totalChapters && (
-                <span className="ml-auto inline-flex items-center text-[10px] text-emerald-400 font-medium">✓ 100%</span>
+                <span className="ml-auto inline-flex items-center text-[11px] text-emerald-400 font-medium">✓ 100%</span>
               )}
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
@@ -346,10 +335,10 @@ function SubjectCard({
           </div>
 
           <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">Avg Confidence</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Avg Confidence</span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-base font-bold text-sky-400 tabular-nums">{avgConfidence}</span>
-              <span className="font-mono text-[11px] text-muted">/ 5.0</span>
+              <span className="font-mono text-xs text-muted">/ 5.0</span>
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
               <div
@@ -360,11 +349,11 @@ function SubjectCard({
           </div>
 
           <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">PYQ Pass</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">PYQ Pass</span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-base font-bold text-teal-400 tabular-nums">{pyqCount}</span>
-              <span className="font-mono text-[11px] text-muted">/ {totalChapters}</span>
-              <span className="ml-auto font-mono text-[10px] text-zinc-400">{Math.round((pyqCount / totalChapters) * 100)}%</span>
+              <span className="font-mono text-xs text-muted">/ {totalChapters}</span>
+              <span className="ml-auto font-mono text-[11px] text-zinc-400">{Math.round((pyqCount / totalChapters) * 100)}%</span>
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
               <div
@@ -375,11 +364,11 @@ function SubjectCard({
           </div>
 
           <div className="flex flex-col gap-1 rounded-xl border border-white/[0.08] bg-surface/60 p-2.5 backdrop-blur-sm">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">Full Mastery</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Full Mastery</span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-base font-bold text-emerald-400 tabular-nums">{masteredCount}</span>
-              <span className="font-mono text-[11px] text-muted">/ {totalChapters}</span>
-              <span className="ml-auto font-mono text-[10px] text-zinc-400">{Math.round((masteredCount / totalChapters) * 100)}%</span>
+              <span className="font-mono text-xs text-muted">/ {totalChapters}</span>
+              <span className="ml-auto font-mono text-[11px] text-zinc-400">{Math.round((masteredCount / totalChapters) * 100)}%</span>
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
               <div
@@ -509,7 +498,7 @@ function SubjectCard({
                   type="button"
                   aria-label={`Open Quick Viva / Active Recall for ${c.name}`}
                   onClick={() => onOpenViva(c)}
-                  className="h-7 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 font-mono text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 transition-all uppercase tracking-wider flex items-center gap-1"
+                  className="h-7 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 font-mono text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-all uppercase tracking-wider flex items-center gap-1"
                 >
                   <AppleEmoji emoji="⚡" size={11} />
                   <span>Viva</span>
@@ -525,7 +514,7 @@ function SubjectCard({
                       onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${i + 1}`, { done: !c.passes[i] })}
                       className="h-8 border-0 bg-transparent px-0.5"
                     >
-                      <span className={`block rounded-lg border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider transition-all ${c.passes[i] ? "border-emerald-500/40 bg-emerald-500/15 font-semibold text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.15)]" : "border-white/[0.08] bg-surface text-zinc-400 hover:border-white/20 hover:text-zinc-200"}`}>{c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}</span>
+                      <span className={`block rounded-lg border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-all ${c.passes[i] ? "border-emerald-500/40 bg-emerald-500/15 font-semibold text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.15)]" : "border-white/[0.08] bg-surface text-zinc-400 hover:border-white/20 hover:text-zinc-200"}`}>{c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}</span>
                     </button>
                   ))}
                 </div>
@@ -540,7 +529,7 @@ function SubjectCard({
                   <span className="text-xs text-rose-300 font-medium">Delete &ldquo;{c.name}&rdquo;? Targets and revision records will be purged.</span>
                   <div className="flex gap-2">
                     <Btn kind="outline" className="px-3" onClick={() => setDeleting(null)}>Cancel</Btn>
-                    <Btn className="border border-rose-500/50 bg-rose-600 px-3 font-mono text-xs font-semibold text-white hover:bg-rose-500" onClick={async () => { if (await act("DELETE", `/api/chapters/${c.id}`)) setDeleting(null); }}>Delete</Btn>
+                    <Btn className="border border-rose-500/50 bg-rose-600 px-3 font-mono text-xs font-semibold text-on-solid hover:bg-rose-500" onClick={async () => { if (await act("DELETE", `/api/chapters/${c.id}`)) setDeleting(null); }}>Delete</Btn>
                   </div>
                 </div>
               )}

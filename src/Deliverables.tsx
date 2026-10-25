@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Act, Chapter, Deliverable, DeliverableStatus, State, Subject } from "./api.ts";
 import { activeOf } from "./model.ts";
-import { AppleEmoji, AppleText, Btn, Card, H2, daysBetween, fmtShort, plural } from "./ui.tsx";
+import { AppleEmoji, AppleText, Btn, Card, H2, daysBetween, fmtShort, plural, PageHeader } from "./ui.tsx";
 import { getDeliverableGCalUrl, getVivaPrepGCalUrl } from "./calendar-utils.ts";
 import { CalendarModal } from "./CalendarModal.tsx";
 
@@ -53,7 +53,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
           </span>
           <div>
             <h2 id="viva-watchdog-h" className="font-sans font-semibold text-base text-white">
-              CBSE Practical Viva & Internal Assessment Watchdog
+              Practical viva prep
             </h2>
             <p className="m-0 text-xs text-zinc-400">
               Lab manual experiments & oral exam readiness tied directly to Class 10 syllabus chapters
@@ -76,7 +76,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
               className={`flex flex-col justify-between gap-3 rounded-xl border p-3.5 transition-all ${
                 done
                   ? "border-emerald-500/30 bg-emerald-950/15"
-                  : "border-white/[0.08] bg-[#121622]/60 hover:border-white/20"
+                  : "border-white/[0.08] bg-surface/60 hover:border-white/20"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -93,7 +93,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     <span className={`font-sans text-xs font-semibold ${done ? "text-zinc-400 line-through" : "text-white"}`}>
                       {t.title}
                     </span>
-                    <span className="font-mono text-[11px] text-zinc-400 mt-0.5">
+                    <span className="font-mono text-xs text-zinc-400 mt-0.5">
                       {t.lab}
                     </span>
                   </div>
@@ -101,7 +101,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
-                <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
+                <span className="font-mono text-[11px] text-zinc-500 uppercase tracking-wider">
                   {t.subjectId.toUpperCase()} VIVA
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -111,17 +111,17 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     rel="noopener noreferrer"
                     aria-label={`Add ${t.title} Viva Prep to Google Calendar`}
                     title="Add Viva Prep Session to Google Calendar"
-                    className="h-6 rounded border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] px-2 font-mono text-[11px] text-zinc-300 hover:text-white transition-all flex items-center gap-1"
+                    className="h-6 rounded border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] px-2 font-mono text-xs text-zinc-300 hover:text-white transition-all flex items-center gap-1"
                   >
                     <AppleEmoji emoji="📅" size={12} />
-                    <span className="text-[10px]">Add Cal</span>
+                    <span className="text-[11px]">Add Cal</span>
                   </a>
                   {match && onOpenViva && (
                     <button
                       type="button"
                       aria-label={`Launch Practical Viva for ${t.title}`}
                       onClick={() => onOpenViva(match.chapter, match.subject)}
-                      className="h-6 rounded border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 px-2 font-mono text-[11px] font-semibold text-amber-300 transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                      className="h-6 rounded border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 px-2 font-mono text-xs font-semibold text-amber-300 transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
                     >
                       <AppleEmoji emoji="⚡" size={12} />
                       <span>Launch Viva</span>
@@ -151,13 +151,7 @@ export function DeliverablesPage({
 
   return (
     <>
-      <header className="border-b border-white/[0.08] pb-5 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="text-xs font-medium text-zinc-400">Class X · 2026-27</div>
-          <h1 className="m-0 mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Deliverables, Lab Manuals & Practical Viva
-          </h1>
-        </div>
+      <PageHeader eyebrow="Class X · 2026-27" title="Deliverables">
         <button
           type="button"
           onClick={() => setShowCalendarModal(true)}
@@ -166,7 +160,7 @@ export function DeliverablesPage({
           <span>📅</span>
           <span>Subscribe in Google Calendar</span>
         </button>
-      </header>
+      </PageHeader>
       <div className="flex flex-col gap-6 max-w-4xl">
         <Deliverables state={state} act={act} onOpenViva={onOpenViva} />
         <PracticalVivaWatchdog state={state} onOpenViva={onOpenViva} />
@@ -292,19 +286,19 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
               <AppleText text={d.name} size={14} />
             </span>
             {isOverdue && (
-              <span className="rounded-full border border-rose-500/80 bg-rose-500/20 px-2 py-0.2 text-[10px] font-bold text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.4)] animate-pulse inline-flex items-center gap-1">
+              <span className="rounded-full border border-rose-500/80 bg-rose-500/20 px-2 py-0.2 text-[11px] font-bold text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.4)] animate-pulse inline-flex items-center gap-1">
                 <AppleEmoji emoji="⚠️" size={10} />
                 <span>Overdue ({plural(-left!, "day")} late)</span>
               </span>
             )}
             {isUrgent && (
-              <span className="rounded-full border border-amber-400/80 bg-amber-500/20 px-2 py-0.2 text-[10px] font-bold text-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.4)] animate-pulse inline-flex items-center gap-1">
+              <span className="rounded-full border border-amber-400/80 bg-amber-500/20 px-2 py-0.2 text-[11px] font-bold text-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.4)] animate-pulse inline-flex items-center gap-1">
                 <AppleEmoji emoji="⚡" size={10} />
                 <span>Urgent (&lt;72h)</span>
               </span>
             )}
             {d.vivaPrep && (
-              <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.2 text-[9px] font-mono text-sky-300">
+              <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.2 text-[11px] font-mono text-sky-300">
                 Viva
               </span>
             )}
@@ -394,7 +388,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
               aria-label={`Due date for ${d.name}`}
               value={d.due ?? ""}
               onChange={(e) => patch({ due: e.target.value || null })}
-              className="h-8.5 rounded-lg border border-white/15 bg-[#161c28] px-3 font-mono text-xs text-white focus:border-sky-400"
+              className="h-8.5 rounded-lg border border-white/15 bg-surface px-3 font-mono text-xs text-white focus:border-sky-400"
             />
             <Btn className="px-3 text-xs" onClick={() => setEditingDue(false)}>
               Done
@@ -444,7 +438,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
             <Btn kind="outline" onClick={() => setRemoving(false)}>
               Cancel
             </Btn>
-            <Btn className="border-0 bg-rose-600 font-semibold text-white hover:bg-rose-500" onClick={() => act("DELETE", `/api/deliverables/${d.id}`)}>
+            <Btn className="border-0 bg-rose-600 font-semibold text-on-solid hover:bg-rose-500" onClick={() => act("DELETE", `/api/deliverables/${d.id}`)}>
               Remove
             </Btn>
           </div>
@@ -464,7 +458,7 @@ function AddForm({ phaseId, act, onDone }: { phaseId: string; act: Act; onDone: 
   const [steps, setSteps] = useState("");
   const [saving, setSaving] = useState(false);
   const busy = useRef(false);
-  const field = "h-10 rounded-xl border border-white/15 bg-[#161c28] px-3.5 text-sm text-white disabled:opacity-50 focus:border-sky-400 transition-all placeholder:text-zinc-500";
+  const field = "h-10 rounded-xl border border-white/15 bg-surface px-3.5 text-sm text-white disabled:opacity-50 focus:border-sky-400 transition-all placeholder:text-zinc-500";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

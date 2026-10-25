@@ -253,7 +253,7 @@ export function CommandBar({
         aria-modal="true"
         aria-label="Universal Command Bar"
         onKeyDown={handleKeyDown}
-        className="fixed inset-x-4 top-[10vh] z-50 mx-auto flex max-h-[80vh] max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e1117] shadow-2xl animate-fade-in"
+        className="fixed inset-x-4 top-[10vh] z-50 mx-auto flex max-h-[80vh] max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-bg shadow-2xl animate-fade-in"
       >
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3.5">
@@ -279,7 +279,7 @@ export function CommandBar({
               ✕
             </button>
           )}
-          <kbd className="hidden sm:inline-block rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">
+          <kbd className="hidden sm:inline-block rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[11px] text-zinc-400">
             Esc
           </kbd>
         </div>
@@ -334,18 +334,18 @@ export function CommandBar({
                             </>
                           )}
                           {item.badge && !isChapter && (
-                            <span className="rounded px-1.5 py-0.2 font-mono text-[9px] uppercase tracking-wider text-sky-400 border border-sky-500/20 bg-sky-500/10">
+                            <span className="rounded px-1.5 py-0.2 font-mono text-[11px] uppercase tracking-wider text-sky-400 border border-sky-500/20 bg-sky-500/10">
                               {item.badge}
                             </span>
                           )}
                         </div>
                         {item.subtitle && !isChapter && (
-                          <div className="text-[11px] text-zinc-500 mt-0.5">{item.subtitle}</div>
+                          <div className="text-xs text-zinc-500 mt-0.5">{item.subtitle}</div>
                         )}
                         {isChapter && (
-                          <div className="flex items-center gap-2 text-[11px] text-zinc-500 mt-0.5">
+                          <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
                             <ConfDots value={item.chapter!.confidence} />
-                            <span className="font-mono text-[10px]">
+                            <span className="font-mono text-[11px]">
                               {item.chapter!.passes.filter(Boolean).length}/3 passes
                             </span>
                           </div>
@@ -363,7 +363,7 @@ export function CommandBar({
                             e.stopPropagation();
                             handleFocusChapter(item.subject!);
                           }}
-                          className="flex h-7 items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 font-sans text-[11px] font-medium text-sky-300 hover:bg-sky-500/20 transition-all active:scale-95"
+                          className="flex h-7 items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 font-sans text-xs font-medium text-sky-300 hover:bg-sky-500/20 transition-all active:scale-95"
                         >
                           <span>▶ Focus</span>
                         </button>
@@ -375,7 +375,7 @@ export function CommandBar({
                               e.stopPropagation();
                               handleVivaChapter(item.chapter!, item.subject!);
                             }}
-                            className="flex h-7 items-center gap-1 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 font-sans text-[11px] font-medium text-cyan-300 hover:bg-cyan-500/20 transition-all active:scale-95"
+                            className="flex h-7 items-center gap-1 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 font-sans text-xs font-medium text-cyan-300 hover:bg-cyan-500/20 transition-all active:scale-95"
                           >
                             <AppleEmoji emoji="⚡" size={11} />
                             <span>Viva</span>
@@ -388,13 +388,13 @@ export function CommandBar({
                             e.stopPropagation();
                             void handlePlanChapter(item.chapter!);
                           }}
-                          className="flex h-7 items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 font-sans text-[11px] font-medium text-zinc-200 hover:text-white hover:bg-white/[0.08] transition-all active:scale-95"
+                          className="flex h-7 items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 font-sans text-xs font-medium text-zinc-200 hover:text-white hover:bg-white/[0.08] transition-all active:scale-95"
                         >
                           <span>+ Target</span>
                         </button>
                       </div>
                     ) : (
-                      <kbd className="hidden sm:inline-block rounded px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 group-hover:text-zinc-300">
+                      <kbd className="hidden sm:inline-block rounded px-1.5 py-0.5 font-mono text-[11px] text-zinc-500 group-hover:text-zinc-300">
                         ↵
                       </kbd>
                     )}
@@ -406,19 +406,19 @@ export function CommandBar({
         </div>
 
         {/* Command Bar Footer with helpful hints */}
-        <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#090b10] px-4 py-2 text-[11px] text-zinc-500">
+        <div className="flex items-center justify-between border-t border-white/[0.06] bg-bg px-4 py-2 text-xs text-zinc-500">
           <div className="flex items-center gap-3">
             <span>
-              <kbd className="rounded border border-white/10 bg-white/[0.03] px-1 py-0.2 font-mono text-[10px] text-zinc-400">↑↓</kbd> navigate
+              <kbd className="rounded border border-white/10 bg-white/[0.03] px-1 py-0.2 font-mono text-[11px] text-zinc-400">↑↓</kbd> navigate
             </span>
             <span>
-              <kbd className="rounded border border-white/10 bg-white/[0.03] px-1 py-0.2 font-mono text-[10px] text-zinc-400">↵</kbd> select
+              <kbd className="rounded border border-white/10 bg-white/[0.03] px-1 py-0.2 font-mono text-[11px] text-zinc-400">↵</kbd> select
             </span>
             <span>
-              <kbd className="rounded border border-white/10 bg-white/[0.03] px-1 py-0.2 font-mono text-[10px] text-zinc-400">Esc</kbd> close
+              <kbd className="rounded border border-white/10 bg-white/[0.03] px-1 py-0.2 font-mono text-[11px] text-zinc-400">Esc</kbd> close
             </span>
           </div>
-          <span className="font-mono text-[10px] text-zinc-400">
+          <span className="font-mono text-[11px] text-zinc-400">
             {allChapters.length} Chapters Indexed
           </span>
         </div>

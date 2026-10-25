@@ -205,43 +205,34 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
       {/* ========================================================================= */}
       <section
         aria-label="Daily Overview"
-        className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-6 sm:p-8 lg:p-10 min-h-[180px] sm:min-h-[200px] flex flex-col justify-between shadow-2xl"
+        className="relative overflow-hidden rounded-2xl border border-line-strong px-6 py-5 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         style={{
           backgroundImage: "url('/hero-mountains.jpg')",
           backgroundPosition: "center 35%",
           backgroundSize: "cover",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0f13]/95 via-[#0c0f13]/75 to-black/40 z-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-bg/95 via-bg/80 to-bg/40 z-0" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex flex-col gap-1 max-w-xl">
-            <span className="font-sans text-xs sm:text-sm font-medium text-zinc-300 tracking-wide">
-              {greeting}
-            </span>
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white leading-[1.15] tracking-tight whitespace-pre-line mt-1">
-              Same mind.{"\n"}Bigger plans.
-            </h1>
-          </div>
-
-          <div className="shrink-0 self-start md:self-center flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="rounded-2xl border border-white/[0.1] bg-[#15191f]/85 backdrop-blur-md px-4 py-2.5 shadow-xl flex items-center gap-3">
-              <AppleEmoji emoji="📅" size={16} />
-              <div className="flex flex-col">
-                <span className="font-mono text-xs font-semibold text-white">{todayISTFormatted}</span>
-                <span className="font-sans text-[11px] text-zinc-400">{activePhase.name}</span>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/[0.1] bg-[#15191f]/85 backdrop-blur-md px-4 py-2.5 shadow-xl flex items-center gap-3">
-              <AppleEmoji emoji="⏱️" size={16} />
-              <div className="flex flex-col">
-                <span className="font-mono text-xs font-semibold text-white">{studyTimeFormatted}</span>
-                <span className="font-sans text-[11px] text-zinc-400">Study Logged Today</span>
-              </div>
-            </div>
-          </div>
+        <div className="relative z-10">
+          <p className="m-0 text-sm font-medium text-muted">{greeting}</p>
+          <h1 className="m-0 mt-0.5 font-serif text-2xl sm:text-3xl font-normal text-fg leading-tight tracking-tight">
+            Same mind. Bigger plans.
+          </h1>
         </div>
+
+        <dl className="relative z-10 m-0 flex gap-3">
+          <div className="rounded-xl border border-line-strong bg-surface/85 backdrop-blur-md px-4 py-2">
+            <dt className="text-xs text-muted">{activePhase.name}</dt>
+            <dd className="m-0 font-mono text-sm font-semibold text-fg">
+              {activePhase.daysLeft > 0 ? `${activePhase.daysLeft} days to go` : "Under way"}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-line-strong bg-surface/85 backdrop-blur-md px-4 py-2">
+            <dt className="text-xs text-muted">Studied today</dt>
+            <dd className="m-0 font-mono text-sm font-semibold text-fg">{studyTimeFormatted}</dd>
+          </div>
+        </dl>
       </section>
 
       {/* ========================================================================= */}
@@ -255,7 +246,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
         <div className="lg:col-span-7 flex flex-col gap-6">
           <section
             aria-labelledby="primary-cockpit-h"
-            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.4)] flex flex-col gap-6 transition-all"
+            className="rounded-3xl bg-surface border border-white/[0.08] hover:border-white/[0.14] p-6 sm:p-7 shadow-sm flex flex-col gap-6 transition-all"
           >
             {/* Primary Panel Header */}
             <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
@@ -265,10 +256,10 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                 </span>
                 <div>
                   <h2 id="primary-cockpit-h" className="font-sans font-bold text-lg text-white">
-                    Today's Targets & Action Cockpit
+                    Today's targets
                   </h2>
                   <p className="m-0 text-xs text-zinc-400 mt-0.5">
-                    Your scheduled focus targets and instant next-up syllabus chapters
+                    What to study today, in order
                   </p>
                 </div>
               </div>
@@ -286,7 +277,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                   Active Focus Targets
                 </span>
                 {state.targets.length > 0 && (
-                  <span className="text-[11px] font-mono text-zinc-500">
+                  <span className="text-xs font-mono text-zinc-500">
                     Auto-scheduled avoiding school & tuition
                   </span>
                 )}
@@ -297,7 +288,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                   <p className="m-0 text-xs text-zinc-400">
                     No targets scheduled yet for today.
                   </p>
-                  <p className="m-0 text-[11px] text-zinc-500 mt-1">
+                  <p className="m-0 text-xs text-zinc-500 mt-1">
                     Select a high-yield chapter from the recommended queue below, or add a custom task.
                   </p>
                 </div>
@@ -309,7 +300,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                     return (
                       <div
                         key={task.id}
-                        className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-[#0c0f14]/70 border border-white/[0.06] hover:border-white/[0.14] transition-all group"
+                        className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-bg/70 border border-white/[0.06] hover:border-white/[0.14] transition-all group"
                       >
                         <button
                           type="button"
@@ -319,7 +310,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                         >
                           <Check on={task.done} />
                           <span
-                            className={`text-xs sm:text-[13px] font-sans font-medium tracking-wide truncate ${
+                            className={`text-xs sm:text-[13px] font-sans font-medium tracking-wide sm:truncate ${
                               task.done ? "text-zinc-500 line-through" : "text-zinc-100 group-hover:text-white"
                             }`}
                           >
@@ -328,7 +319,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                         </button>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="font-mono text-[11px] text-zinc-400 bg-white/[0.04] border border-white/[0.08] px-2 py-0.5 rounded-md tabular-nums">
+                          <span className="font-mono text-xs text-zinc-400 bg-white/[0.04] border border-white/[0.08] px-2 py-0.5 rounded-md tabular-nums">
                             {taskDur}
                           </span>
                           <a
@@ -374,16 +365,16 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                       if (e.key === "Enter") void handleAddTask();
                       if (e.key === "Escape") setIsAddingTask(false);
                     }}
-                    className="w-full rounded-xl border border-white/[0.12] bg-[#0c0f13] px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-400 transition-all"
+                    className="w-full rounded-xl border border-white/[0.12] bg-bg px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-400 transition-all"
                   />
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-sans text-zinc-400">Duration:</span>
+                      <span className="text-xs font-sans text-zinc-400">Duration:</span>
                       <select
                         aria-label="Task duration"
                         value={newTaskDuration}
                         onChange={(e) => setNewTaskDuration(e.target.value)}
-                        className="rounded-lg border border-white/[0.1] bg-[#0c0f13] px-2.5 py-1 text-xs text-zinc-200 focus:outline-none"
+                        className="rounded-lg border border-white/[0.1] bg-bg px-2.5 py-1 text-xs text-zinc-200 focus:outline-none"
                       >
                         <option value="30m">30m</option>
                         <option value="45m">45m</option>
@@ -405,7 +396,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                       <button
                         type="button"
                         onClick={handleAddTask}
-                        className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md active:scale-95 transition-all cursor-pointer"
+                        className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-on-solid font-semibold text-xs shadow-md active:scale-95 transition-all cursor-pointer"
                       >
                         Add Target
                       </button>
@@ -434,10 +425,10 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                     <AppleEmoji emoji="⚡" size={13} />
                   </span>
                   <span className="font-sans text-xs font-semibold uppercase tracking-wider text-zinc-300">
-                    Recommended Study Queue (Priority Syllabus)
+                    Up next
                   </span>
                 </div>
-                <span className="font-mono text-[11px] text-zinc-500">
+                <span className="font-mono text-xs text-zinc-500">
                   {topQueue.length} priority chapters
                 </span>
               </div>
@@ -456,7 +447,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                     return (
                       <div
                         key={q.chapterId}
-                        className="flex flex-col gap-2 rounded-2xl border border-white/[0.05] bg-[#0c0f14]/50 p-3.5 hover:border-white/[0.12] transition-all"
+                        className="flex flex-col gap-2 rounded-2xl border border-white/[0.05] bg-bg/50 p-3.5 hover:border-white/[0.12] transition-all"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex flex-col min-w-0">
@@ -469,18 +460,18 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                                 {q.subject.name} · {q.chapter.name}
                               </span>
                             </div>
-                            <span className="text-[11px] font-sans text-zinc-400 mt-0.5">
+                            <span className="text-xs font-sans text-zinc-400 mt-0.5">
                               {reasonFor(q.chapter)}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="rounded-md bg-white/[0.04] border border-white/10 px-2 py-0.5 font-mono text-[10px] text-zinc-300 inline-flex items-center gap-1">
+                            <span className="rounded-md bg-white/[0.04] border border-white/10 px-2 py-0.5 font-mono text-[11px] text-zinc-300 inline-flex items-center gap-1">
                               <AppleEmoji emoji="⏱️" size={11} />
                               <span>{durationEst}</span>
                             </span>
                             {q.needsFreshMind && (
-                              <span className="rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-300 inline-flex items-center gap-1">
+                              <span className="rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 font-mono text-[11px] font-semibold text-amber-300 inline-flex items-center gap-1">
                                 <AppleEmoji emoji="⚠️" size={11} />
                                 <span>Fresh Mind</span>
                               </span>
@@ -489,13 +480,13 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                         </div>
 
                         <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
-                          <span className="font-mono text-[11px] text-zinc-500">
+                          <span className="font-mono text-xs text-zinc-500">
                             Confidence {q.confidence}/5
                           </span>
 
                           <div className="flex items-center gap-2">
                             {inToday ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg">
+                              <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg">
                                 <span>✓</span> In Today's Targets
                               </span>
                             ) : (
@@ -540,7 +531,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
           {/* Secondary Panel 1: School Deliverables Watchdog (Flags Overdue & Urgent) */}
           <section
             aria-labelledby="card-deliverables-h"
-            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+            className="rounded-3xl bg-surface border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-sm flex flex-col gap-4 transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -549,9 +540,9 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                 </span>
                 <div>
                   <h2 id="card-deliverables-h" className="font-sans font-semibold text-base text-white">
-                    Deliverables Watchdog
+                    Due soon
                   </h2>
-                  <p className="m-0 text-[11px] text-zinc-400">
+                  <p className="m-0 text-xs text-zinc-400">
                     Pre-Boards 1 submissions & lab practicals
                   </p>
                 </div>
@@ -572,7 +563,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                   <span className="font-semibold text-rose-300">
                     {plural(overdueDeliverables.length, "deliverable")} overdue!
                   </span>
-                  <span className="text-[11px] text-rose-200/90 mt-0.5 truncate">
+                  <span className="text-xs text-rose-200/90 mt-0.5 truncate">
                     {overdueDeliverables.map((d) => d.name).join(", ")}
                   </span>
                 </div>
@@ -594,7 +585,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                         ? "border-rose-500/40 bg-rose-950/20 shadow-2xs"
                         : isUrgent
                           ? "border-amber-500/30 bg-amber-950/15"
-                          : "border-white/[0.04] bg-[#0c0f14]/50 hover:border-white/[0.1]"
+                          : "border-white/[0.04] bg-bg/50 hover:border-white/[0.1]"
                     }`}
                   >
                     <div className="flex flex-col gap-0.5 min-w-0 flex-1">
@@ -603,26 +594,26 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                           {item.name}
                         </span>
                         {isOverdue && (
-                          <span className="px-1.5 py-0.2 rounded bg-rose-500/25 text-rose-300 border border-rose-500/50 text-[9px] font-mono font-bold animate-pulse inline-flex items-center gap-1">
+                          <span className="px-1.5 py-0.2 rounded bg-rose-500/25 text-rose-300 border border-rose-500/50 text-[11px] font-mono font-bold animate-pulse inline-flex items-center gap-1">
                             <AppleEmoji emoji="⚠️" size={10} />
                             <span>Overdue ({plural(-daysLeft!, "day")} late)</span>
                           </span>
                         )}
                         {isUrgent && (
-                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-mono font-bold animate-pulse inline-flex items-center gap-1">
+                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-mono font-bold animate-pulse inline-flex items-center gap-1">
                             <AppleEmoji emoji="⚡" size={10} />
                             <span>&lt;72h</span>
                           </span>
                         )}
                       </div>
-                      <span className="font-mono text-[10px] text-zinc-400 uppercase">
+                      <span className="font-mono text-[11px] text-zinc-400 uppercase">
                         {item.subject} {item.due ? `· Due ${item.due}` : ""}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       {item.vivaPrep && (
-                        <span className="font-mono text-[10px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                        <span className="font-mono text-[11px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
                           Viva
                         </span>
                       )}
@@ -646,7 +637,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
           {/* Secondary Panel 2: Habits Consistency */}
           <section
             aria-labelledby="card-habits-h"
-            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+            className="rounded-3xl bg-surface border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-sm flex flex-col gap-4 transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -655,9 +646,9 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                 </span>
                 <div>
                   <h2 id="card-habits-h" className="font-sans font-semibold text-base text-white">
-                    Habits Matrix
+                    Habits
                   </h2>
-                  <p className="m-0 text-[11px] text-zinc-400">
+                  <p className="m-0 text-xs text-zinc-400">
                     Daily consistency streaks
                   </p>
                 </div>
@@ -687,7 +678,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                       </span>
                     </div>
                     {habit.streak > 0 && (
-                      <span className="font-mono text-[10px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md shrink-0 inline-flex items-center gap-1">
+                      <span className="font-mono text-[11px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md shrink-0 inline-flex items-center gap-1">
                         <AppleEmoji emoji="🔥" size={10} />
                         <span>{habit.streak}d</span>
                       </span>
@@ -701,7 +692,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
           {/* Secondary Panel 3: Routine & Schedule Timeline */}
           <section
             aria-labelledby="card-routine-h"
-            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+            className="rounded-3xl bg-surface border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-sm flex flex-col gap-4 transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -712,7 +703,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                   <h2 id="card-routine-h" className="font-sans font-semibold text-base text-white">
                     Routine & Time Slots
                   </h2>
-                  <p className="m-0 text-[11px] text-zinc-400">
+                  <p className="m-0 text-xs text-zinc-400">
                     Real free study slots avoiding school & tuition
                   </p>
                 </div>
@@ -725,7 +716,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
             {/* If tuition / external events exist today */}
             {state.externalEvents && state.externalEvents.length > 0 && (
               <div className="p-3 rounded-xl border border-sky-500/20 bg-sky-950/20 text-xs flex flex-col gap-1.5">
-                <div className="flex items-center justify-between text-[11px] text-sky-300 font-semibold">
+                <div className="flex items-center justify-between text-xs text-sky-300 font-semibold">
                   <span className="flex items-center gap-1.5">
                     <AppleEmoji emoji="📅" size={12} />
                     <span>Tuition / External Calendar</span>
@@ -735,7 +726,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                   </span>
                 </div>
                 {state.externalEvents.slice(0, 2).map((ev) => (
-                  <div key={ev.id} className="flex items-center justify-between gap-2 text-[11px] font-mono text-zinc-300">
+                  <div key={ev.id} className="flex items-center justify-between gap-2 text-xs font-mono text-zinc-300">
                     <span className="truncate">{ev.summary}</span>
                     <span className="text-zinc-400 shrink-0">{ev.startsAt.slice(11, 16)}–{ev.endsAt.slice(11, 16)}</span>
                   </div>
@@ -759,7 +750,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
               ).map((rb) => (
                 <div key={rb.id} className="relative flex items-center gap-3 text-xs">
                   <span className="absolute -left-[21px] size-2 rounded-full border border-black bg-zinc-400" />
-                  <span className="font-mono text-[11px] text-zinc-400 w-24 shrink-0 tabular-nums">
+                  <span className="font-mono text-xs text-zinc-400 w-24 shrink-0 tabular-nums">
                     {rb.time}
                   </span>
                   <span className="font-sans text-zinc-200 truncate">{rb.label}</span>
@@ -771,7 +762,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
           {/* Secondary Panel 4: Quick Capture Buffer */}
           <section
             aria-labelledby="card-capture-h"
-            className="rounded-3xl bg-[#15191f] border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col gap-4 transition-all"
+            className="rounded-3xl bg-surface border border-white/[0.08] hover:border-white/[0.14] p-5 sm:p-6 shadow-sm flex flex-col gap-4 transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -793,7 +784,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                 value={captureText}
                 onChange={(e) => setCaptureText(e.target.value)}
                 placeholder="Write thought... (#task, #note, #doubt)"
-                className="w-full resize-none rounded-xl border border-white/[0.08] bg-[#0c0f13] p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500 transition-all"
+                className="w-full resize-none rounded-xl border border-white/[0.08] bg-bg p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500 transition-all"
               />
 
               <div className="flex items-center justify-between">
@@ -807,7 +798,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                       key={tag}
                       type="button"
                       onClick={() => setCaptureText((cur) => (cur.includes(tag) ? cur : `${cur} ${tag}`.trim()))}
-                      className={`h-5 rounded border px-1.5 font-mono text-[9px] uppercase font-bold tracking-wider cursor-pointer ${color}`}
+                      className={`h-5 rounded border px-1.5 font-mono text-[11px] uppercase font-bold tracking-wider cursor-pointer ${color}`}
                     >
                       {tag}
                     </button>
@@ -816,7 +807,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                 <button
                   type="button"
                   onClick={handleSaveCapture}
-                  className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                  className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-on-solid shadow-xs active:scale-95 transition-all cursor-pointer"
                 >
                   Save
                 </button>
@@ -829,7 +820,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                 {state.captures.slice(0, 3).map((c) => (
                   <div
                     key={c.id}
-                    className="flex flex-col gap-1.5 p-2 rounded-xl bg-[#0c0f14]/50 border border-white/[0.04] text-xs"
+                    className="flex flex-col gap-1.5 p-2 rounded-xl bg-bg/50 border border-white/[0.04] text-xs"
                   >
                     <div className="flex items-center justify-between gap-2.5">
                       <span className={`font-sans truncate ${c.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>
@@ -850,21 +841,21 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                         <button
                           type="button"
                           onClick={() => void convertCaptureToTask(c)}
-                          className="h-5 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 font-mono text-[9px] text-sky-300 hover:bg-sky-500/20 transition-all cursor-pointer"
+                          className="h-5 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 font-mono text-[11px] text-sky-300 hover:bg-sky-500/20 transition-all cursor-pointer"
                         >
                           → Target
                         </button>
                         <button
                           type="button"
                           onClick={() => void convertCaptureToDeliverable(c)}
-                          className="h-5 rounded border border-indigo-500/30 bg-indigo-500/10 px-1.5 font-mono text-[9px] text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer"
+                          className="h-5 rounded border border-indigo-500/30 bg-indigo-500/10 px-1.5 font-mono text-[11px] text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer"
                         >
                           → Deliverable
                         </button>
                         <button
                           type="button"
                           onClick={() => setActiveDoubtId(activeDoubtId === c.id ? null : c.id)}
-                          className="h-5 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 font-mono text-[9px] text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
+                          className="h-5 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 font-mono text-[11px] text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
                         >
                           → Doubt
                         </button>
@@ -884,7 +875,7 @@ export function Today({ state, act, onOpenViva }: TodayProps) {
                             await act("PATCH", `/api/captures/${c.id}`, { done: true });
                             setActiveDoubtId(null);
                           }}
-                          className="h-6 text-[10px] bg-[#121622] border border-amber-500/40 text-amber-100 rounded px-1.5 font-mono flex-1 focus:outline-none"
+                          className="h-6 text-[11px] bg-surface border border-amber-500/40 text-amber-100 rounded px-1.5 font-mono flex-1 focus:outline-none"
                         >
                           <option value="" disabled>Select chapter to link doubt...</option>
                           {state.subjects.map((s) => (

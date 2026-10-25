@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Act, Habit, State } from "./api.ts";
-import { AppleEmoji, AppleEmojiPicker, AppleText, Btn, Card, Check, H2, ICONS, Icon } from "./ui.tsx";
+import { AppleEmoji, AppleEmojiPicker, AppleText, Btn, Card, Check, H2, ICONS, Icon, PageHeader } from "./ui.tsx";
 
 const LETTER = (day: string) => new Date(day + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "narrow", timeZone: "UTC" });
 const addDays = (day: string, n: number) => new Date(Date.parse(day + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
@@ -23,25 +23,14 @@ export function Habits({ state, act }: { state: State; act: Act }) {
 
   return (
     <>
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-            <span className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
-            <span>Habit Architecture</span>
-            <span className="text-zinc-600">·</span>
-            <span className="text-zinc-400">Consistency Tracker</span>
-          </div>
-          <h1 className="m-0 mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Daily Habits & Streaks
-          </h1>
-        </div>
+      <PageHeader eyebrow="Habits" title="Daily habits">
 
         <div className="flex items-center gap-3">
           <div className="flex flex-col items-end">
             <span className="text-xs font-semibold text-white tracking-wide">
               {doneToday} of {state.habits.length} Done Today
             </span>
-            <span className="text-[11px] text-zinc-400">
+            <span className="text-xs text-zinc-400">
               {consistencyPct}% 30-Day Consistency
             </span>
           </div>
@@ -49,7 +38,7 @@ export function Habits({ state, act }: { state: State; act: Act }) {
             {adding ? "Close" : "+ Add Habit"}
           </Btn>
         </div>
-      </header>
+      </PageHeader>
 
       {/* Contribution Heatmap & Visual Habit Chains Matrix */}
       <HabitContributionGraph state={state} topStreak={topStreak} />
@@ -59,7 +48,7 @@ export function Habits({ state, act }: { state: State; act: Act }) {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-baseline gap-2">
             <H2 id="habits-h">Active Daily Habits</H2>
-            <span className="text-xs text-zinc-400">({state.habits.length} protocols tracked)</span>
+            <span className="text-xs text-zinc-400">({state.habits.length} habits)</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs font-medium text-amber-400">
             <AppleEmoji emoji="🔥" size={14} />
@@ -132,7 +121,7 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
     <Card labelledBy="chains-h" className="max-w-4xl overflow-hidden">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <H2 id="chains-h">Consistency & Habit Matrix</H2>
+          <H2 id="chains-h">Last 16 weeks</H2>
           <div className="text-xs text-zinc-400 mt-1">
             16-Week activity visualization across all daily habits
           </div>
@@ -140,10 +129,10 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
         <div className="flex items-center gap-1.5 text-xs text-zinc-400">
           <span>Less</span>
           <span className="size-3 rounded-[3px] bg-white/[0.04] border border-white/5" />
-          <span className="size-3 rounded-[3px] bg-indigo-950/60" />
-          <span className="size-3 rounded-[3px] bg-indigo-800" />
-          <span className="size-3 rounded-[3px] bg-indigo-500" />
-          <span className="size-3 rounded-[3px] bg-sky-400" />
+          <span className="size-3 rounded-[3px] bg-heat-1" />
+          <span className="size-3 rounded-[3px] bg-heat-2" />
+          <span className="size-3 rounded-[3px] bg-heat-3" />
+          <span className="size-3 rounded-[3px] bg-heat-4" />
           <span>More</span>
         </div>
       </div>
@@ -151,7 +140,7 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
       <div className="relative overflow-x-auto pb-2">
         <div className="flex gap-2.5">
           {/* Day of week labels */}
-          <div className="flex flex-col justify-between py-0.5 text-[10px] text-zinc-500 shrink-0 w-6">
+          <div className="flex flex-col justify-between py-0.5 text-[11px] text-zinc-500 shrink-0 w-6">
             {DAY_LABELS.map((lbl, idx) => (
               <span key={idx} className="h-3.5 leading-3.5">
                 {lbl}
@@ -170,13 +159,13 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
                   const colorClass = isFuture
                     ? "opacity-20 bg-white/5"
                     : item.level === 4
-                    ? "bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.6)]"
+                    ? "bg-heat-4"
                     : item.level === 3
-                    ? "bg-indigo-500"
+                    ? "bg-heat-3"
                     : item.level === 2
-                    ? "bg-indigo-800"
+                    ? "bg-heat-2"
                     : item.level === 1
-                    ? "bg-indigo-950/60"
+                    ? "bg-heat-1"
                     : "bg-white/[0.04] hover:bg-white/[0.08]";
 
                   return (
@@ -201,7 +190,7 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
 
       {/* Floating tooltip on hover */}
       {tooltip && (
-        <div className="mt-2 text-xs text-zinc-300 bg-[#161c28] rounded-lg px-3 py-1.5 border border-white/10 w-fit shadow-lg">
+        <div className="mt-2 text-xs text-zinc-300 bg-surface rounded-lg px-3 py-1.5 border border-white/10 w-fit shadow-lg">
           <span className="font-semibold text-white">{tooltip.day}:</span>{" "}
           <span>{tooltip.done} of {habitCount} habits completed</span>
         </div>
@@ -280,7 +269,7 @@ function Row({ habit: h, days, act }: { habit: Habit; days: string[]; act: Act }
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 sm:px-4 transition-all hover:border-white/[0.14] hover:bg-white/[0.04]">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex min-w-0 flex-[1_1_200px] items-center gap-3">
         {h.kind === "tick" ? (
           <button
             type="button"
@@ -326,12 +315,12 @@ function Row({ habit: h, days, act }: { habit: Habit; days: string[]; act: Act }
           </div>
           <div className="mt-1 flex items-center gap-2">
             {h.streak > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-400 tracking-wide">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-400 tracking-wide">
                 <AppleEmoji emoji="🔥" size={12} />
                 <span>{h.streak}d streak</span>
               </span>
             ) : (
-              <span className="text-[10px] text-zinc-500">Start streak today</span>
+              <span className="text-[11px] text-zinc-500">Start streak today</span>
             )}
           </div>
         </div>
@@ -348,11 +337,11 @@ function Row({ habit: h, days, act }: { habit: Habit; days: string[]; act: Act }
             <span
               className={`size-3.5 rounded-[3px] border transition-all ${
                 d
-                  ? "bg-sky-400 border-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.5)]"
+                  ? "bg-heat-4 border-heat-4"
                   : "bg-white/[0.04] border-white/5"
               } ${i === 6 ? "ring-1 ring-white/60" : ""}`}
             />
-            <span className="text-[9px] text-zinc-500">{LETTER(days[i])}</span>
+            <span className="text-[11px] text-zinc-500">{LETTER(days[i])}</span>
           </span>
         ))}
       </div>
@@ -381,7 +370,7 @@ function Row({ habit: h, days, act }: { habit: Habit; days: string[]; act: Act }
           <span className="text-xs text-rose-300">Delete "{h.name}"? Streak and history will be permanently removed.</span>
           <div className="flex gap-2">
             <Btn kind="outline" onClick={() => setRemoving(false)}>Cancel</Btn>
-            <Btn className="border-0 bg-rose-600 font-semibold text-white hover:bg-rose-500" onClick={async () => { if (await act("DELETE", `/api/habits/${h.id}`)) setRemoving(false); }}>Delete habit</Btn>
+            <Btn className="border-0 bg-rose-600 font-semibold text-on-solid hover:bg-rose-500" onClick={async () => { if (await act("DELETE", `/api/habits/${h.id}`)) setRemoving(false); }}>Delete habit</Btn>
           </div>
         </div>
       )}
@@ -426,7 +415,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
             <button
               type="button"
               onClick={() => setShowPicker((p) => !p)}
-              className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 cursor-pointer"
+              className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 cursor-pointer"
             >
               <AppleEmoji emoji="✨" size={12} />
               <span>{showPicker ? "Close Picker" : "Apple Emoji"}</span>
@@ -440,7 +429,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
               value={v.name}
               onChange={(e) => setV({ ...v, name: e.target.value })}
               placeholder="e.g. 20m Daily Math Practice"
-              className="h-10 w-full rounded-xl border border-white/[0.14] bg-[#161c28] px-3.5 text-sm text-white focus:border-sky-400 transition-all placeholder:text-zinc-500"
+              className="h-10 w-full rounded-xl border border-white/[0.14] bg-surface px-3.5 text-sm text-white focus:border-accent transition-all placeholder:text-zinc-500"
             />
           </div>
         </div>
@@ -458,7 +447,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
                   goal: e.target.value === "tick" ? 1 : Math.max(2, v.goal),
                 })
               }
-              className="h-10 rounded-xl border border-white/[0.14] bg-[#161c28] px-3.5 text-sm text-white focus:border-sky-400 cursor-pointer"
+              className="h-10 rounded-xl border border-white/[0.14] bg-surface px-3.5 text-sm text-white focus:border-accent cursor-pointer"
             >
               <option value="tick">Binary (Done / Not Done)</option>
               <option value="count">Count (Target value per day)</option>
@@ -476,7 +465,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
               max={50}
               value={v.goal}
               onChange={(e) => setV({ ...v, goal: Math.min(50, Math.max(1, Number(e.target.value) || 1)) })}
-              className="h-10 w-24 rounded-xl border border-white/[0.14] bg-[#161c28] px-3.5 text-sm font-mono text-white focus:border-sky-400"
+              className="h-10 w-24 rounded-xl border border-white/[0.14] bg-surface px-3.5 text-sm font-mono text-white focus:border-accent"
             />
           </div>
         )}
@@ -489,7 +478,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
 
       {/* Quick Apple Emoji Bar */}
       <div className="flex items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar">
-        <span className="text-[11px] text-zinc-500 shrink-0 font-medium">Quick Emoji:</span>
+        <span className="text-xs text-zinc-500 shrink-0 font-medium">Quick Emoji:</span>
         {QUICK_HABIT_EMOJIS.map((e) => (
           <button
             key={e}
@@ -503,7 +492,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
         <button
           type="button"
           onClick={() => setShowPicker((p) => !p)}
-          className="text-[11px] text-sky-400 hover:text-sky-300 ml-1.5 underline cursor-pointer"
+          className="text-xs text-accent hover:text-accent-hover ml-1.5 underline cursor-pointer"
         >
           {showPicker ? "Hide" : "+ More Emojis"}
         </button>

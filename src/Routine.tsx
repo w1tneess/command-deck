@@ -1,7 +1,6 @@
 import { useId, useRef, useState } from "react";
 import type { Act, State } from "./api.ts";
-import { AppleEmoji, AppleText, Btn, Card, H2 } from "./ui.tsx";
-import { Schedule } from "./Schedule.tsx";
+import { AppleEmoji, AppleText, Btn, Card, H2, PageHeader } from "./ui.tsx";
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
 const istHour = () => Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }).format(new Date())) % 24;
@@ -54,13 +53,13 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
       <div className="relative flex flex-col gap-6 pl-4 border-l border-white/[0.08] ml-2">
         {/* Step 1: Morning Intent (07:00) */}
         <div className="relative flex flex-col gap-2.5">
-          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-[#0e1117] bg-sky-400" />
+          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-sky-400" />
           <div className="flex items-center justify-between">
             <span className="font-sans text-xs font-semibold text-sky-400 uppercase tracking-wider">
               01 · Morning Intent (07:00)
             </span>
             {r.kickoffAt ? (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-sans text-[11px] font-medium text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-sans text-xs font-medium text-emerald-400">
                 <AppleEmoji emoji="☀️" size={13} />
                 <span>Started {clock(r.kickoffAt)}</span>
               </span>
@@ -68,7 +67,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
               <button
                 type="button"
                 onClick={() => act("PUT", "/api/routine", { kickoff: true })}
-                className="min-h-[32px] rounded-md border border-white/[0.08] bg-white/[0.04] px-2.5 font-sans text-[11px] font-medium text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+                className="min-h-[32px] rounded-md border border-white/[0.08] bg-white/[0.04] px-2.5 font-sans text-xs font-medium text-white hover:bg-white/[0.08] transition-all cursor-pointer"
               >
                 Start Day
               </button>
@@ -76,8 +75,8 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
           </div>
 
           {/* Energy Calibration (1–5) */}
-          <div className="flex flex-col gap-1.5 rounded-lg border border-white/[0.06] bg-[#131720] p-2.5">
-            <div className="flex items-center justify-between font-sans text-[11px] text-zinc-400">
+          <div className="flex flex-col gap-1.5 rounded-lg border border-white/[0.06] bg-surface p-2.5">
+            <div className="flex items-center justify-between font-sans text-xs text-zinc-400">
               <span>Energy Calibration</span>
               <span className="text-zinc-200 font-medium">
                 {state.checkin === "high" ? "Peak Focus (4–5)" : state.checkin === "low" ? "Light Review (1–2)" : "Normal (3)"}
@@ -114,7 +113,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
                 </span>
                 <div className="flex flex-col gap-0.5">
                   <span className="font-semibold text-amber-300">Low Energy Protocol Active (1–2)</span>
-                  <span className="text-[11px] text-amber-200/80 leading-relaxed">
+                  <span className="text-xs text-amber-200/80 leading-relaxed">
                     High-intensity numerical chapters are flagged as <strong>[Needs Fresh Mind]</strong>. Study Queue reshuffled to prioritize formula revision, flashcard viva prep, and lighter theory.
                   </span>
                 </div>
@@ -128,7 +127,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
                 </span>
                 <div className="flex flex-col gap-0.5">
                   <span className="font-semibold text-sky-300">Peak Energy Protocol Active (4–5)</span>
-                  <span className="text-[11px] text-sky-200/80 leading-relaxed">
+                  <span className="text-xs text-sky-200/80 leading-relaxed">
                     Heavy problem-solving and weak-spot numerical chapters (Maths, Physics, Chemistry) promoted to top priority for deep focus!
                   </span>
                 </div>
@@ -137,8 +136,8 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
           </div>
 
           {/* Sleep Quality */}
-          <div className="flex flex-col gap-1.5 rounded-lg border border-white/[0.06] bg-[#131720] p-2.5">
-            <div className="flex items-center justify-between font-sans text-[11px] text-zinc-400">
+          <div className="flex flex-col gap-1.5 rounded-lg border border-white/[0.06] bg-surface p-2.5">
+            <div className="flex items-center justify-between font-sans text-xs text-zinc-400">
               <span>Sleep Rating</span>
               {r.sleep && <span className="text-sky-400 font-medium">{SLEEP[r.sleep - 1]}</span>}
             </div>
@@ -161,12 +160,12 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
 
           {/* Big 3 Commitment */}
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between font-sans text-[11px] text-zinc-400">
+            <div className="flex items-center justify-between font-sans text-xs text-zinc-400">
               <span>Today's Big 3 Commitment</span>
-              <span className="text-zinc-500 font-mono text-[10px]">2 Academic + 1 Personal</span>
+              <span className="text-zinc-500 font-mono text-[11px]">2 Academic + 1 Personal</span>
             </div>
             {big3.length === 0 ? (
-              <p className="m-0 rounded-lg border border-white/[0.06] bg-[#131720] p-2.5 font-sans text-xs text-zinc-500">
+              <p className="m-0 rounded-lg border border-white/[0.06] bg-surface p-2.5 font-sans text-xs text-zinc-500">
                 No Big 3 selected yet. Add from Study Queue or Targets.
               </p>
             ) : (
@@ -174,7 +173,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
                 {big3.map((t, i) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between gap-2.5 rounded-lg border border-white/[0.06] bg-[#131720] p-2.5 transition-all"
+                    className="flex items-center justify-between gap-2.5 rounded-lg border border-white/[0.06] bg-surface p-2.5 transition-all"
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <button
@@ -183,7 +182,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
                         onClick={() => act("PATCH", `/api/targets/${t.id}`, { done: !t.done })}
                         className="flex min-h-[36px] min-w-[36px] items-center justify-center p-0 border-0 bg-transparent active:scale-95 cursor-pointer"
                       >
-                        <span className={`flex size-4.5 items-center justify-center rounded-md border transition-all text-[11px] ${t.done ? "border-emerald-500 bg-emerald-500 text-zinc-950 font-bold" : "border-white/[0.2] bg-white/[0.03] text-transparent"}`}>
+                        <span className={`flex size-4.5 items-center justify-center rounded-md border transition-all text-xs ${t.done ? "border-emerald-500 bg-emerald-500 text-zinc-950 font-bold" : "border-white/[0.2] bg-white/[0.03] text-transparent"}`}>
                           {t.done && "✓"}
                         </span>
                       </button>
@@ -191,12 +190,12 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
                         <div className={`truncate text-xs font-sans font-medium ${t.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>
                           {t.title}
                         </div>
-                        <div className="text-[10px] text-zinc-500 font-sans">
+                        <div className="text-[11px] text-zinc-500 font-sans">
                           {i < 2 ? "Academic Priority" : "Personal / Health Needle"}
                         </div>
                       </div>
                     </div>
-                    {t.done && <span className="font-sans text-[11px] text-emerald-400 font-medium">✓ Done</span>}
+                    {t.done && <span className="font-sans text-xs text-emerald-400 font-medium">✓ Done</span>}
                   </div>
                 ))}
               </div>
@@ -206,7 +205,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
 
         {/* Step 2: Deep Work Blocks (10:00 - 18:00) */}
         <div className="relative flex flex-col gap-2">
-          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-[#0e1117] bg-indigo-400" />
+          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-indigo-400" />
           <div className="flex items-center justify-between">
             <span className="font-sans text-xs font-semibold text-indigo-400 uppercase tracking-wider">
               02 · Deep Work Blocks
@@ -215,10 +214,10 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
               {todayFocusMins >= 60 ? `${Math.floor(todayFocusMins / 60)}h ${todayFocusMins % 60}m` : `${todayFocusMins}m`} Logged
             </span>
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-[#131720] p-3 text-xs">
+          <div className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-surface p-3 text-xs">
             <div className="flex flex-col gap-0.5">
               <span className="font-sans text-zinc-200 font-medium">{cyclesDone} Pomodoro cycles complete</span>
-              <span className="font-sans text-zinc-500 text-[11px]">
+              <span className="font-sans text-zinc-500 text-xs">
                 {topStreak > 0 ? (
                   <span className="inline-flex items-center gap-1 text-amber-400">
                     <AppleEmoji emoji="🔥" size={12} />
@@ -231,7 +230,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
             </div>
             <a
               href="#today"
-              className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 font-sans text-[11px] text-zinc-300 hover:text-white"
+              className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 font-sans text-xs text-zinc-300 hover:text-white"
             >
               Focus View →
             </a>
@@ -240,7 +239,7 @@ export function DailyRoutineTimeline({ state, act }: { state: State; act: Act })
 
         {/* Step 3: Evening Review (21:00) */}
         <div className="relative flex flex-col gap-2">
-          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-[#0e1117] bg-purple-400" />
+          <div className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-bg bg-purple-400" />
           <span className="font-sans text-xs font-semibold text-purple-400 uppercase tracking-wider">
             03 · Evening Review (21:00)
           </span>
@@ -260,14 +259,14 @@ export function Morning({ state, act }: { state: State; act: Act }) {
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         <H2 id="morning-h">Morning Kickoff</H2>
         {r.kickoffAt && (
-          <span className="inline-flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 font-sans text-[11px] font-medium text-emerald-400">
+          <span className="inline-flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 font-sans text-xs font-medium text-emerald-400">
             Started at {clock(r.kickoffAt)}
           </span>
         )}
       </div>
       <div className="mt-4" role="group" aria-labelledby="sleep-h">
         <div id="sleep-h" className="mb-2 font-sans text-xs text-zinc-400">Sleep Quality Rating</div>
-        <div className="flex gap-1 rounded-lg bg-[#131720] p-1 border border-white/[0.06]">
+        <div className="flex gap-1 rounded-lg bg-surface p-1 border border-white/[0.06]">
           {SLEEP.map((label, i) => (
             <button
               key={label}
@@ -282,7 +281,7 @@ export function Morning({ state, act }: { state: State; act: Act }) {
               }`}
             >
               <span>{i + 1}</span>
-              <span className="ml-1 hidden text-[10px] sm:inline">{label}</span>
+              <span className="ml-1 hidden text-[11px] sm:inline">{label}</span>
             </button>
           ))}
         </div>
@@ -290,22 +289,22 @@ export function Morning({ state, act }: { state: State; act: Act }) {
       <div className="mt-4">
         <div className="mb-2 flex items-baseline justify-between font-sans text-xs text-zinc-300">
           <div>The Big 3 Non-Negotiables</div>
-          <span className="text-zinc-500 text-[10px]">2 Academic + 1 Personal</span>
+          <span className="text-zinc-500 text-[11px]">2 Academic + 1 Personal</span>
         </div>
         {big3.length === 0 ? (
-          <p className="m-0 font-sans text-xs text-zinc-400 rounded-lg bg-[#131720] p-3 border border-white/[0.06]">No targets initialized yet.</p>
+          <p className="m-0 font-sans text-xs text-zinc-400 rounded-lg bg-surface p-3 border border-white/[0.06]">No targets initialized yet.</p>
         ) : (
           <ol className="m-0 list-none p-0 flex flex-col gap-1.5">
             {big3.map((t, i) => (
-              <li key={t.id} className="flex items-center gap-2.5 rounded-lg bg-[#131720] px-3 py-2 border border-white/[0.06]">
-                <span className="flex size-5 items-center justify-center rounded-md bg-white/[0.08] font-mono text-[10px] font-semibold text-white">{i + 1}</span>
+              <li key={t.id} className="flex items-center gap-2.5 rounded-lg bg-surface px-3 py-2 border border-white/[0.06]">
+                <span className="flex size-5 items-center justify-center rounded-md bg-white/[0.08] font-mono text-[11px] font-semibold text-white">{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <div className={`text-xs font-sans font-medium ${t.done ? "text-zinc-500 line-through" : "text-white"}`}>{t.title}</div>
-                  <div className="text-[10px] font-sans text-zinc-500">
+                  <div className="text-[11px] font-sans text-zinc-500">
                     {i < 2 ? "Academic Priority" : "Personal / Health Needle"}
                   </div>
                 </div>
-                {t.done && <span className="font-sans text-[11px] font-medium text-emerald-400">✓ Done</span>}
+                {t.done && <span className="font-sans text-xs font-medium text-emerald-400">✓ Done</span>}
               </li>
             ))}
           </ol>
@@ -367,14 +366,14 @@ export function Evening({ state, act }: { state: State; act: Act }) {
         <summary className="flex min-h-9 cursor-pointer flex-wrap items-center justify-between gap-2.5 list-none">
           <div className="flex items-center gap-2">
             <span className={`size-2 rounded-[1px] ${r.shutdownAt ? "bg-emerald-400" : "bg-indigo-400"}`} />
-            <span id="evening-h" className="font-mono text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase">
+            <span id="evening-h" className="font-mono text-[11px] font-bold tracking-[0.2em] text-zinc-300 uppercase">
               EVENING // SHUTDOWN
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] text-zinc-300">
+            <span className="font-mono text-[11px] text-zinc-300">
               {r.shutdownAt ? (
-                <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[9px] font-bold text-emerald-400 uppercase">
+                <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-400 uppercase">
                   <AppleEmoji emoji="🌙" size={12} />
                   <span>Shut down {clock(r.shutdownAt)}</span>
                 </span>
@@ -387,7 +386,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
         </summary>
         <div className="mt-3 flex flex-col gap-3 pt-2.5 border-t border-white/[0.08]">
           <div className="flex flex-col gap-1">
-            <label htmlFor={winsId} className="font-mono text-[10px] uppercase tracking-wider text-zinc-300">Today's Key Wins & Mastered Topics</label>
+            <label htmlFor={winsId} className="font-mono text-[11px] uppercase tracking-wider text-zinc-300">Today's Key Wins & Mastered Topics</label>
             <textarea
               id={winsId}
               rows={2}
@@ -399,11 +398,11 @@ export function Evening({ state, act }: { state: State; act: Act }) {
                 setHasUserEdited(true);
               }}
               onBlur={() => void save("wins", wins)}
-              className="w-full resize-none rounded-[2px] border border-white/[0.12] bg-[#141724] px-3 py-2 font-mono text-xs text-zinc-100 focus:border-sky-400 transition-all placeholder:text-zinc-500 leading-relaxed"
+              className="w-full resize-none rounded-[2px] border border-white/[0.12] bg-surface px-3 py-2 font-mono text-xs text-zinc-100 focus:border-sky-400 transition-all placeholder:text-zinc-500 leading-relaxed"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={tomorrowId} className="font-mono text-[10px] uppercase tracking-wider text-zinc-300">Preparation for Tomorrow</label>
+            <label htmlFor={tomorrowId} className="font-mono text-[11px] uppercase tracking-wider text-zinc-300">Preparation for Tomorrow</label>
             <textarea
               id={tomorrowId}
               rows={2}
@@ -415,7 +414,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
                 setHasUserEdited(true);
               }}
               onBlur={() => void save("tomorrow", tomorrow)}
-              className="w-full resize-none rounded-[2px] border border-white/[0.12] bg-[#141724] px-3 py-2 font-mono text-xs text-zinc-100 focus:border-sky-400 transition-all placeholder:text-zinc-500 leading-relaxed"
+              className="w-full resize-none rounded-[2px] border border-white/[0.12] bg-surface px-3 py-2 font-mono text-xs text-zinc-100 focus:border-sky-400 transition-all placeholder:text-zinc-500 leading-relaxed"
             />
           </div>
           <div className="pt-0.5">
@@ -441,9 +440,9 @@ export function Evening({ state, act }: { state: State; act: Act }) {
 
 export function Routine({ state, act }: { state: State; act: Act }) {
   return (
-    <div className="space-y-6 max-w-4xl mx-auto w-full">
+    <div className="space-y-6 max-w-4xl w-full">
+      <PageHeader eyebrow="Daily" title="Routine" sub="Start the day, then close it." />
       <Morning state={state} act={act} />
-      <Schedule state={state} act={act} onStartFocus={() => act("POST", "/api/timer/start")} />
       <DailyRoutineTimeline state={state} act={act} />
       <Evening key={state.routine.day} state={state} act={act} />
     </div>

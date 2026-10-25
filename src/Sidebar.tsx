@@ -59,14 +59,14 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
 
   return (
     <aside
-      className="hidden lg:flex w-64 shrink-0 flex-col justify-between bg-[#0c0f13] border-r border-white/[0.06] p-5 select-none text-zinc-100 min-h-screen"
+      className="hidden lg:flex w-64 shrink-0 flex-col justify-between bg-bg border-r border-white/[0.06] p-5 select-none text-zinc-100 min-h-screen"
       aria-label="Main Navigation Rail"
     >
       <div>
         {/* Brand Header */}
         <a href="#today" className="block group">
           <h1 className="font-serif text-2xl font-normal text-white tracking-tight">Life OS</h1>
-          <p className="text-[10px] text-zinc-400 font-sans tracking-widest uppercase mt-0.5">
+          <p className="text-[11px] text-zinc-400 font-sans tracking-widest uppercase mt-0.5">
             Study · Build · Be
           </p>
         </a>
@@ -120,7 +120,7 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
           {/* Progress Bar */}
           <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[#74c69d] transition-all duration-500"
+              className="h-full rounded-full bg-accent-hover transition-all duration-500"
               style={{ width: `${totalProgress}%` }}
             />
           </div>
@@ -133,31 +133,23 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
                   <span className="size-2 rounded-full" style={{ backgroundColor: s.color }} />
                   <span className="text-zinc-300 text-xs">{s.name}</span>
                 </div>
-                <span className="font-mono text-[11px] text-zinc-400 tabular-nums">{s.pct}%</span>
+                <span className="font-mono text-xs text-zinc-400 tabular-nums">{s.pct}%</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Bottom Footer Quote & Mountain Emblem */}
-      <div className="mt-8 pt-6 border-t border-white/[0.06] relative rounded-xl overflow-hidden p-4 bg-gradient-to-t from-black/60 to-transparent">
-        <div className="flex flex-col gap-1 z-10 relative">
-          <p className="font-serif italic text-xs text-zinc-400 leading-relaxed">
-            Better notes.
-            <br />
-            Better habits.
-            <br />
-            A bigger you.
-          </p>
-        </div>
-        {/* Minimalist Mountain Line Icon */}
-        <div className="absolute right-3 bottom-3 text-zinc-500 opacity-60">
-          <svg width="28" height="18" viewBox="0 0 32 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M2 18L10 6L16 14L22 4L30 18H2Z" strokeLinejoin="round" />
-          </svg>
-        </div>
-      </div>
+      {/* Settings: theme, backup & restore, Google connection */}
+      <a
+        href="#backup"
+        className={`mt-8 flex items-center gap-3 px-3 py-2.5 rounded-xl font-sans text-xs font-medium tracking-wide transition-all ${
+          page === "backup" ? "bg-white/[0.08] text-white font-semibold" : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+        }`}
+      >
+        <Icon d={ICONS.backup} size={17} stroke={page === "backup" ? 2.2 : 1.75} />
+        <span>Settings</span>
+      </a>
     </aside>
   );
 }

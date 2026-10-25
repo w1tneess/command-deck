@@ -97,12 +97,12 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
         aria-modal="true"
         aria-labelledby="capture-h"
         onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col gap-4 overflow-y-auto rounded-t-3xl lg:rounded-t-none lg:rounded-l-3xl border-t lg:border-t-0 lg:border-l border-white/[0.1] bg-[#0c0f18]/95 backdrop-blur-2xl p-5 shadow-2xl animate-drawer-mobile lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[460px] lg:p-7 lg:animate-drawer-desktop"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col gap-4 overflow-y-auto rounded-t-3xl lg:rounded-t-none lg:rounded-l-3xl border-t lg:border-t-0 lg:border-l border-white/[0.1] bg-bg/95 backdrop-blur-2xl p-5 shadow-2xl animate-drawer-mobile lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[460px] lg:p-7 lg:animate-drawer-desktop"
       >
         <div className="mx-auto -mt-1 mb-1 h-1 w-10 shrink-0 rounded-full bg-white/20 lg:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3 pb-2 border-b border-white/[0.08]">
           <h2 id="capture-h" className="m-0 text-base font-semibold tracking-tight text-white">Quick Capture Buffer</h2>
-          <span className="hidden text-xs text-zinc-400 lg:inline"><kbd className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">Ctrl/⌘ K</kbd> to toggle</span>
+          <span className="hidden text-xs text-zinc-400 lg:inline"><kbd className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[11px] text-zinc-400">Ctrl/⌘ K</kbd> to toggle</span>
           <Btn kind="ghost" aria-label="Close quick capture" onClick={onClose}>✕</Btn>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); void save(); }} className="flex flex-col gap-3">
@@ -116,7 +116,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
             placeholder="Jot down a quick thought, task, or study reminder..."
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void save(); } }}
-            className="w-full resize-none rounded-xl border border-white/15 bg-[#161c28] px-4 py-3 text-sm text-white focus:border-sky-400 transition-all placeholder:text-zinc-500 leading-relaxed font-sans"
+            className="w-full resize-none rounded-xl border border-white/15 bg-surface px-4 py-3 text-sm text-white focus:border-sky-400 transition-all placeholder:text-zinc-500 leading-relaxed font-sans"
           />
 
           <div className="flex items-center justify-between gap-2">
@@ -133,7 +133,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                     setKind(k);
                     setText((cur) => (cur.includes(tag) ? cur : cur ? `${cur} ${tag}` : `${tag} `));
                   }}
-                  className={`h-6 rounded-[3px] border px-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 hover:brightness-125 ${color}`}
+                  className={`h-6 rounded-[3px] border px-2 font-mono text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 hover:brightness-125 ${color}`}
                 >
                   {tag}
                 </button>
@@ -175,32 +175,32 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                   <div className={`text-sm break-words whitespace-pre-wrap ${c.done ? "text-zinc-500 line-through" : "text-white"}`}>
                     <AppleText text={c.text} size={14} />
                   </div>
-                  <div className="text-[11px] text-zinc-500 mt-1">{when(c.createdAt)}</div>
+                  <div className="text-xs text-zinc-500 mt-1">{when(c.createdAt)}</div>
                 </div>
                 <button type="button" aria-label={`Delete ${c.text}`} onClick={() => act("DELETE", `/api/captures/${c.id}`)} className="flex size-6 items-center justify-center rounded-lg border-0 bg-transparent text-xs text-zinc-500 hover:text-rose-400 transition-all">✕</button>
               </div>
 
               {!c.done && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-white/[0.04]">
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-zinc-500">Triage:</span>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Triage:</span>
                   <button
                     type="button"
                     onClick={() => void convertToTask(c)}
-                    className="h-5.5 rounded border border-sky-500/30 bg-sky-500/10 px-2 font-mono text-[10px] text-sky-300 hover:bg-sky-500/20 transition-all"
+                    className="h-5.5 rounded border border-sky-500/30 bg-sky-500/10 px-2 font-mono text-[11px] text-sky-300 hover:bg-sky-500/20 transition-all"
                   >
                     → Today's Task
                   </button>
                   <button
                     type="button"
                     onClick={() => void convertToDeliverable(c)}
-                    className="h-5.5 rounded border border-indigo-500/30 bg-indigo-500/10 px-2 font-mono text-[10px] text-indigo-300 hover:bg-indigo-500/20 transition-all"
+                    className="h-5.5 rounded border border-indigo-500/30 bg-indigo-500/10 px-2 font-mono text-[11px] text-indigo-300 hover:bg-indigo-500/20 transition-all"
                   >
                     → School Deliverable
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveDoubtId(activeDoubtId === c.id ? null : c.id)}
-                    className="h-5.5 rounded border border-amber-500/30 bg-amber-500/10 px-2 font-mono text-[10px] text-amber-300 hover:bg-amber-500/20 transition-all"
+                    className="h-5.5 rounded border border-amber-500/30 bg-amber-500/10 px-2 font-mono text-[11px] text-amber-300 hover:bg-amber-500/20 transition-all"
                   >
                     → Link Doubt
                   </button>
@@ -220,7 +220,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                       await act("PATCH", `/api/captures/${c.id}`, { done: true });
                       setActiveDoubtId(null);
                     }}
-                    className="h-7 text-xs bg-[#121622] border border-amber-500/40 text-amber-100 rounded px-2 font-mono flex-1 focus:outline-none focus:border-amber-400"
+                    className="h-7 text-xs bg-surface border border-amber-500/40 text-amber-100 rounded px-2 font-mono flex-1 focus:outline-none focus:border-amber-400"
                   >
                     <option value="" disabled>Select chapter to link doubt...</option>
                     {state.subjects.map((s) => (
@@ -301,7 +301,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
       <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-3">
         <div className="flex items-center gap-2">
           <span className="size-2 rounded-[1px] bg-sky-400" />
-          <span className="font-mono text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">INBOX // QUICK CAPTURE</span>
+          <span className="font-mono text-[11px] font-bold tracking-[0.2em] text-zinc-400 uppercase">INBOX // QUICK CAPTURE</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs text-zinc-400">
@@ -311,7 +311,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
             <button
               type="button"
               onClick={onOpenDrawer}
-              className="font-mono text-[10px] text-zinc-400 hover:text-white uppercase transition-colors"
+              className="font-mono text-[11px] text-zinc-400 hover:text-white uppercase transition-colors"
             >
               Drawer [Ctrl+K]
             </button>
@@ -333,7 +333,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
             placeholder={kind === "todo" ? "Add to-do, task, or #doubt..." : "Quick thought or #note..."}
             onChange={(e) => setText(e.target.value)}
             disabled={saving}
-            className="h-8.5 flex-1 rounded-[2px] border border-white/[0.12] bg-[#141724] px-3 font-mono text-xs text-zinc-100 placeholder:text-zinc-500 focus:border-sky-400 transition-all"
+            className="h-8.5 flex-1 rounded-[2px] border border-white/[0.12] bg-surface px-3 font-mono text-xs text-zinc-100 placeholder:text-zinc-500 focus:border-sky-400 transition-all"
           />
           <Btn type="submit" kind="primary" disabled={!text.trim() || saving}>
             {saving ? "…" : "+ Add"}
@@ -342,7 +342,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
           <div className="flex items-center gap-1.5">
-            <span className="font-mono text-[9px] uppercase tracking-wider text-zinc-400">Quick Tags:</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">Quick Tags:</span>
             {[
               { tag: "#task", k: "todo" as const, color: "border-sky-500/40 bg-sky-500/10 text-sky-300" },
               { tag: "#note", k: "note" as const, color: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" },
@@ -355,7 +355,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                   setKind(k);
                   setText((cur) => (cur.includes(tag) ? cur : cur ? `${cur} ${tag}` : `${tag} `));
                 }}
-                className={`h-5.5 rounded-[2px] border px-1.5 font-mono text-[9px] font-bold uppercase tracking-wider transition-all active:scale-95 hover:brightness-125 ${color}`}
+                className={`h-5.5 rounded-[2px] border px-1.5 font-mono text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 hover:brightness-125 ${color}`}
               >
                 {tag}
               </button>
@@ -369,7 +369,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                 type="button"
                 aria-pressed={kind === k}
                 onClick={() => setKind(k)}
-                className={`h-5.5 rounded-[2px] border px-2 font-mono text-[9px] uppercase font-bold tracking-wider transition-all ${
+                className={`h-5.5 rounded-[2px] border px-2 font-mono text-[11px] uppercase font-bold tracking-wider transition-all ${
                   kind === k
                     ? "border-sky-500/40 bg-sky-500/20 text-sky-300"
                     : "border-white/[0.08] bg-transparent text-zinc-400 hover:text-white"
@@ -387,7 +387,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
           {recent.map((c) => (
             <li
               key={c.id}
-              className="group flex flex-col gap-1.5 rounded-[2px] border border-white/[0.06] bg-[#141724]/60 p-2 transition-all hover:bg-[#141724] hover:border-white/[0.12]"
+              className="group flex flex-col gap-1.5 rounded-[2px] border border-white/[0.06] bg-surface/60 p-2 transition-all hover:bg-surface hover:border-white/[0.12]"
             >
               <div className="flex items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -421,25 +421,25 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
 
               {!c.done && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/[0.04]">
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-zinc-500">Triage:</span>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Triage:</span>
                   <button
                     type="button"
                     onClick={() => void convertToTask(c)}
-                    className="h-5 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 font-mono text-[9px] text-sky-300 hover:bg-sky-500/20 transition-all"
+                    className="h-5 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 font-mono text-[11px] text-sky-300 hover:bg-sky-500/20 transition-all"
                   >
                     → Task
                   </button>
                   <button
                     type="button"
                     onClick={() => void convertToDeliverable(c)}
-                    className="h-5 rounded border border-indigo-500/30 bg-indigo-500/10 px-1.5 font-mono text-[9px] text-indigo-300 hover:bg-indigo-500/20 transition-all"
+                    className="h-5 rounded border border-indigo-500/30 bg-indigo-500/10 px-1.5 font-mono text-[11px] text-indigo-300 hover:bg-indigo-500/20 transition-all"
                   >
                     → Deliverable
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveDoubtId(activeDoubtId === c.id ? null : c.id)}
-                    className="h-5 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 font-mono text-[9px] text-amber-300 hover:bg-amber-500/20 transition-all"
+                    className="h-5 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 font-mono text-[11px] text-amber-300 hover:bg-amber-500/20 transition-all"
                   >
                     → Doubt
                   </button>
@@ -459,7 +459,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                       await act("PATCH", `/api/captures/${c.id}`, { done: true });
                       setActiveDoubtId(null);
                     }}
-                    className="h-6 text-[11px] bg-[#121622] border border-amber-500/40 text-amber-100 rounded px-1.5 font-mono flex-1 focus:outline-none focus:border-amber-400"
+                    className="h-6 text-xs bg-surface border border-amber-500/40 text-amber-100 rounded px-1.5 font-mono flex-1 focus:outline-none focus:border-amber-400"
                   >
                     <option value="" disabled>Select chapter to link doubt...</option>
                     {state.subjects.map((s) => (

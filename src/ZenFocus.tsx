@@ -116,7 +116,7 @@ export function ZenFocusStudio({
       role="dialog"
       aria-modal="true"
       aria-label="Zen Focus Studio"
-      className="fixed inset-0 z-50 flex flex-col justify-between overflow-y-auto bg-[#07090e]/95 backdrop-blur-2xl p-6 sm:p-10 text-white animate-fade-in select-none"
+      className="fixed inset-0 z-50 flex flex-col justify-between overflow-y-auto bg-bg/95 backdrop-blur-2xl p-6 sm:p-10 text-white animate-fade-in select-none"
     >
       {/* Top Telemetry & Controls */}
       <div className="flex items-center justify-between border-b border-white/[0.08] pb-5">
@@ -160,7 +160,7 @@ export function ZenFocusStudio({
 
       {/* Session Mastery Prompt Modal */}
       {f.masteryPrompt && (
-        <div className="mx-auto my-3 w-full max-w-xl rounded-2xl border border-sky-500/40 bg-[#0d1322] p-5 shadow-2xl animate-fade-in">
+        <div className="mx-auto my-3 w-full max-w-xl rounded-2xl border border-sky-500/40 bg-bg p-5 shadow-2xl animate-fade-in">
           <div className="flex items-center justify-between pb-2">
             <span className="font-semibold text-sky-400 text-sm flex items-center gap-2">
               <AppleEmoji emoji="✨" size={15} />
@@ -190,7 +190,7 @@ export function ZenFocusStudio({
               name="zenMastery"
               autoFocus
               placeholder="e.g. Electric potential derivation, Carbon allotropes..."
-              className="flex-1 h-9 rounded-lg border border-white/15 bg-[#141a2b] px-3 font-sans text-xs text-white placeholder:text-zinc-500 focus:border-sky-400 transition-all"
+              className="flex-1 h-9 rounded-lg border border-white/15 bg-surface px-3 font-sans text-xs text-white placeholder:text-zinc-500 focus:border-sky-400 transition-all"
             />
             <button
               type="submit"
@@ -204,7 +204,7 @@ export function ZenFocusStudio({
 
       {/* Integrated Ephemeral Scratchpad Drawer */}
       {scratchOpen && (
-        <div className="mx-auto my-3 w-full max-w-xl rounded-2xl border border-white/15 bg-[#0f1420]/95 backdrop-blur-xl p-4 shadow-2xl animate-fade-in flex flex-col gap-2.5">
+        <div className="mx-auto my-3 w-full max-w-xl rounded-2xl border border-white/15 bg-bg/95 backdrop-blur-xl p-4 shadow-2xl animate-fade-in flex flex-col gap-2.5">
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
             <span className="font-sans text-xs font-semibold text-zinc-200 flex items-center gap-2">
               <AppleEmoji emoji="📝" size={14} />
@@ -229,16 +229,16 @@ export function ZenFocusStudio({
               setScratchpad(val);
               try { localStorage.setItem("focus_scratchpad", val); } catch {}
             }}
-            className="w-full resize-none rounded-lg border border-white/10 bg-[#090c14] p-3 font-mono text-xs text-zinc-200 placeholder:text-zinc-600 focus:border-sky-400 transition-all focus:outline-none"
+            className="w-full resize-none rounded-lg border border-white/10 bg-bg p-3 font-mono text-xs text-zinc-200 placeholder:text-zinc-600 focus:border-sky-400 transition-all focus:outline-none"
           />
           <div className="flex items-center justify-between pt-1">
-            <span className="font-mono text-[10px] text-zinc-500">Auto-saved locally</span>
+            <span className="font-mono text-[11px] text-zinc-500">Auto-saved locally</span>
             {act && (
               <button
                 type="button"
                 disabled={!scratchpad.trim() || savingScratch}
                 onClick={() => void handleSaveScratchToCapture()}
-                className="h-7 rounded-md border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 font-sans text-[11px] font-semibold text-sky-300 transition-all disabled:opacity-40"
+                className="h-7 rounded-md border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 font-sans text-xs font-semibold text-sky-300 transition-all disabled:opacity-40"
               >
                 {savingScratch ? "Saving…" : "→ Push to Quick Capture"}
               </button>
@@ -249,7 +249,7 @@ export function ZenFocusStudio({
 
       {/* Center Console: Beautiful distraction-free focus workspace */}
       <div className="my-auto flex flex-col items-center justify-center py-8 max-w-3xl mx-auto w-full">
-        <div className="relative w-full rounded-3xl border border-white/[0.1] bg-gradient-to-b from-[#111624]/90 to-[#0c0f1a]/90 p-8 sm:p-14 flex flex-col items-center justify-center text-center shadow-2xl backdrop-blur-xl">
+        <div className="relative w-full rounded-3xl border border-white/[0.1] bg-gradient-to-b from-shell/90 to-bg/90 p-8 sm:p-14 flex flex-col items-center justify-center text-center shadow-2xl backdrop-blur-xl">
           {/* Ambient Glow */}
           <div className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-sky-500/10 blur-3xl rounded-full" aria-hidden="true" />
 
@@ -302,10 +302,10 @@ export function ZenFocusStudio({
                   aria-label="Study Subject"
                   value={f.subject}
                   onChange={(e) => f.setSubject(e.target.value)}
-                  className="h-10 rounded-[3px] border border-white/[0.14] bg-[#141724] px-4 font-mono text-xs sm:text-sm text-white focus:border-sky-400 cursor-pointer"
+                  className="h-10 rounded-[3px] border border-white/[0.14] bg-surface px-4 font-mono text-xs sm:text-sm text-white focus:border-sky-400 cursor-pointer"
                 >
                   {state.subjects.map((s) => (
-                    <option key={s.id} value={s.id} className="bg-[#0d0f17] text-white">
+                    <option key={s.id} value={s.id} className="bg-bg text-white">
                       {s.name}
                     </option>
                   ))}
@@ -331,10 +331,10 @@ export function ZenFocusStudio({
             const pct = Math.min(100, Math.round((todayFocusMins / targetMin) * 100));
             const done = todayFocusMins >= targetMin;
             return (
-              <div key={targetMin} className="rounded-xl border border-white/[0.08] bg-[#0f131c]/80 backdrop-blur-md p-3.5 flex flex-col gap-2">
+              <div key={targetMin} className="rounded-xl border border-white/[0.08] bg-bg/80 backdrop-blur-md p-3.5 flex flex-col gap-2">
                 <div className="flex justify-between text-xs font-medium text-zinc-300">
                   <span className={done ? "text-emerald-400 font-semibold" : ""}>{label} {done ? "✓" : ""}</span>
-                  <span className="text-zinc-500 font-mono text-[11px]">{todayFocusMins}/{targetMin}m ({pct}%)</span>
+                  <span className="text-zinc-500 font-mono text-xs">{todayFocusMins}/{targetMin}m ({pct}%)</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
                   <div

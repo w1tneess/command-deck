@@ -1,18 +1,14 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 import type { Act, Project, State } from "./api.ts";
-import { AppleText, Btn, Card, Check, H2, plural } from "./ui.tsx";
+import { AppleText, Btn, Card, Check, H2, plural, PageHeader } from "./ui.tsx";
 
 export function Projects({ state, act }: { state: State; act: Act }) {
   const [adding, setAdding] = useState(false);
   return (
     <>
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
-        <div>
-          <div className="text-xs font-medium text-zinc-400">Beyond the Syllabus</div>
-          <h1 className="m-0 mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">Personal Projects & Goals</h1>
-        </div>
+      <PageHeader eyebrow="Beyond the syllabus" title="Projects">
         <Btn kind="primary" aria-expanded={adding} onClick={() => setAdding((a) => !a)}>{adding ? "Close" : "+ Add Project"}</Btn>
-      </header>
+      </PageHeader>
       {adding && (
         <Card className="max-w-3xl">
           <ProjectForm saveLabel="Add Project" initial={{ name: "", detail: "" }} onCancel={() => setAdding(false)} onSave={async (v) => { if (await act("POST", "/api/projects", v)) setAdding(false); }} />
@@ -78,7 +74,7 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
           <span className="text-xs text-rose-300">Delete "{p.name}"? All {plural(p.milestones.length, "milestone")} will be permanently removed.</span>
           <div className="flex gap-2">
             <Btn kind="outline" onClick={() => setRemoving(false)}>Cancel</Btn>
-            <Btn className="border-0 bg-rose-600 font-semibold text-white hover:bg-rose-500" onClick={async () => { if (await act("DELETE", `/api/projects/${p.id}`)) setRemoving(false); }}>Delete project</Btn>
+            <Btn className="border-0 bg-rose-600 font-semibold text-on-solid hover:bg-rose-500" onClick={async () => { if (await act("DELETE", `/api/projects/${p.id}`)) setRemoving(false); }}>Delete project</Btn>
           </div>
         </div>
       )}
@@ -103,7 +99,7 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
       </ul>
       <form className="mt-4 flex gap-2.5 border-t border-white/[0.08] pt-3.5" onSubmit={addMilestone}>
         <label htmlFor={`${id}-new`} className="sr-only">New milestone for {p.name}</label>
-        <input id={`${id}-new`} maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a specific milestone..." className="h-10 min-w-0 flex-1 rounded-xl border border-white/15 bg-[#161c28] px-3.5 text-sm text-white focus:border-sky-400 transition-all placeholder:text-zinc-500" />
+        <input id={`${id}-new`} maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a specific milestone..." className="h-10 min-w-0 flex-1 rounded-xl border border-white/15 bg-surface px-3.5 text-sm text-white focus:border-sky-400 transition-all placeholder:text-zinc-500" />
         <Btn type="submit" kind="primary" disabled={!title.trim() || savingMilestone}>{savingMilestone ? "Adding…" : "Add Milestone"}</Btn>
       </form>
     </Card>
@@ -136,11 +132,11 @@ function ProjectForm({ initial, saveLabel, onSave, onCancel }: { initial: { name
     <form className="flex flex-col gap-3.5" onSubmit={submit}>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={nameId} className="text-xs font-medium text-zinc-300">Project Title</label>
-        <input id={nameId} autoFocus maxLength={80} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="e.g. Science Exhibition Prototype" className="h-10 rounded-xl border border-white/20 bg-[#161c28] px-3.5 text-sm text-white focus:border-sky-400 transition-all" />
+        <input id={nameId} autoFocus maxLength={80} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="e.g. Science Exhibition Prototype" className="h-10 rounded-xl border border-white/20 bg-surface px-3.5 text-sm text-white focus:border-sky-400 transition-all" />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={detailId} className="text-xs font-medium text-zinc-300">Objective / Details (Optional)</label>
-        <input id={detailId} maxLength={500} value={v.detail} onChange={(e) => setV({ ...v, detail: e.target.value })} placeholder="Key deliverables or target completion dates..." className="h-10 rounded-xl border border-white/10 bg-[#161c28] px-3.5 text-sm text-white focus:border-sky-400 transition-all" />
+        <input id={detailId} maxLength={500} value={v.detail} onChange={(e) => setV({ ...v, detail: e.target.value })} placeholder="Key deliverables or target completion dates..." className="h-10 rounded-xl border border-white/10 bg-surface px-3.5 text-sm text-white focus:border-sky-400 transition-all" />
       </div>
       <div className="flex gap-2.5 pt-1">
         <Btn type="submit" kind="primary" disabled={saving} className="px-5">{saving ? "Saving…" : saveLabel}</Btn>

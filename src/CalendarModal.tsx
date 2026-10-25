@@ -72,7 +72,7 @@ export function CalendarModal({
         aria-hidden="true"
       />
 
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0e1117] p-6 text-zinc-100 shadow-2xl flex flex-col gap-5">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-bg p-6 text-zinc-100 shadow-2xl flex flex-col gap-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] pb-4">
           <div className="flex items-center gap-3">
@@ -103,25 +103,25 @@ export function CalendarModal({
 
         {/* Sync Stream Preview Badges */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-[#141724] p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-surface p-3">
             <AppleEmoji emoji="📝" size={18} />
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-semibold text-zinc-200">CBSE Timetable</span>
-              <span className="text-[10px] text-zinc-400">Exam slots (10:30–13:30)</span>
+              <span className="text-xs font-semibold text-zinc-200">CBSE Timetable</span>
+              <span className="text-[11px] text-zinc-400">Exam slots (10:30–13:30)</span>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-[#141724] p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-surface p-3">
             <AppleEmoji emoji="🌅" size={18} />
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-semibold text-zinc-200">Routine Blocks</span>
-              <span className="text-[10px] text-zinc-400">Morning, School, Review</span>
+              <span className="text-xs font-semibold text-zinc-200">Routine Blocks</span>
+              <span className="text-[11px] text-zinc-400">Morning, School, Review</span>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-[#141724] p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-surface p-3">
             <AppleEmoji emoji="📋" size={18} />
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-semibold text-zinc-200">Deliverables</span>
-              <span className="text-[10px] text-zinc-400">Lab manuals & due dates</span>
+              <span className="text-xs font-semibold text-zinc-200">Deliverables</span>
+              <span className="text-[11px] text-zinc-400">Lab manuals & due dates</span>
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function CalendarModal({
               <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
             </svg>
             <span>Subscribe in Google Calendar</span>
-            <span className="text-[10px] opacity-75 font-mono">(1-Click Add)</span>
+            <span className="text-[11px] opacity-75 font-mono">(1-Click Add)</span>
           </a>
 
           <div className="flex items-center gap-2">
@@ -169,15 +169,15 @@ export function CalendarModal({
         </div>
 
         {/* Feed URL Display */}
-        <div className="flex flex-col gap-1.5 rounded-xl border border-white/[0.08] bg-[#121520] p-3">
-          <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-white/[0.08] bg-surface p-3">
+          <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
             <span>YOUR PRIVATE SUBSCRIPTION URL</span>
-            <span className="text-emerald-400 text-[10px] font-sans">● Protected & Signed</span>
+            <span className="text-emerald-400 text-[11px] font-sans">● Protected & Signed</span>
           </div>
-          <div className="rounded-lg bg-black/40 border border-white/[0.06] p-2 font-mono text-[11px] text-zinc-300 break-all select-all">
+          <div className="rounded-lg bg-black/40 border border-white/[0.06] p-2 font-mono text-xs text-zinc-300 break-all select-all">
             {httpFeedUrl}
           </div>
-          <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-1 font-sans">
+          <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1 font-sans">
             <span>Enforces Asia/Kolkata (IST, UTC+5:30) timezone automatically.</span>
             <button
               type="button"
@@ -191,12 +191,12 @@ export function CalendarModal({
         </div>
 
         {/* Multi-Account & Client Guidance */}
-        <div className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-[#141724]/70 p-3.5 text-xs text-zinc-300">
+        <div className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-surface/70 p-3.5 text-xs text-zinc-300">
           <div className="flex items-center gap-2 font-semibold text-zinc-200">
             <AppleEmoji emoji="💡" size={16} />
             <span>Multiple Google Accounts & Phone Setup</span>
           </div>
-          <p className="m-0 text-[11px] text-zinc-400 leading-relaxed">
+          <p className="m-0 text-xs text-zinc-400 leading-relaxed">
             Using a different Google account for your calendar? Clicking{" "}
             <strong className="text-zinc-200">Subscribe in Google Calendar</strong> opens your browser where you can pick or switch to any Google account. For Apple Calendar or Outlook, copy the Feed URL and paste it into <em>File → New Calendar Subscription</em>.
           </p>

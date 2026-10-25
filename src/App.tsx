@@ -11,6 +11,7 @@ import { Projects } from "./Projects.tsx";
 import { signOut } from "./session.ts";
 import { Syllabus } from "./Syllabus.tsx";
 import { useTheme } from "./theme.ts";
+import { ThemeToggle } from "./ThemeToggle.tsx";
 import { Routine } from "./Routine.tsx";
 import { Schedule } from "./Schedule.tsx";
 import { CalendarModal } from "./CalendarModal.tsx";
@@ -111,7 +112,7 @@ export function App() {
   }, [load]);
 
   if (needsLogin) return <PinGate onDone={load} />;
-  if (!state) return <main className="grid min-h-dvh place-items-center px-6 text-center text-muted bg-[#0c0f13] text-zinc-400">{error || "Loading…"}</main>;
+  if (!state) return <main className="grid min-h-dvh place-items-center px-6 text-center text-muted bg-bg text-zinc-400">{error || "Loading…"}</main>;
   return <Shell state={state} act={act} reload={load} error={error} setError={setError} saving={saving > 0} online={online} />;
 }
 
@@ -180,12 +181,12 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
 
   return (
     <div
-      className="bg-[#0c0f13] min-h-screen font-sans text-zinc-100 flex flex-col lg:flex-row relative"
+      className="bg-bg min-h-screen font-sans text-zinc-100 flex flex-col lg:flex-row relative"
       aria-busy={saving}
     >
       {saving && (
         <div aria-hidden="true" className="fixed inset-x-0 top-0 z-50 h-[3px] overflow-hidden bg-black/20">
-          <div className="h-full w-1/3 animate-[slide_1s_cubic-bezier(0.16,1,0.3,1)_infinite] bg-[#52b788] shadow-[0_0_8px_rgba(82,183,136,0.8)]" />
+          <div className="h-full w-1/3 animate-[slide_1s_cubic-bezier(0.16,1,0.3,1)_infinite] bg-accent shadow-[0_0_8px_rgba(82,183,136,0.8)]" />
         </div>
       )}
 
@@ -201,7 +202,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
       {/* Main View Area */}
       <div className="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto">
         {/* Top Header Bar */}
-        <header className="flex items-center justify-between px-6 lg:px-8 py-4 border-b border-white/[0.04] bg-[#0c0f13]/90 sticky top-0 z-20 backdrop-blur-md">
+        <header className="flex items-center justify-between px-6 lg:px-8 py-4 border-b border-white/[0.04] bg-bg/90 sticky top-0 z-20 backdrop-blur-md">
           {/* Dynamic IST Timestamp */}
           <div className="font-sans text-xs text-zinc-400 tracking-wide font-medium">
             {istDateTime}
@@ -219,9 +220,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
               <span className="hidden sm:inline">Sync Calendar</span>
             </button>
 
-            <span className="hidden md:inline font-serif italic text-xs text-zinc-400">
-              Small consistent steps create a different you.
-            </span>
+            <ThemeToggle theme={theme} setTheme={setTheme} />
             <button
               type="button"
               onClick={() => signOut("/api/logout")}
@@ -235,7 +234,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 pb-24 lg:pb-8">
+        <main className="mx-auto w-full max-w-[1180px] flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 pb-24 lg:pb-8">
           {error && (
             <div role="alert" className="m-0 flex items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-rose-950/20 text-rose-200 px-4.5 py-3 text-xs sm:text-sm shadow-xs">
               <div className="flex items-center gap-2.5">
@@ -298,11 +297,11 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
       {!(page === "today" || focus.running) && (
         <button
           type="button"
-          aria-label="Command bar"
+          aria-label="Quick add"
           onClick={() => setCommandBar(true)}
-          className="fixed right-4 bottom-[78px] z-20 flex size-11 items-center justify-center rounded-full bg-[#52b788] text-white shadow-lg hover:scale-105 transition-all active:scale-95 lg:hidden font-mono text-xl font-bold"
+          className="fixed right-4 bottom-[78px] z-20 flex size-11 items-center justify-center rounded-full bg-accent text-accent-text shadow-lg hover:scale-105 transition-all active:scale-95 lg:hidden"
         >
-          ⌘
+          <Icon d={ICONS.plus} size={20} stroke={2.2} />
         </button>
       )}
       {capture && <CaptureDrawer state={state} act={act} onClose={() => setCapture(false)} />}
@@ -352,7 +351,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
       {more && (
         <>
           <div aria-hidden="true" className="fixed inset-0 z-30 bg-black/60 backdrop-blur-xs lg:hidden animate-fade-in" onClick={() => setMore(false)} />
-          <div id="more-menu" className="fixed inset-x-3 bottom-[76px] z-40 flex flex-col gap-1 rounded-2xl border border-white/[0.08] bg-[#15191f]/95 backdrop-blur-xl p-2.5 shadow-2xl lg:hidden animate-drawer-mobile">
+          <div id="more-menu" className="fixed inset-x-3 bottom-[76px] z-40 flex flex-col gap-1 rounded-2xl border border-white/[0.08] bg-surface/95 backdrop-blur-xl p-2.5 shadow-2xl lg:hidden animate-drawer-mobile">
             {NAV.filter((n) => !n.dock).map((n) => {
               const active = page === n.id;
               return (
@@ -368,7 +367,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
                 >
                   <Icon d={n.icon} size={18} stroke={active ? 2.2 : 1.7} />
                   <span>{n.label}</span>
-                  {active && <span className="ml-auto size-1.5 rounded-full bg-[#52b788] shadow-xs" />}
+                  {active && <span className="ml-auto size-1.5 rounded-full bg-accent shadow-xs" />}
                 </a>
               );
             })}
@@ -397,7 +396,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
       {/* Sticky Mobile Bottom Navigation Dock */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-30 flex h-[66px] items-center border-t border-white/[0.08] bg-[#0c0f13]/95 backdrop-blur-2xl px-2 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex h-[66px] items-center border-t border-white/[0.08] bg-bg/95 backdrop-blur-2xl px-2 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] lg:hidden"
       >
         {NAV.filter((n) => n.dock).map((n) => {
           const active = page === n.id;
@@ -411,9 +410,9 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
               }`}
             >
               <Icon d={n.icon} size={19} stroke={active ? 2.3 : 1.7} />
-              <span className="text-[10px] font-medium tracking-wide">{n.phone}</span>
+              <span className="text-[11px] font-medium tracking-wide">{n.phone}</span>
               {active && (
-                <span className="absolute bottom-1 size-1 rounded-full bg-[#52b788] shadow-xs" />
+                <span className="absolute bottom-1 size-1 rounded-full bg-accent shadow-xs" />
               )}
             </a>
           );
@@ -428,9 +427,9 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
           }`}
         >
           <Icon d={ICONS.more} size={19} stroke={inMore || more ? 2.3 : 1.7} />
-          <span className="text-[10px] font-medium tracking-wide">More</span>
+          <span className="text-[11px] font-medium tracking-wide">More</span>
           {(inMore || more) && (
-            <span className="absolute bottom-1 size-1 rounded-full bg-[#52b788] shadow-xs" />
+            <span className="absolute bottom-1 size-1 rounded-full bg-accent shadow-xs" />
           )}
         </button>
       </nav>

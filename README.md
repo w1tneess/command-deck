@@ -9,7 +9,7 @@
 
 A private **CBSE Class 10 exam-prep dashboard and personal life tracker**. It runs entirely on Cloudflare's edge (Worker + D1) and combines a ranked study queue, a cloud-settled Pomodoro timer, three-pass chapter revision, habits, a daily schedule synced with Google Calendar, and school deliverable tracking.
 
-**Live:** [study.advaitachandra.in](https://study.advaitachandra.in) *(private; PIN or allow-listed Google sign-in)*
+**Live:** [deck.advaitachandra.in](https://deck.advaitachandra.in) *(private; PIN or allow-listed Google sign-in)*
 
 ---
 

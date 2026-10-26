@@ -382,7 +382,7 @@ export function GoogleSyncModal({
               <ul className="text-xs text-muted m-0 space-y-1 list-disc list-inside">
                 <li>Enable the <strong>Google Calendar API</strong> in Google Cloud Console.</li>
                 <li>Add your email under <strong>APIs &amp; Services &gt; OAuth consent screen &gt; Test users</strong> (prevents 403 access_denied).</li>
-                <li>Add <code>https://study.advaitachandra.in/api/google/callback</code> to <strong>Authorized redirect URIs</strong>.</li>
+                <li>Add <code>https://deck.advaitachandra.in/api/google/callback</code> to <strong>Authorized redirect URIs</strong>.</li>
               </ul>
             </div>
 

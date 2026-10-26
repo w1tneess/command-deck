@@ -109,7 +109,7 @@ export function getTargetGCalUrl(target: Target, todayIST: string, options?: Tar
   return buildGoogleCalendarUrl({
     title: `Target: ${target.title}`,
     dates: `${start}/${end}`,
-    details: `Class 10 CBSE Study Target\nSubject: ${target.subjectId || "General"}\nTarget: ${target.title}\nAllocated Duration: ${target.duration || "45m"}\nScheduled Slot: ${startTime} - ${endTime} IST (Avoids School & Tuition)\nTracked on: https://study.advaitachandra.in`,
+    details: `Class 10 CBSE Study Target\nSubject: ${target.subjectId || "General"}\nTarget: ${target.title}\nAllocated Duration: ${target.duration || "45m"}\nScheduled Slot: ${startTime} - ${endTime} IST (Avoids School & Tuition)\nTracked on: https://deck.advaitachandra.in`,
     location: "Study Desk",
   });
 }
@@ -123,7 +123,7 @@ export function getDeliverableGCalUrl(deliverable: Deliverable, todayIST: string
   return buildGoogleCalendarUrl({
     title: `Due: ${deliverable.name} (${deliverable.subject})${deliverable.vivaPrep ? " [VIVA PREP]" : ""}`,
     dates: `${start}/${end}`,
-    details: `School Deliverable & Internal Assessment\nSubject: ${deliverable.subject}\nStatus: ${deliverable.status}\nDetails: ${deliverable.detail || "CBSE submission deadline"}\nMorning Handover: 08:00 AM - 08:30 AM IST (Before school)\nhttps://study.advaitachandra.in`,
+    details: `School Deliverable & Internal Assessment\nSubject: ${deliverable.subject}\nStatus: ${deliverable.status}\nDetails: ${deliverable.detail || "CBSE submission deadline"}\nMorning Handover: 08:00 AM - 08:30 AM IST (Before school)\nhttps://deck.advaitachandra.in`,
     location: "School Submission Desk",
   });
 }
@@ -136,7 +136,7 @@ export function getExamGCalUrl(subjectName: string, phaseName: string, date: str
   return buildGoogleCalendarUrl({
     title: `CBSE Exam: ${subjectName} (${phaseName})`,
     dates: `${start}/${end}`,
-    details: `Official CBSE Class 10 Examination\nSubject: ${subjectName}\nPhase: ${phaseName}\nTime: 10:30 AM - 01:30 PM (IST)\nDuration: 3 Hours\nhttps://study.advaitachandra.in`,
+    details: `Official CBSE Class 10 Examination\nSubject: ${subjectName}\nPhase: ${phaseName}\nTime: 10:30 AM - 01:30 PM (IST)\nDuration: 3 Hours\nhttps://deck.advaitachandra.in`,
     location: "CBSE Examination Hall",
   });
 }
@@ -149,7 +149,7 @@ export function getScheduleBlockGCalUrl(block: ScheduleBlock, todayIST: string):
   return buildGoogleCalendarUrl({
     title: `Focus Block: ${block.title}`,
     dates: `${start}/${end}`,
-    details: `Command Deck Time-Block\nTrack: ${block.title}\nCategory: ${block.category.toUpperCase()}\nTime: ${block.startTime} - ${block.endTime} (IST)\nhttps://study.advaitachandra.in`,
+    details: `Command Deck Time-Block\nTrack: ${block.title}\nCategory: ${block.category.toUpperCase()}\nTime: ${block.startTime} - ${block.endTime} (IST)\nhttps://deck.advaitachandra.in`,
     location: "Study Desk / School",
   });
 }
@@ -162,7 +162,7 @@ export function getVivaPrepGCalUrl(title: string, lab: string, todayIST: string)
   return buildGoogleCalendarUrl({
     title: `Viva Prep: ${title}`,
     dates: `${start}/${end}`,
-    details: `CBSE Class 10 Practical Viva Revision\nTopic: ${title}\nLab Manual: ${lab}\nDuration: 45m\nhttps://study.advaitachandra.in`,
+    details: `CBSE Class 10 Practical Viva Revision\nTopic: ${title}\nLab Manual: ${lab}\nDuration: 45m\nhttps://deck.advaitachandra.in`,
     location: "Science Study Corner",
   });
 }
@@ -171,7 +171,7 @@ export function getVivaPrepGCalUrl(title: string, lab: string, todayIST: string)
 export function getCalendarFeedUrls(token: string) {
   const origin = typeof window !== "undefined" && window.location.origin
     ? window.location.origin
-    : "https://study.advaitachandra.in";
+    : "https://deck.advaitachandra.in";
 
   const cleanHost = origin.replace(/^https?:\/\//, "");
   const httpFeedUrl = `${origin}/api/calendar/feed.ics?token=${token}`;

@@ -57,7 +57,7 @@ describe("Google Calendar Pure Utilities", () => {
     const creds = {
       clientId: "test-client-id.apps.googleusercontent.com",
       clientSecret: "test-secret",
-      redirectUri: "https://study.advaitachandra.in/api/google/callback",
+      redirectUri: "https://deck.advaitachandra.in/api/google/callback",
     };
     const urlStr = buildGoogleAuthUrl(creds, "xyz-state-token");
     const u = new URL(urlStr);

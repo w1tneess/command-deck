@@ -93,7 +93,7 @@ export async function getGoogleAuthCredentials(
   }
 
   if (!redirectUri) {
-    redirectUri = "https://study.advaitachandra.in/api/auth/google/callback";
+    redirectUri = "https://deck.advaitachandra.in/api/auth/google/callback";
   }
 
   if (!clientId || !clientSecret) return null;

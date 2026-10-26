@@ -55,7 +55,7 @@ export type ScheduleConflict = {
   eventEnd: string;
 };
 
-const DEFAULT_REDIRECT_URI = "https://study.advaitachandra.in/api/google/callback";
+const DEFAULT_REDIRECT_URI = "https://deck.advaitachandra.in/api/google/callback";
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const GOOGLE_CALENDAR_API_BASE = "https://www.googleapis.com/calendar/v3";
@@ -371,7 +371,7 @@ export async function pushBlockToGoogle(
   const startIso = `${dateStr}T${block.startTime}:00+05:30`;
   const endIso = `${dateStr}T${block.endTime}:00+05:30`;
   const summary = `[Command Deck] ${block.title}`;
-  const description = `Study Track: ${block.category}\nManaged by Command Deck (study.advaitachandra.in)`;
+  const description = `Study Track: ${block.category}\nManaged by Command Deck (deck.advaitachandra.in)`;
 
   const payload = {
     summary,

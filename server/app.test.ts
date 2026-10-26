@@ -126,3 +126,40 @@ describe("backup and restore", () => {
     expect(maths(await state()).chapters).toHaveLength(14);
   });
 });
+
+describe("backup secrets", () => {
+  const SECRET_KEYS = ["calendar_token", "google_client_id", "google_client_secret", "google_redirect_uri", "google_oauth_state", "google_login_state", "allowed_google_emails"];
+  const feed = (token: string) => t.inject(`/api/calendar/feed.ics?token=${token}`);
+
+  it("keeps Google credentials and the calendar token out of an export", async () => {
+    const { calendarToken } = await state();
+    expect(calendarToken).toMatch(/^study_cal_/); // the secret exists...
+    const backup = (await (await t.inject("/api/export")).json()) as any;
+    const keys = backup.settings.map((r: any) => r.key);
+    expect(keys.filter((k: string) => SECRET_KEYS.includes(k))).toEqual([]); // ...but is not in the file
+    expect(JSON.stringify(backup)).not.toContain(calendarToken);
+  });
+
+  it("a restore ignores secrets planted in the file and keeps the live ones", async () => {
+    const { calendarToken } = await state();
+    const backup = (await (await t.inject("/api/export")).json()) as any;
+    backup.settings.push(
+      { key: "calendar_token", value: "planted-token" },
+      { key: "google_client_secret", value: "planted-secret" },
+      { key: "allowed_google_emails", value: "attacker@example.com" },
+    );
+    expect((await send("POST", "/api/import", backup)).status).toBe(200);
+    expect((await feed("planted-token")).status).toBe(401);
+    expect((await feed(calendarToken)).status).toBe(200);
+    expect((await state()).calendarToken).toBe(calendarToken);
+  });
+
+  it("a restore still brings back the ordinary settings", async () => {
+    await send("PUT", "/api/active-phase", { phaseId: "boards" });
+    const backup = (await (await t.inject("/api/export")).json()) as any;
+    expect(backup.settings.map((r: any) => r.key)).toContain("active_phase");
+    await send("PUT", "/api/active-phase", { phaseId: null });
+    expect((await send("POST", "/api/import", backup)).status).toBe(200);
+    expect((await state()).activePhaseId).toBe("boards");
+  });
+});

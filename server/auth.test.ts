@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { PIN, setup } from "./testdb.ts";
+import { EMAIL, PASSWORD, setup } from "./testdb.ts";
 
 type T = Awaited<ReturnType<typeof setup>>;
 let t: T;
@@ -9,13 +9,21 @@ beforeEach(async () => {
     googleClientId: "mock-google-client-id",
     googleClientSecret: "mock-google-client-secret",
     googleRedirectUri: "http://localhost:8787/api/auth/google/callback",
-    allowedGoogleEmails: "advaita974@gmail.com",
+    allowedGoogleEmails: EMAIL,
   });
 });
 afterEach(() => t.dispose());
 
-const login = (pin = PIN, remember = true, ip = "1.1.1.1") =>
-  t.inject({ method: "POST", url: "/api/login", payload: { pin, remember }, headers: { "cf-connecting-ip": ip } });
+const post = (url: string, payload: unknown, ip = "1.1.1.1") =>
+  t.inject({ method: "POST", url, payload, headers: { "cf-connecting-ip": ip } });
+const requestCode = (email = EMAIL, ip = "1.1.1.1") => post("/api/auth/email/request", { email }, ip);
+const codeIn = (i = -1) => t.mails.at(i)!.text.match(/\b(\d{6})\b/)![1];
+const setPassword = (code: string, password = PASSWORD, remember = true, ip = "1.1.1.1", email = EMAIL) =>
+  post("/api/auth/email/set-password", { email, code, password, remember }, ip);
+const login = (password = PASSWORD, remember = true, ip = "1.1.1.1", email = EMAIL) =>
+  post("/api/auth/email/login", { email, password, remember }, ip);
+/** Verify the address and set the password, the first-time flow. */
+const register = async () => { await requestCode(); return setPassword(codeIn()); };
 /** "session=...; Path=/" -> "session=..." */
 const cookieOf = (res: Response) => (res.headers.get("set-cookie") ?? "").split(";")[0];
 const sessionCookieOf = (res: Response) =>
@@ -26,103 +34,220 @@ const state = (headers: Record<string, string> = {}) => t.inject({ url: "/api/st
 const withCookie = (cookie: string) => ({ cookie });
 const MIN = 60_000, DAY = 86_400_000;
 
-describe("login", () => {
-  it("accepts the right PIN and sets a hardened cookie", async () => {
-    const res = await login();
+describe("email code", () => {
+  it("emails a six-digit code to an allowed address and never says whether the address is allowed", async () => {
+    const ok = await requestCode();
+    expect(ok.status).toBe(200);
+    expect(t.mails).toHaveLength(1);
+    expect(t.mails[0]).toMatchObject({ to: EMAIL });
+    expect(t.mails[0].text).toMatch(/\b\d{6}\b/);
+    const stranger = await requestCode("stranger@example.com");
+    expect(stranger.status).toBe(200);
+    expect(await stranger.json()).toEqual(await ok.json()); // same answer
+    expect(t.mails).toHaveLength(1); // but nothing was sent
+  });
+
+  it("stores only a hash of the code", async () => {
+    await requestCode();
+    const row = await t.db.prepare("SELECT code_hash FROM email_codes").first<{ code_hash: string }>();
+    expect(row!.code_hash).not.toContain(codeIn());
+    expect(row!.code_hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("sends at most one email a minute to the same address", async () => {
+    await requestCode();
+    await requestCode();
+    expect(t.mails).toHaveLength(1);
+    t.setNow(t.now() + 61_000);
+    await requestCode();
+    expect(t.mails).toHaveLength(2);
+  });
+
+  it("rejects something that isn't an email address", async () => {
+    expect((await requestCode("not-an-email")).status).toBe(400);
+    expect((await post("/api/auth/email/request", { email: 42 })).status).toBe(400);
+  });
+});
+
+describe("setting a password", () => {
+  it("needs the emailed code, then signs in with a hardened cookie", async () => {
+    await requestCode();
+    const res = await setPassword(codeIn());
     expect(res.status).toBe(200);
     const raw = res.headers.get("set-cookie")!;
     expect(raw).toMatch(/HttpOnly/i);
     expect(raw).toMatch(/SameSite=Strict/i);
-    expect(raw).toMatch(/Path=\//);
     expect(raw).toMatch(/Max-Age=7776000/); // 90 days with "remember this device"
     expect((await state(withCookie(cookieOf(res)))).status).toBe(200);
   });
 
-  it("uses a session cookie when the device isn't remembered", async () => {
-    const res = await login(PIN, false);
-    expect(res.headers.get("set-cookie")).not.toMatch(/Max-Age/i);
+  it("stores a salted PBKDF2 hash, never the password, and the code works once", async () => {
+    await requestCode();
+    const code = codeIn();
+    expect((await setPassword(code)).status).toBe(200);
+    const row = await t.db.prepare("SELECT pw_hash, salt, iterations FROM credentials").first<{ pw_hash: string; salt: string; iterations: number }>();
+    expect(row!.pw_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(row!.salt).toMatch(/^[0-9a-f]{32}$/);
+    expect(row!.iterations).toBe(100_000);
+    expect(JSON.stringify(row)).not.toContain(PASSWORD);
+    expect((await setPassword(code, "another-long-password")).status).toBe(401); // already used
   });
 
-  it("rejects a wrong PIN and says how many tries are left", async () => {
-    const res = await login("000000");
-    expect(res.status).toBe(401);
-    expect(await res.json()).toMatchObject({ attemptsLeft: 4 });
-    expect(res.headers.get("set-cookie")).toBeNull();
+  it("rejects a wrong code, and five wrong guesses kill the code", async () => {
+    await requestCode();
+    const good = codeIn();
+    const bad = good === "000000" ? "111111" : "000000";
+    for (let i = 0; i < 5; i++) expect((await setPassword(bad, PASSWORD, true, `10.0.0.${i}`)).status).toBe(401);
+    expect((await setPassword(good, PASSWORD, true, "10.0.0.9")).status).toBe(401);
   });
 
-  it("rejects non-string and malformed PINs", async () => {
-    // A different address each time, so the lockout (tested separately) doesn't interfere.
-    for (const [i, pin] of [123456, null, "", "12345", "1234567", "abcdef"].entries()) {
-      expect((await login(pin as any, true, `10.0.0.${i}`)).status).toBe(401);
+  it("rejects an expired code", async () => {
+    await requestCode();
+    t.setNow(t.now() + 11 * MIN);
+    expect((await setPassword(codeIn())).status).toBe(401);
+  });
+
+  it("rejects an address that isn't allowed", async () => {
+    await requestCode();
+    expect((await setPassword(codeIn(), PASSWORD, true, "1.1.1.1", "stranger@example.com")).status).toBe(401);
+  });
+
+  it("insists on a long password", async () => {
+    await requestCode();
+    expect((await setPassword(codeIn(), "short")).status).toBe(400);
+    expect((await setPassword(codeIn(), "x".repeat(201))).status).toBe(400);
+  });
+
+  it("uses a browser-session cookie when the device isn't remembered", async () => {
+    await requestCode();
+    expect((await setPassword(codeIn(), PASSWORD, false)).headers.get("set-cookie")).not.toMatch(/Max-Age/i);
+  });
+
+  it("a new password signs out every other device", async () => {
+    const first = cookieOf(await register());
+    expect((await state(withCookie(first))).status).toBe(200);
+    t.setNow(t.now() + 2 * MIN);
+    await requestCode();
+    const second = cookieOf(await setPassword(codeIn(), "a-brand-new-password"));
+    expect((await state(withCookie(first))).status).toBe(401);
+    expect((await state(withCookie(second))).status).toBe(200);
+  });
+});
+
+describe("email sign-in", () => {
+  it("accepts the right password and rejects a wrong one", async () => {
+    await register();
+    const ok = await login();
+    expect(ok.status).toBe(200);
+    expect((await state(withCookie(cookieOf(ok)))).status).toBe(200);
+    const bad = await login("wrong-password-here");
+    expect(bad.status).toBe(401);
+    expect(bad.headers.get("set-cookie")).toBeNull();
+    expect(await bad.json()).toMatchObject({ error: "Wrong email or password.", attemptsLeft: 4 });
+  });
+
+  it("gives the same answer for an unknown or disallowed address as for a wrong password", async () => {
+    await register();
+    const wrong = (await (await login("wrong-password-here", true, "2.2.2.2")).json()) as any;
+    const unknown = (await (await login(PASSWORD, true, "3.3.3.3", "stranger@example.com")).json()) as any;
+    expect(unknown.error).toBe(wrong.error);
+  });
+
+  it("rejects malformed input", async () => {
+    await register();
+    for (const [i, password] of [123456, null, "", {}].entries()) {
+      expect((await login(password as any, true, `10.1.0.${i}`)).status).toBe(401);
     }
   });
 
-  it("fails closed when the PIN or session secret isn't configured", async () => {
-    const noPin = await setup({ auth: "none", pin: null });
+  it("uses a browser-session cookie when the device isn't remembered", async () => {
+    await register();
+    expect((await login(PASSWORD, false)).headers.get("set-cookie")).not.toMatch(/Max-Age/i);
+  });
+
+  it("fails closed when the session secret isn't configured", async () => {
     const noSecret = await setup({ auth: "none", secret: null });
     try {
-      expect((await noPin.inject({ method: "POST", url: "/api/login", payload: { pin: PIN } })).status).toBe(500);
-      expect((await noSecret.inject({ method: "POST", url: "/api/login", payload: { pin: PIN } })).status).toBe(500);
+      for (const url of ["/api/auth/email/request", "/api/auth/email/set-password", "/api/auth/email/login"]) {
+        expect((await noSecret.inject({ method: "POST", url, payload: { email: EMAIL } })).status).toBe(500);
+      }
     } finally {
-      await noPin.dispose();
       await noSecret.dispose();
     }
+  });
+
+  it("the old PIN login is gone", async () => {
+    expect((await post("/api/login", { pin: "123456" })).status).toBe(401);
   });
 });
 
 describe("lockout", () => {
-  it("locks a device after 5 wrong tries, even for the right PIN, then releases after 15 minutes", async () => {
-    for (let i = 0; i < 5; i++) expect((await login("000000")).status).toBe(401);
-    const locked = await login(PIN);
+  it("locks a device after 5 wrong tries, even for the right password, then releases after 15 minutes", async () => {
+    await register();
+    for (let i = 0; i < 5; i++) expect((await login("wrong-password-here")).status).toBe(401);
+    const locked = await login();
     expect(locked.status).toBe(429);
     expect((await locked.json()) as any).toMatchObject({ retryAfter: 900 });
     expect(locked.headers.get("retry-after")).toBe("900");
     t.setNow(t.now() + 14 * MIN);
-    expect((await login(PIN)).status).toBe(429);
+    expect((await login()).status).toBe(429);
     t.setNow(t.now() + 2 * MIN);
-    expect((await login(PIN)).status).toBe(200);
+    expect((await login()).status).toBe(200);
   });
 
   it("does not lock other devices", async () => {
-    for (let i = 0; i < 5; i++) await login("000000", true, "9.9.9.9");
-    expect((await login(PIN, true, "9.9.9.9")).status).toBe(429);
-    expect((await login(PIN, true, "2.2.2.2")).status).toBe(200);
+    await register();
+    for (let i = 0; i < 5; i++) await login("wrong-password-here", true, "9.9.9.9");
+    expect((await login(PASSWORD, true, "9.9.9.9")).status).toBe(429);
+    expect((await login(PASSWORD, true, "2.2.2.2")).status).toBe(200);
   });
 
-  it("a successful login resets that device's count", async () => {
-    for (let i = 0; i < 4; i++) await login("000000");
-    expect((await login(PIN)).status).toBe(200);
-    for (let i = 0; i < 4; i++) expect((await login("000000")).status).toBe(401);
+  it("a successful sign-in resets that device's count", async () => {
+    await register(); // clears this device's tries
+    for (let i = 0; i < 3; i++) await login("wrong-password-here");
+    expect((await login()).status).toBe(200);
+    for (let i = 0; i < 4; i++) expect((await login("wrong-password-here")).status).toBe(401);
   });
 
   it("lets at most 5 wrong tries through even when they arrive at the same moment", async () => {
-    const codes = (await Promise.all(Array.from({ length: 12 }, () => login("000000", true, "7.7.7.7")))).map((r) => r.status);
+    await register();
+    const codes = (await Promise.all(Array.from({ length: 12 }, () => login("wrong-password-here", true, "7.7.7.7")))).map((r) => r.status);
     expect(codes.filter((c) => c === 401)).toHaveLength(5);
     expect(codes.filter((c) => c === 429)).toHaveLength(7);
-    expect((await login(PIN, true, "7.7.7.7")).status).toBe(429); // refused tries don't extend the lock
+    expect((await login(PASSWORD, true, "7.7.7.7")).status).toBe(429); // refused tries don't extend the lock
     t.setNow(t.now() + 16 * MIN);
-    expect((await login(PIN, true, "7.7.7.7")).status).toBe(200);
+    expect((await login(PASSWORD, true, "7.7.7.7")).status).toBe(200);
   });
 
-  it("caps total wrong tries across all devices at 20 per hour", async () => {
-    for (const ip of ["a", "b", "c", "d"]) for (let i = 0; i < 5; i++) await login("000000", true, ip);
-    expect((await login(PIN, true, "fresh")).status).toBe(429);
+  it("caps total tries across all devices at 20 per hour", async () => {
+    await register();
+    for (const ip of ["a", "b", "c", "d"]) for (let i = 0; i < 5; i++) await login("wrong-password-here", true, ip);
+    expect((await login(PASSWORD, true, "fresh")).status).toBe(429);
     t.setNow(t.now() + 61 * MIN);
-    expect((await login(PIN, true, "fresh")).status).toBe(200);
+    expect((await login(PASSWORD, true, "fresh")).status).toBe(200);
+  });
+
+  it("also limits how often one device can ask for codes", async () => {
+    const codes = [];
+    for (let i = 0; i < 6; i++) codes.push((await requestCode(EMAIL, "5.5.5.5")).status);
+    expect(codes.slice(0, 5)).toEqual([200, 200, 200, 200, 200]);
+    expect(codes[5]).toBe(429);
   });
 });
 
 describe("session cookie", () => {
   it("is required, and a tampered cookie is rejected", async () => {
     expect((await state()).status).toBe(401);
+    await register();
     const cookie = cookieOf(await login());
     expect((await state(withCookie(cookie.slice(0, -3) + "AAA"))).status).toBe(401);
     expect((await state(withCookie("session=garbage"))).status).toBe(401);
   });
 
   it("expires: 24 hours without remember, 90 days with it", async () => {
-    const short = cookieOf(await login(PIN, false));
-    const long = cookieOf(await login(PIN, true));
+    await register();
+    const short = cookieOf(await login(PASSWORD, false));
+    const long = cookieOf(await login(PASSWORD, true));
     t.setNow(t.now() + DAY - MIN);
     expect((await state(withCookie(short))).status).toBe(200);
     t.setNow(t.now() + 2 * MIN);
@@ -133,8 +258,9 @@ describe("session cookie", () => {
   });
 
   it("sign out all devices invalidates every existing cookie", async () => {
+    await register();
     const a = cookieOf(await login());
-    const b = cookieOf(await login(PIN, true, "3.3.3.3"));
+    const b = cookieOf(await login(PASSWORD, true, "3.3.3.3"));
     expect((await t.inject({ method: "POST", url: "/api/logout-all", headers: withCookie(a) })).status).toBe(200);
     expect((await state(withCookie(a))).status).toBe(401);
     expect((await state(withCookie(b))).status).toBe(401);
@@ -148,6 +274,7 @@ describe("session cookie", () => {
   });
 
   it("blocks cookie-authenticated writes from another origin", async () => {
+    await register();
     const cookie = cookieOf(await login());
     const write = (origin?: string) =>
       t.inject({ method: "POST", url: "/api/targets", payload: { title: "x" }, headers: { cookie, ...(origin ? { origin } : {}) } });
@@ -156,16 +283,13 @@ describe("session cookie", () => {
     expect((await write("http://localhost")).status).toBe(201);
     expect((await write()).status).toBe(201);
   });
-});
 
-describe("recovery token", () => {
-  it("still works as a bearer, and a wrong one is rejected", async () => {
-    expect((await state({ authorization: "Bearer test-token" })).status).toBe(200);
-    expect((await state({ authorization: "Bearer nope" })).status).toBe(401);
+  it("no bearer token opens the API any more", async () => {
+    expect((await state({ authorization: "Bearer test-token" })).status).toBe(401);
   });
 
-  it("with nothing configured the API refuses everything", async () => {
-    const bare = await setup({ auth: "none", token: null, secret: null });
+  it("with no session secret configured the API refuses everything", async () => {
+    const bare = await setup({ auth: "none", secret: null });
     try {
       expect((await bare.inject("/api/state")).status).toBe(500);
     } finally {

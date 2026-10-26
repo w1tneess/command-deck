@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
-import { registerAuth, type Env, hasValidSession, isLocalDev, same } from "./auth.ts";
+import { registerAuth, type Env, type SendMail, hasValidSession, isLocalDev, same } from "./auth.ts";
 import { SCOPES, STATUSES, activePhase, computeChapterDuration, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
 import { lifeState, registerLife } from "./life.ts";
 import { ENERGIES, studyQueue, type Energy } from "./planner.ts";
@@ -174,7 +174,7 @@ async function settleNow(db: D1Database, nowMs: number): Promise<Timer> {
 
 const timerView = (t: Timer, nowMs: number) => ({ ...t, endsAt: t.startedAt === null ? null : t.startedAt + t.durationS * 1000, serverNow: nowMs });
 
-export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } = {}) {
+export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch; sendMail?: SendMail } = {}) {
   const app = new Hono<Env>();
   const now = () => opts.now?.() ?? Date.now();
   const today = () => todayIST(now());
@@ -186,7 +186,7 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     return c.json({ error: "Unexpected server error." }, 500);
   });
 
-  registerAuth(app, now, fetchFn);
+  registerAuth(app, now, fetchFn, opts.sendMail);
   registerLife(app, today, () => new Date(now()).toISOString());
 
   app.get("/api/state", async (c) => {
@@ -608,14 +608,14 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
 
   // --- Dynamic ICS / iCal Feed ---
   app.get("/api/calendar/feed.ics", async (c) => {
-    if (!c.env.STUDY_PASSCODE || !c.env.SESSION_SECRET) {
+    if (!c.env.SESSION_SECRET) {
       return c.text("Server auth isn't configured.", 500);
     }
     const token = c.req.query("token") ?? "";
     let authorized = false;
 
-    // Only the dedicated random calendar token (or a session) opens the feed. The PIN and APP_TOKEN must never
-    // be accepted here: this endpoint has no lockout, so it would be an unthrottled PIN guessing oracle.
+    // Only the dedicated random calendar token (or a session) opens the feed. A password must never be accepted
+    // here: this endpoint has no lockout, so it would be an unthrottled password guessing oracle.
     if (token) {
       const calTokenRow = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'calendar_token'").first<{ value: string }>();
       authorized = !!calTokenRow?.value && (await same(token, calTokenRow.value));

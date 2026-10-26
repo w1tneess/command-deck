@@ -84,14 +84,20 @@ describe("api", () => {
 });
 
 describe("access control", () => {
-  it("rejects missing and wrong tokens, accepts the right one", async () => {
-    expect((await t.inject({ url: "/api/state", headers: { authorization: "" } })).status).toBe(401);
-    expect((await t.inject({ url: "/api/state", headers: { authorization: "Bearer nope" } })).status).toBe(401);
-    expect((await t.inject("/api/state")).status).toBe(200);
+  it("rejects missing and wrong credentials, accepts a real session", async () => {
+    const anon = await setup({ auth: "none" });
+    try {
+      expect((await anon.inject("/api/state")).status).toBe(401);
+      expect((await anon.inject({ url: "/api/state", headers: { authorization: "Bearer nope" } })).status).toBe(401);
+      expect((await anon.inject({ url: "/api/state", headers: { cookie: "session=garbage" } })).status).toBe(401);
+    } finally {
+      await anon.dispose();
+    }
+    expect((await t.inject("/api/state")).status).toBe(200); // signed in by the test setup
   });
 
-  it("fails closed when the server has no APP_TOKEN", async () => {
-    const open = await setup({ token: null, secret: null });
+  it("fails closed when the server has no SESSION_SECRET", async () => {
+    const open = await setup({ secret: null });
     try {
       expect((await open.inject("/api/state")).status).toBe(500);
     } finally {

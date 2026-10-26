@@ -1,5 +1,5 @@
 {
-  "name": "exam-tracker",
+  "name": "command-deck",
   "main": "server/index.ts",
   "compatibility_date": "2026-09-01",
   // Static files come from dist/; only /api/* runs the Worker. Unknown paths fall back to the SPA.
@@ -22,8 +22,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "exam-tracker",
-      "database_id": "c3ab950b-26ad-492d-999b-4b801a1e045d",
+      "database_name": "command-deck",
+      "database_id": "6e3e949b-847d-429a-ad4b-8ffe0aea1893",
       "migrations_dir": "migrations"
     }
   ]

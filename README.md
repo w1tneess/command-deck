@@ -5,11 +5,11 @@
 [![React 19](https://img.shields.io/badge/Frontend-React%2019-61DAFB?logo=react)](https://react.dev/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Styling-Tailwind%20CSS%20v4-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%205-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Vitest](https://img.shields.io/badge/Tests-170%20Passed-brightgreen?logo=vitest)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-160%20Passed-brightgreen?logo=vitest)](https://vitest.dev/)
 
 A private **CBSE Class 10 exam-prep dashboard and personal life tracker**. It runs entirely on Cloudflare's edge (Worker + D1) and combines a ranked study queue, a cloud-settled Pomodoro timer, three-pass chapter revision, habits, a daily schedule synced with Google Calendar, and school deliverable tracking.
 
-**Live:** [deck.advaitachandra.in](https://deck.advaitachandra.in) *(private; PIN or allow-listed Google sign-in)*
+**Live:** [deck.advaitachandra.in](https://deck.advaitachandra.in) *(private; allow-listed Google account only)*
 
 ---
 
@@ -23,7 +23,7 @@ graph TD
     end
 
     subgraph Edge [Cloudflare Worker · Hono v4]
-        Auth[Auth · PIN, Google sign-in, lockout]
+        Auth[Auth · Google sign-in, sessions]
         Timer[Cloud-settled timer]
         Planner[Study queue + energy heuristics]
         Cal[Schedule, iCal feed, Google Calendar sync]
@@ -81,12 +81,11 @@ The app has four places to go: **Today**, **Study**, **Plan** and **Life**. Plan
 
 | Principle | Implementation |
 |---|---|
-| Fail closed | If `STUDY_PASSCODE` or `SESSION_SECRET` is unset, the Worker answers 500 to everything. |
-| Constant-time PIN check | Compared with a timing-safe equality. |
-| Lockout | 5 wrong PINs lock an IP for 15 minutes; 20 across all IPs lock everyone for an hour. The attempt is recorded before the check, in one atomic batch. |
+| Fail closed | If `SESSION_SECRET` is unset, the Worker answers 500 to everything. |
+| One way in | Google sign-in, and only for addresses in `ALLOWED_GOOGLE_EMAILS`. No PIN, no passwords and no standing API key, so there is nothing to guess. |
 | Sessions | HMAC-signed `HttpOnly`, `SameSite=Strict`, `Secure` cookie. 90 days with "Remember me", 24 hours otherwise. Cookie writes also check the `Origin`. |
-| Google sign-in | Optional. Only addresses in `ALLOWED_GOOGLE_EMAILS` are admitted, and the OAuth state is bound to the browser. |
-| Recovery token | `APP_TOKEN` works as a bearer token for scripts and recovery. |
+| Google sign-in | The OAuth state is bound to the browser, and Google must report the email as verified. |
+| No bypass | There is no master key. If Google sign-in breaks, fix the cause (the OAuth keys or redirect URIs) from your own computer with wrangler; your data stays in D1. |
 | Backups carry no secrets | Google credentials, the calendar token and the sign-in allow-list are left out of exports and ignored on restore. |
 | SQL | Parameterized (`db.prepare(...).bind(...)`) with atomic `db.batch([...])`. |
 | IST | Day boundaries, streaks and targets use `Asia/Kolkata` through `todayIST()`. |
@@ -100,7 +99,7 @@ exam-tracker/
 ├── context/          Rules, architecture, verification checklist, decision log
 ├── server/           Cloudflare Worker (Hono v4) and its tests
 │   ├── app.ts        Routes, state assembly, export/import
-│   ├── auth.ts       PIN, Google sign-in, sessions, lockout
+│   ├── auth.ts       Google sign-in and sessions
 │   ├── logic.ts      Pure domain maths (todayIST, daysLeft, ranking)
 │   ├── planner.ts    Study queue and energy heuristics
 │   ├── timer.ts      Pomodoro state engine
@@ -133,13 +132,13 @@ Needs Node.js 20+ (CI uses 24).
 git clone https://github.com/w1tneess/study-dashboard.git
 cd study-dashboard
 npm install
-cp .dev.vars.example .dev.vars   # set STUDY_PASSCODE, SESSION_SECRET, APP_TOKEN
+cp .dev.vars.example .dev.vars   # set SESSION_SECRET and the Google keys
 npm run db:local                 # apply migrations to the local D1
 npm run build                    # the Worker serves ./dist
 npm run dev                      # http://localhost:8787
 ```
 
-`npm run dev:web` runs Vite alone for front-end work. Google sign-in and calendar sync also need `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and the redirect URIs from `.dev.vars.example`; the app works without them.
+`npm run dev:web` runs Vite alone for front-end work. Signing in needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and the redirect URIs from `.dev.vars.example`, and your address in `ALLOWED_GOOGLE_EMAILS`.
 
 ---
 
@@ -147,7 +146,7 @@ npm run dev                      # http://localhost:8787
 
 ```bash
 npm run build   # type-check client and server, then bundle
-npm test        # 170 tests in 11 files, against a real local D1
+npm test        # 160 tests in 11 files, against a real local D1
 npm run audit   # optional static checks (not run in CI)
 ```
 
@@ -164,9 +163,7 @@ Manual deploy:
 ```bash
 npx wrangler login
 npm run db:remote
-npx wrangler secret put STUDY_PASSCODE
 npx wrangler secret put SESSION_SECRET
-npx wrangler secret put APP_TOKEN
 npm run deploy
 ```
 

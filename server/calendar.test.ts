@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { PIN, setup } from "./testdb.ts";
+import { setup } from "./testdb.ts";
 
 type T = Awaited<ReturnType<typeof setup>>;
 let t: T;
@@ -8,8 +8,8 @@ beforeEach(async () => {
 });
 afterEach(() => t.dispose());
 
-const login = (pin = PIN) =>
-  t.inject({ method: "POST", url: "/api/login", payload: { pin, remember: true } });
+/** A valid session cookie wrapped in a Response, so tests can keep using cookieOf(). */
+const login = async () => new Response(null, { headers: { "set-cookie": await t.mintCookie() } });
 const cookieOf = (res: Response) => (res.headers.get("set-cookie") ?? "").split(";")[0];
 
 describe("Calendar Feed API (/api/calendar/feed.ics)", () => {
@@ -24,8 +24,8 @@ describe("Calendar Feed API (/api/calendar/feed.ics)", () => {
     expect(res.status).toBe(401);
   });
 
-  it("fails closed (500) if STUDY_PASSCODE or SESSION_SECRET is unset", async () => {
-    const broken = await setup({ auth: "none", pin: null });
+  it("fails closed (500) if SESSION_SECRET is unset", async () => {
+    const broken = await setup({ auth: "none", secret: null });
     try {
       const res = await broken.inject({ url: "/api/calendar/feed.ics?token=xyz" });
       expect(res.status).toBe(500);

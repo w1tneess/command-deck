@@ -4,10 +4,6 @@ import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
 export type Env = {
   Bindings: {
     DB: D1Database;
-    /** Recovery and automation bearer token. Still accepted alongside the PIN. */
-    APP_TOKEN?: string;
-    /** The 6-digit PIN, set by the owner with `wrangler secret put`. */
-    STUDY_PASSCODE?: string;
     /** Signs session cookies. */
     SESSION_SECRET?: string;
     /** Google OAuth Client ID for Calendar API v3 */
@@ -24,13 +20,17 @@ export type Env = {
 };
 
 const COOKIE = "session";
-const DAY = 86_400;
-const REMEMBER_SECS = 90 * DAY;
-const SHORT_SECS = DAY;
-// Per device: 5 wrong tries lock for 15 minutes. Across all devices: 20 per hour, so one
-// stranger can't lock you out for long, and a botnet still can't search 1,000,000 PINs.
-const IP_LIMIT = 5, IP_WINDOW = 15 * 60;
-const GLOBAL_LIMIT = 20, GLOBAL_WINDOW = 60 * 60;
+const REMEMBER_SECS = 90 * 86_400;
+const PUBLIC_PATHS = new Set(["/api/calendar/feed.ics", "/api/google/callback", "/api/auth/google", "/api/auth/google/callback"]);
+
+/** Permitted Google addresses: the env var, else the `allowed_google_emails` setting. */
+async function allowedEmails(env: Env["Bindings"]) {
+  const split = (s: string) => s.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  const fromEnv = split(env.ALLOWED_GOOGLE_EMAILS || "");
+  if (fromEnv.length) return fromEnv;
+  const row = await env.DB.prepare("SELECT value FROM settings WHERE key = 'allowed_google_emails'").first<{ value: string }>();
+  return row?.value ? split(row.value) : [];
+}
 
 /** Hash both sides first so the comparison is constant-time whatever the lengths. */
 export async function same(a: string, b: string) {
@@ -104,9 +104,20 @@ export async function getGoogleAuthCredentials(
 /** Cross-scheme HTTPS->HTTP redirects drop Lax cookies on localhost, so the D1 OAuth-state fallback is only honoured there. */
 export const isLocalDev = (url: string) => ["localhost", "127.0.0.1"].includes(new URL(url).hostname);
 
-/** Registers /api/login, /api/auth/google, /api/auth/google/callback, /api/logout, and guards every other /api route. */
+/** Registers Google sign-in, /api/logout, and guards every other /api route. */
 export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof fetch = fetch) {
   const nowS = () => Math.floor(now() / 1000);
+
+  /** Signs the visitor in with a 90-day session cookie. */
+  const startSession = async (c: C) => {
+    await setSignedCookie(c, COOKIE, `${nowS() + REMEMBER_SECS}.${await sessionVersion(c.env.DB)}`, c.env.SESSION_SECRET!, {
+      httpOnly: true,
+      secure: c.req.url.startsWith("https:"),
+      sameSite: "Strict",
+      path: "/",
+      maxAge: REMEMBER_SECS,
+    });
+  };
 
   // --- Google OAuth 2.0 Initiation Handler ---
   app.get("/api/auth/google", async (c) => {
@@ -274,19 +285,7 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
     }
 
     // CRITICAL RESTRICTION CHECK
-    let allowedEmails = (c.env.ALLOWED_GOOGLE_EMAILS || "")
-      .split(",")
-      .map((e: string) => e.trim().toLowerCase())
-      .filter(Boolean);
-
-    if (allowedEmails.length === 0) {
-      const setting = await db.prepare("SELECT value FROM settings WHERE key = 'allowed_google_emails'").first<{ value: string }>();
-      if (setting?.value) {
-        allowedEmails = setting.value.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean);
-      }
-    }
-
-    if (!allowedEmails.includes(email.toLowerCase())) {
+    if (!(await allowedEmails(c.env)).includes(email.toLowerCase())) {
       console.warn(`Unauthorized login attempt by non-whitelisted account: ${email}`);
       return c.html(
         `<!DOCTYPE html>
@@ -319,61 +318,8 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
     }
 
     // 4. Session Issuance
-    const t = nowS();
-    const ttl = REMEMBER_SECS;
-    await setSignedCookie(c, COOKIE, `${t + ttl}.${await sessionVersion(db)}`, secret, {
-      httpOnly: true,
-      secure: c.req.url.startsWith("https:"),
-      sameSite: "Strict",
-      path: "/",
-      maxAge: ttl,
-    });
-
+    await startSession(c);
     return c.redirect("/");
-  });
-
-  app.post("/api/login", async (c) => {
-    const { STUDY_PASSCODE: pin, SESSION_SECRET: secret, DB: db } = c.env;
-    if (!pin || !secret) return c.json({ error: "Login isn't set up on the server yet." }, 500);
-    const t = nowS();
-    const ip = c.req.header("cf-connecting-ip") ?? "unknown";
-    await db.prepare("DELETE FROM login_attempts WHERE ts <= ?").bind(t - GLOBAL_WINDOW).run();
-
-    // Record this try first, in the same batch as the check, so tries that arrive together can't all
-    // see an empty log. The (N+1)th most recent try being inside the window means the limit is reached.
-    const [added, mine, all] = await db.batch<{ ts: number }>([
-      db.prepare("INSERT INTO login_attempts (ip, ts) VALUES (?, ?)").bind(ip, t),
-      db.prepare("SELECT ts FROM login_attempts WHERE ip = ? ORDER BY ts DESC LIMIT 1 OFFSET ?").bind(ip, IP_LIMIT),
-      db.prepare("SELECT ts FROM login_attempts ORDER BY ts DESC LIMIT 1 OFFSET ?").bind(GLOBAL_LIMIT),
-    ]);
-    const waits = [
-      mine.results[0] && mine.results[0].ts + IP_WINDOW - t,
-      all.results[0] && all.results[0].ts + GLOBAL_WINDOW - t,
-    ].filter((w): w is number => typeof w === "number" && w > 0);
-    if (waits.length) {
-      await db.prepare("DELETE FROM login_attempts WHERE rowid = ?").bind(added.meta.last_row_id).run(); // refused tries don't extend the lock
-      const retryAfter = Math.max(...waits);
-      c.header("Retry-After", String(retryAfter));
-      return c.json({ error: "Too many wrong tries. Try again later.", retryAfter }, 429);
-    }
-
-    const body = ((await c.req.json().catch(() => ({}))) ?? {}) as { pin?: unknown; remember?: unknown };
-    if (typeof body.pin !== "string" || !(await same(body.pin, pin))) {
-      const n = (await db.prepare("SELECT COUNT(*) AS n FROM login_attempts WHERE ip = ? AND ts > ?").bind(ip, t - IP_WINDOW).first<{ n: number }>())?.n ?? 0;
-      return c.json({ error: "Wrong PIN.", attemptsLeft: Math.max(0, IP_LIMIT - n) }, 401);
-    }
-
-    await db.prepare("DELETE FROM login_attempts WHERE ip = ?").bind(ip).run();
-    const remember = body.remember === true;
-    const ttl = remember ? REMEMBER_SECS : SHORT_SECS;
-    await setSignedCookie(c, COOKIE, `${t + ttl}.${await sessionVersion(db)}`, secret, {
-      httpOnly: true,
-      secure: c.req.url.startsWith("https:"),
-      sameSite: "Strict",
-      path: "/",
-      ...(remember ? { maxAge: ttl } : {}), // otherwise a browser-session cookie that also expires after a day
-    });
-    return c.json({ ok: true });
   });
 
   app.post("/api/logout", (c) => {
@@ -381,17 +327,11 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
     return c.json({ ok: true });
   });
 
-  // Fail closed: with neither a token nor a session secret configured, nothing is reachable.
+  // Fail closed: with no session secret configured, nothing is reachable.
   app.use("/api/*", async (c, next) => {
-    if (!c.env.APP_TOKEN && !c.env.SESSION_SECRET) return c.json({ error: "Server auth isn't configured." }, 500);
-    // The calendar feed, Google OAuth callback, and Google Auth initiation/callback manage their own verification
-    if (
-      c.req.path === "/api/calendar/feed.ics" ||
-      c.req.path === "/api/google/callback" ||
-      c.req.path === "/api/auth/google" ||
-      c.req.path === "/api/auth/google/callback"
-    ) return next();
-    if (c.env.APP_TOKEN && (await same(c.req.header("authorization") ?? "", `Bearer ${c.env.APP_TOKEN}`))) return next();
+    if (!c.env.SESSION_SECRET) return c.json({ error: "Server auth isn't configured." }, 500);
+    // The calendar feed, the Google callbacks and the sign-in routes manage their own verification.
+    if (PUBLIC_PATHS.has(c.req.path)) return next();
     if (await hasValidSession(c, nowS())) {
       // Belt and braces on top of SameSite=Strict: refuse cookie-authenticated writes from another origin.
       const origin = c.req.header("origin");

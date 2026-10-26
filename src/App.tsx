@@ -7,7 +7,7 @@ import { DeliverablesPage } from "./Deliverables.tsx";
 import { FocusBar, useFocus } from "./Focus.tsx";
 import { Habits } from "./Habits.tsx";
 import { Overview } from "./Overview.tsx";
-import { PinGate } from "./PinGate.tsx";
+import { SignIn } from "./SignIn.tsx";
 import { Projects } from "./Projects.tsx";
 import { signOut } from "./session.ts";
 import { Syllabus } from "./Syllabus.tsx";
@@ -101,7 +101,7 @@ export function App() {
     }
   }, [load]);
 
-  if (needsLogin) return <PinGate onDone={load} />;
+  if (needsLogin) return <SignIn />;
   if (!state) return <main className="grid min-h-dvh place-items-center px-6 text-center text-muted bg-bg text-muted">{error || "Loading…"}</main>;
   return <Shell state={state} act={act} reload={load} error={error} setError={setError} saving={saving > 0} online={online} />;
 }

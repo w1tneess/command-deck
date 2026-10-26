@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PIN, setup } from "./testdb.ts";
+import { setup } from "./testdb.ts";
 import {
   buildGoogleAuthUrl,
   categoryToGoogleColorId,
@@ -21,8 +21,8 @@ beforeEach(async () => {
 });
 afterEach(() => t.dispose());
 
-const login = (pin = PIN) =>
-  t.inject({ method: "POST", url: "/api/login", payload: { pin, remember: true } });
+/** A valid session cookie wrapped in a Response, so tests can keep using cookieOf(). */
+const login = async () => new Response(null, { headers: { "set-cookie": await t.mintCookie() } });
 const cookieOf = (res: Response) => (res.headers.get("set-cookie") ?? "").split(";")[0];
 
 describe("Google Calendar Pure Utilities", () => {
@@ -266,9 +266,9 @@ describe("Google Calendar Two-Way Live Sync Endpoints", () => {
 });
 
 describe("security hardening", () => {
-  it("calendar feed never accepts the PIN as a URL credential", async () => {
+  it("calendar feed never accepts a password-like value as a URL credential", async () => {
     for (const q of ["token", "passcode", "key"]) {
-      expect((await t.inject({ url: `/api/calendar/feed.ics?${q}=${PIN}` })).status).toBe(401);
+      expect((await t.inject({ url: `/api/calendar/feed.ics?${q}=correct-horse-battery` })).status).toBe(401);
     }
   });
 

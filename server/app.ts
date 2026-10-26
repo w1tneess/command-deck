@@ -608,14 +608,14 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
 
   // --- Dynamic ICS / iCal Feed ---
   app.get("/api/calendar/feed.ics", async (c) => {
-    if (!c.env.STUDY_PASSCODE || !c.env.SESSION_SECRET) {
+    if (!c.env.SESSION_SECRET) {
       return c.text("Server auth isn't configured.", 500);
     }
     const token = c.req.query("token") ?? "";
     let authorized = false;
 
-    // Only the dedicated random calendar token (or a session) opens the feed. The PIN and APP_TOKEN must never
-    // be accepted here: this endpoint has no lockout, so it would be an unthrottled PIN guessing oracle.
+    // Only the dedicated random calendar token (or a session) opens the feed. A password must never be accepted
+    // here: this endpoint has no lockout, so it would be an unthrottled password guessing oracle.
     if (token) {
       const calTokenRow = await c.env.DB.prepare("SELECT value FROM settings WHERE key = 'calendar_token'").first<{ value: string }>();
       authorized = !!calTokenRow?.value && (await same(token, calTokenRow.value));

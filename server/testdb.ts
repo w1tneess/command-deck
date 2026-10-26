@@ -1,20 +1,16 @@
 import { getPlatformProxy } from "wrangler";
+import { serializeSigned } from "hono/utils/cookie";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createApp } from "./app.ts";
 
-export const TOKEN = "test-token";
-export const PIN = "123456";
 const ROOT = resolve(import.meta.dirname, "..");
 const MIGRATIONS = resolve(ROOT, "migrations");
+export const EMAIL = "advaita974@gmail.com";
 
 type Opts = {
-  /** APP_TOKEN secret; null leaves it unset. */
-  token?: string | null;
   /** SESSION_SECRET; null leaves it unset. */
   secret?: string | null;
-  /** STUDY_PASSCODE; null leaves it unset. */
-  pin?: string | null;
   /** Google OAuth Client ID */
   googleClientId?: string | null;
   /** Google OAuth Client Secret */
@@ -23,10 +19,10 @@ type Opts = {
   googleRedirectUri?: string | null;
   /** Google OAuth Redirect URI for Calendar */
   googleCalendarRedirectUri?: string | null;
-  /** Allowed Google Emails whitelist */
+  /** Allowed Google emails whitelist */
   allowedGoogleEmails?: string | null;
-  /** "bearer" (default) sends the token on every call; "none" sends nothing so tests can use cookies. */
-  auth?: "bearer" | "none";
+  /** "session" (default) signs every call in with a valid cookie; "none" sends nothing so tests can sign in themselves. */
+  auth?: "session" | "none";
   now?: number;
   fetchFn?: typeof fetch;
 };
@@ -41,25 +37,28 @@ export async function setup(opts: Opts = {}) {
   }
   let clock = opts.now ?? Date.parse("2026-10-22T06:00:00Z");
   const app = createApp({ now: () => clock, fetchFn: opts.fetchFn });
-  const pick = (v: string | null | undefined, dflt: string) => (v === undefined ? dflt : v ?? undefined);
-  const token = pick(opts.token, TOKEN);
+  const secret = opts.secret === undefined ? "test-secret" : opts.secret ?? undefined;
   const env = {
     DB: db,
-    APP_TOKEN: token,
-    SESSION_SECRET: pick(opts.secret, "test-secret"),
-    STUDY_PASSCODE: pick(opts.pin, PIN),
+    SESSION_SECRET: secret,
     GOOGLE_CLIENT_ID: opts.googleClientId ?? undefined,
     GOOGLE_CLIENT_SECRET: opts.googleClientSecret ?? undefined,
     GOOGLE_REDIRECT_URI: opts.googleRedirectUri ?? undefined,
     GOOGLE_CALENDAR_REDIRECT_URI: opts.googleCalendarRedirectUri ?? undefined,
-    ALLOWED_GOOGLE_EMAILS: opts.allowedGoogleEmails ?? "advaita974@gmail.com",
+    ALLOWED_GOOGLE_EMAILS: opts.allowedGoogleEmails ?? EMAIL,
   };
-  const sendToken = (opts.auth ?? "bearer") === "bearer" && token;
-  /** Same call shape as Fastify's inject, with the auth header added unless a test overrides it. */
+  // A session cookie good for ten years, signed the way the app signs it, so ordinary tests start signed in.
+  const signedIn = (opts.auth ?? "session") === "session" && secret
+    ? (await serializeSigned("session", `${Math.floor(clock / 1000) + 10 * 365 * 86_400}.1`, secret)).split(";")[0]
+    : null;
+  /** Same call shape as Fastify's inject, with the session cookie added unless a test overrides it. */
   const inject = (arg: string | { method?: string; url: string; payload?: unknown; headers?: Record<string, string> }) => {
     const o = typeof arg === "string" ? { url: arg } : arg;
-    const headers: Record<string, string> = { ...(sendToken ? { authorization: `Bearer ${token}` } : {}), ...(o.payload ? { "content-type": "application/json" } : {}), ...o.headers };
+    const headers: Record<string, string> = { ...(signedIn ? { cookie: signedIn } : {}), ...(o.payload ? { "content-type": "application/json" } : {}), ...o.headers };
     return app.request(o.url, { method: o.method ?? "GET", headers, body: o.payload ? JSON.stringify(o.payload) : undefined }, env);
   };
-  return { db, inject, dispose: () => proxy.dispose(), setNow: (ms: number) => { clock = ms; }, now: () => clock };
+  /** A session cookie signed the way the app signs it. Version 1 is what a fresh database starts at. */
+  const mintCookie = async (ttlSeconds = 90 * 86_400, version = 1) =>
+    (await serializeSigned("session", `${Math.floor(clock / 1000) + ttlSeconds}.${version}`, secret ?? "test-secret")).split(";")[0];
+  return { db, inject, mintCookie, dispose: () => proxy.dispose(), setNow: (ms: number) => { clock = ms; }, now: () => clock };
 }

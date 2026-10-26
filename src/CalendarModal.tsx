@@ -72,9 +72,9 @@ export function CalendarModal({
         aria-hidden="true"
       />
 
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0e1117] p-6 text-zinc-100 shadow-2xl flex flex-col gap-5">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-line bg-bg p-6 text-fg shadow-2xl flex flex-col gap-5">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] pb-4">
+        <div className="flex items-start justify-between gap-4 border-b border-line pb-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
               <AppleEmoji emoji="📅" size={22} />
@@ -82,11 +82,11 @@ export function CalendarModal({
             <div>
               <h2
                 id={`${modalId}-title`}
-                className="font-sans text-base font-semibold text-white tracking-tight"
+                className="font-sans text-base font-semibold text-fg tracking-tight"
               >
                 Google Calendar & iCal Live Sync
               </h2>
-              <p className="m-0 text-xs text-zinc-400">
+              <p className="m-0 text-xs text-muted">
                 Subscribe once to sync CBSE exam dates, daily routine blocks, and school deliverables
               </p>
             </div>
@@ -95,7 +95,7 @@ export function CalendarModal({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-1 text-zinc-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+            className="rounded-lg p-1 text-muted hover:text-fg hover:bg-white/5 transition-all cursor-pointer"
           >
             ✕
           </button>
@@ -103,25 +103,25 @@ export function CalendarModal({
 
         {/* Sync Stream Preview Badges */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-[#141724] p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface p-3">
             <AppleEmoji emoji="📝" size={18} />
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-semibold text-zinc-200">CBSE Timetable</span>
-              <span className="text-[10px] text-zinc-400">Exam slots (10:30–13:30)</span>
+              <span className="text-xs font-semibold text-fg">CBSE Timetable</span>
+              <span className="text-[11px] text-muted">Exam slots (10:30–13:30)</span>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-[#141724] p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface p-3">
             <AppleEmoji emoji="🌅" size={18} />
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-semibold text-zinc-200">Routine Blocks</span>
-              <span className="text-[10px] text-zinc-400">Morning, School, Review</span>
+              <span className="text-xs font-semibold text-fg">Routine Blocks</span>
+              <span className="text-[11px] text-muted">Morning, School, Review</span>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-[#141724] p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface p-3">
             <AppleEmoji emoji="📋" size={18} />
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-semibold text-zinc-200">Deliverables</span>
-              <span className="text-[10px] text-zinc-400">Lab manuals & due dates</span>
+              <span className="text-xs font-semibold text-fg">Deliverables</span>
+              <span className="text-[11px] text-muted">Lab manuals & due dates</span>
             </div>
           </div>
         </div>
@@ -132,20 +132,20 @@ export function CalendarModal({
             href={gcalSubscribeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2.5 w-full rounded-xl bg-sky-500 hover:bg-sky-400 text-zinc-950 font-sans font-semibold text-xs py-3 px-4 shadow-lg hover:shadow-sky-500/20 active:scale-[0.99] transition-all"
+            className="flex items-center justify-center gap-2.5 w-full rounded-xl bg-fg hover:opacity-90 text-zinc-950 font-sans font-semibold text-xs py-3 px-4 shadow-lg hover:shadow-sky-500/20 active:scale-[0.99] transition-all"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
             </svg>
             <span>Subscribe in Google Calendar</span>
-            <span className="text-[10px] opacity-75 font-mono">(1-Click Add)</span>
+            <span className="text-[11px] opacity-75 font-mono">(1-Click Add)</span>
           </a>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={copyUrl}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-white font-sans font-medium text-xs py-2.5 px-3 transition-all cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-line bg-surface2 hover:bg-surface3 text-fg font-sans font-medium text-xs py-2.5 px-3 transition-all cursor-pointer"
             >
               {copied ? (
                 <span>✓ Feed URL Copied!</span>
@@ -160,7 +160,7 @@ export function CalendarModal({
             <a
               href={httpFeedUrl}
               download="study-calendar.ics"
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white font-sans font-medium text-xs py-2.5 px-3 transition-all"
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface2 hover:bg-surface3 text-fg/80 hover:text-fg font-sans font-medium text-xs py-2.5 px-3 transition-all"
             >
               <AppleEmoji emoji="⬇️" size={14} />
               <span>Download .ICS</span>
@@ -169,21 +169,21 @@ export function CalendarModal({
         </div>
 
         {/* Feed URL Display */}
-        <div className="flex flex-col gap-1.5 rounded-xl border border-white/[0.08] bg-[#121520] p-3">
-          <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-line bg-surface p-3">
+          <div className="flex items-center justify-between text-xs font-mono text-muted">
             <span>YOUR PRIVATE SUBSCRIPTION URL</span>
-            <span className="text-emerald-400 text-[10px] font-sans">● Protected & Signed</span>
+            <span className="text-accent text-[11px] font-sans">● Protected & Signed</span>
           </div>
-          <div className="rounded-lg bg-black/40 border border-white/[0.06] p-2 font-mono text-[11px] text-zinc-300 break-all select-all">
+          <div className="rounded-lg bg-black/40 border border-line p-2 font-mono text-xs text-fg/80 break-all select-all">
             {httpFeedUrl}
           </div>
-          <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-1 font-sans">
+          <div className="flex items-center justify-between text-[11px] text-muted pt-1 font-sans">
             <span>Enforces Asia/Kolkata (IST, UTC+5:30) timezone automatically.</span>
             <button
               type="button"
               onClick={handleResetToken}
               disabled={resetting}
-              className="text-zinc-400 hover:text-rose-400 underline cursor-pointer transition-colors"
+              className="text-muted hover:text-danger underline cursor-pointer transition-colors"
             >
               {resetting ? "Resetting..." : "Regenerate Token"}
             </button>
@@ -191,19 +191,19 @@ export function CalendarModal({
         </div>
 
         {/* Multi-Account & Client Guidance */}
-        <div className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-[#141724]/70 p-3.5 text-xs text-zinc-300">
-          <div className="flex items-center gap-2 font-semibold text-zinc-200">
+        <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface/70 p-3.5 text-xs text-fg/80">
+          <div className="flex items-center gap-2 font-semibold text-fg">
             <AppleEmoji emoji="💡" size={16} />
             <span>Multiple Google Accounts & Phone Setup</span>
           </div>
-          <p className="m-0 text-[11px] text-zinc-400 leading-relaxed">
+          <p className="m-0 text-xs text-muted leading-relaxed">
             Using a different Google account for your calendar? Clicking{" "}
-            <strong className="text-zinc-200">Subscribe in Google Calendar</strong> opens your browser where you can pick or switch to any Google account. For Apple Calendar or Outlook, copy the Feed URL and paste it into <em>File → New Calendar Subscription</em>.
+            <strong className="text-fg">Subscribe in Google Calendar</strong> opens your browser where you can pick or switch to any Google account. For Apple Calendar or Outlook, copy the Feed URL and paste it into <em>File → New Calendar Subscription</em>.
           </p>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end pt-2 border-t border-white/[0.08]">
+        <div className="flex justify-end pt-2 border-t border-line">
           <Btn kind="ghost" onClick={onClose} className="px-4 py-1.5 text-xs">
             Close
           </Btn>

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Act, Chapter, Deliverable, DeliverableStatus, State, Subject } from "./api.ts";
 import { activeOf } from "./model.ts";
-import { AppleEmoji, AppleText, Btn, Card, H2, daysBetween, fmtShort, plural } from "./ui.tsx";
+import { AppleEmoji, AppleText, Btn, Card, H2, daysBetween, fmtShort, plural, PageHeader } from "./ui.tsx";
 import { getDeliverableGCalUrl, getVivaPrepGCalUrl } from "./calendar-utils.ts";
 import { CalendarModal } from "./CalendarModal.tsx";
 
@@ -46,21 +46,21 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
 
   return (
     <Card labelledBy="viva-watchdog-h" className="mt-6 flex flex-col gap-4">
-      <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+      <div className="flex items-center justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2.5">
-          <span className="flex size-6 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+          <span className="flex size-6 items-center justify-center rounded-lg bg-warn/15 text-warn">
             <AppleEmoji emoji="⚡" size={14} />
           </span>
           <div>
-            <h2 id="viva-watchdog-h" className="font-sans font-semibold text-base text-white">
-              CBSE Practical Viva & Internal Assessment Watchdog
+            <h2 id="viva-watchdog-h" className="font-sans font-semibold text-base text-fg">
+              Practical viva prep
             </h2>
-            <p className="m-0 text-xs text-zinc-400">
+            <p className="m-0 text-xs text-muted">
               Lab manual experiments & oral exam readiness tied directly to Class 10 syllabus chapters
             </p>
           </div>
         </div>
-        <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+        <span className="font-mono text-xs text-warn bg-warn/15 border border-warn/30 px-2 py-0.5 rounded">
           {Object.values(checkedLabs).filter(Boolean).length}/{PRACTICAL_VIVA_TARGETS.length} Prepared
         </span>
       </div>
@@ -75,8 +75,8 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
               key={t.title}
               className={`flex flex-col justify-between gap-3 rounded-xl border p-3.5 transition-all ${
                 done
-                  ? "border-emerald-500/30 bg-emerald-950/15"
-                  : "border-white/[0.08] bg-[#121622]/60 hover:border-white/20"
+                  ? "border-accent/30 bg-emerald-950/15"
+                  : "border-line bg-surface/60 hover:border-line-strong"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -85,23 +85,23 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     type="button"
                     aria-label={`Toggle preparation status for ${t.title}`}
                     onClick={() => toggleCheck(t.title)}
-                    className="mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded border border-white/20 bg-white/[0.03] active:scale-95 transition-all"
+                    className="mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded border border-line-strong bg-surface2 active:scale-95 transition-all"
                   >
-                    {done && <span className="text-emerald-400 text-xs font-bold">✓</span>}
+                    {done && <span className="text-accent text-xs font-bold">✓</span>}
                   </button>
                   <div className="flex flex-col min-w-0">
-                    <span className={`font-sans text-xs font-semibold ${done ? "text-zinc-400 line-through" : "text-white"}`}>
+                    <span className={`font-sans text-xs font-semibold ${done ? "text-muted line-through" : "text-fg"}`}>
                       {t.title}
                     </span>
-                    <span className="font-mono text-[11px] text-zinc-400 mt-0.5">
+                    <span className="font-mono text-xs text-muted mt-0.5">
                       {t.lab}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
-                <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
+              <div className="flex items-center justify-between pt-2 border-t border-line">
+                <span className="font-mono text-[11px] text-muted  ">
                   {t.subjectId.toUpperCase()} VIVA
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -111,17 +111,17 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     rel="noopener noreferrer"
                     aria-label={`Add ${t.title} Viva Prep to Google Calendar`}
                     title="Add Viva Prep Session to Google Calendar"
-                    className="h-6 rounded border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] px-2 font-mono text-[11px] text-zinc-300 hover:text-white transition-all flex items-center gap-1"
+                    className="h-6 rounded border border-line bg-surface2 hover:bg-surface3 px-2 font-mono text-xs text-fg/80 hover:text-fg transition-all flex items-center gap-1"
                   >
                     <AppleEmoji emoji="📅" size={12} />
-                    <span className="text-[10px]">Add Cal</span>
+                    <span className="text-[11px]">Add Cal</span>
                   </a>
                   {match && onOpenViva && (
                     <button
                       type="button"
                       aria-label={`Launch Practical Viva for ${t.title}`}
                       onClick={() => onOpenViva(match.chapter, match.subject)}
-                      className="h-6 rounded border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 px-2 font-mono text-[11px] font-semibold text-amber-300 transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                      className="h-6 rounded border border-warn/30 bg-warn/15 hover:bg-warn/15 px-2 font-mono text-xs font-semibold text-warn transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
                     >
                       <AppleEmoji emoji="⚡" size={12} />
                       <span>Launch Viva</span>
@@ -151,22 +151,16 @@ export function DeliverablesPage({
 
   return (
     <>
-      <header className="border-b border-white/[0.08] pb-5 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="text-xs font-medium text-zinc-400">Class X · 2026-27</div>
-          <h1 className="m-0 mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Deliverables, Lab Manuals & Practical Viva
-          </h1>
-        </div>
+      <PageHeader title="Due dates" sub="Lab manuals, projects and practicals for Class X.">
         <button
           type="button"
           onClick={() => setShowCalendarModal(true)}
-          className="h-9 px-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-medium transition-all flex items-center gap-1.5"
+          className="h-9 px-3 rounded-xl border border-accent/30 bg-accent/15 hover:bg-accent/15 text-accent text-xs font-medium transition-all flex items-center gap-1.5"
         >
           <span>📅</span>
           <span>Subscribe in Google Calendar</span>
         </button>
-      </header>
+      </PageHeader>
       <div className="flex flex-col gap-6 max-w-4xl">
         <Deliverables state={state} act={act} onOpenViva={onOpenViva} />
         <PracticalVivaWatchdog state={state} onOpenViva={onOpenViva} />
@@ -213,23 +207,22 @@ export function Deliverables({
   return (
     <Card labelledBy="del-h">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <H2 id="del-h">Phase Deliverables</H2>
-        <span className="text-xs text-zinc-400 font-medium">Scheduled for {phase.name}</span>
+        <H2 id="del-h">For {phase.name}</H2>
       </div>
       {overdue.length > 0 ? (
-        <div role="alert" className="mt-4 mb-2 rounded-xl border border-rose-500/30 bg-rose-950/20 px-4 py-3 text-xs sm:text-sm text-rose-200 flex items-center gap-2">
+        <div role="alert" className="mt-4 mb-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-xs sm:text-sm text-danger flex items-center gap-2">
           <AppleEmoji emoji="⚠️" size={15} />
           <span>{plural(overdue.length, "deliverable")} overdue: {overdue.map((d) => d.name).join(", ")}.</span>
         </div>
       ) : !anyDue ? (
-        <div role="status" className="mt-4 mb-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-xs text-zinc-400">No due dates set yet. Add target dates to enable timely reminders.</div>
+        <div role="status" className="mt-4 mb-2 rounded-xl border border-line bg-surface2 px-4 py-3 text-xs text-muted">No due dates set yet. Add target dates to enable timely reminders.</div>
       ) : null}
-      {items.length === 0 && <p className="m-0 mt-4 border-t border-white/[0.08] py-5 text-sm text-zinc-400">Nothing to submit with {phase.name} yet. Add a deliverable below.</p>}
+      {items.length === 0 && <p className="m-0 mt-4 border-t border-line py-5 text-sm text-muted">Nothing to submit with {phase.name} yet. Add a deliverable below.</p>}
       <div className="flex flex-col gap-2 mt-2">
         {items.map((d) => <Item key={d.id} d={d} today={state.today} act={act} />)}
       </div>
-      <div className="border-t border-white/[0.08] pt-4 mt-2">
-        {adding ? <AddForm phaseId={phase.id} act={act} onDone={() => setAdding(false)} /> : <Btn onClick={() => setAdding(true)}>+ Add Deliverable</Btn>}
+      <div className="border-t border-line pt-4 mt-2">
+        {adding ? <AddForm phaseId={phase.id} act={act} onDone={() => setAdding(false)} /> : <Btn onClick={() => setAdding(true)}>Add a due date</Btn>}
       </div>
     </Card>
   );
@@ -284,35 +277,21 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
   const pct = d.totalCount ? Math.round((countToShow / d.totalCount) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 sm:p-4 transition-all hover:border-white/[0.14] hover:bg-white/[0.04]">
+    <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface2 p-3.5 sm:p-4 transition-all hover:border-line-strong hover:bg-surface2">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-white">
+            <span className="text-sm font-medium text-fg">
               <AppleText text={d.name} size={14} />
             </span>
-            {isOverdue && (
-              <span className="rounded-full border border-rose-500/80 bg-rose-500/20 px-2 py-0.2 text-[10px] font-bold text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.4)] animate-pulse inline-flex items-center gap-1">
-                <AppleEmoji emoji="⚠️" size={10} />
-                <span>Overdue ({plural(-left!, "day")} late)</span>
-              </span>
-            )}
-            {isUrgent && (
-              <span className="rounded-full border border-amber-400/80 bg-amber-500/20 px-2 py-0.2 text-[10px] font-bold text-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.4)] animate-pulse inline-flex items-center gap-1">
-                <AppleEmoji emoji="⚡" size={10} />
-                <span>Urgent (&lt;72h)</span>
-              </span>
-            )}
             {d.vivaPrep && (
-              <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.2 text-[9px] font-mono text-sky-300">
-                Viva
-              </span>
+              <span className="rounded-full bg-surface3 px-2 py-0.5 text-xs font-medium text-muted">Viva</span>
             )}
           </div>
-          <div className="mt-0.5 text-xs text-zinc-400">
-            <span className="font-medium text-zinc-300">{d.subject}</span>{d.detail ? ` · ${d.detail}` : ""}
+          <div className="mt-0.5 text-xs text-muted">
+            <span className="font-medium text-fg/80">{d.subject}</span>{d.detail ? ` · ${d.detail}` : ""}
             {d.due && (
-              <span className={isOverdue ? "font-semibold text-rose-400" : isUrgent ? "font-semibold text-amber-400" : ""}>
+              <span className={isOverdue ? "font-semibold text-danger" : isUrgent ? "font-semibold text-warn" : ""}>
                 {" "}· due {fmtShort(d.due)}
                 {left !== null && d.status !== "done" ? (left < 0 ? ` (${plural(-left, "day")} late)` : left === 0 ? " (today)" : ` (in ${plural(left, "day")})`) : ""}
               </span>
@@ -328,14 +307,14 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           <span
             className={`rounded-full border px-3 py-0.5 text-xs font-medium tracking-wide transition-all ${
               isOverdue
-                ? "border-rose-500/40 bg-rose-500/10 font-semibold text-rose-400"
+                ? "border-danger/30 bg-danger/10 font-semibold text-danger"
                 : isUrgent
-                  ? "border-amber-500/40 bg-amber-500/20 font-semibold text-amber-300 shadow-[0_0_6px_rgba(251,191,36,0.3)]"
+                  ? "border-warn/30 bg-warn/15 font-semibold text-warn"
                   : d.status === "done"
-                    ? "border-emerald-500/40 bg-emerald-500/10 font-semibold text-emerald-400"
+                    ? "border-accent/30 bg-accent/15 font-semibold text-accent"
                     : d.status === "in_progress"
                       ? "border-sky-500/40 bg-sky-500/10 font-semibold text-sky-400"
-                      : "border-white/10 text-zinc-400 bg-white/[0.03]"
+                      : "border-line text-muted bg-surface2"
             }`}
           >
             {isOverdue ? (
@@ -356,13 +335,13 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
 
       {d.totalCount !== null && (
         <div className="flex items-center gap-3">
-          <span className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+          <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface3">
             <span
-              className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-sky-400"}`}
+              className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-fg"}`}
               style={{ width: `${pct}%` }}
             />
           </span>
-          <span className="font-mono text-xs text-zinc-400" aria-label={`${countToShow} of ${d.totalCount} done`}>
+          <span className="font-mono text-xs text-muted" aria-label={`${countToShow} of ${d.totalCount} done`}>
             {countToShow}/{d.totalCount}
           </span>
           <button
@@ -370,7 +349,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
             aria-label={`One fewer done for ${d.name}`}
             disabled={countToShow === 0}
             onClick={() => stepCount(-1)}
-            className="size-8 rounded-lg border border-white/10 bg-white/[0.05] text-sm text-white hover:bg-white hover:text-zinc-950 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95"
+            className="size-8 rounded-lg border border-line bg-surface2 text-sm text-fg hover:bg-white hover:text-zinc-950 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95"
           >
             −
           </button>
@@ -379,14 +358,14 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
             aria-label={`One more done for ${d.name}`}
             disabled={countToShow === d.totalCount}
             onClick={() => stepCount(1)}
-            className="size-8 rounded-lg border border-white/10 bg-white/[0.05] text-sm text-white hover:bg-white hover:text-zinc-950 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95"
+            className="size-8 rounded-lg border border-line bg-surface2 text-sm text-fg hover:bg-white hover:text-zinc-950 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95"
           >
             +
           </button>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/[0.04]">
+      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-line">
         {editingDue ? (
           <>
             <input
@@ -394,7 +373,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
               aria-label={`Due date for ${d.name}`}
               value={d.due ?? ""}
               onChange={(e) => patch({ due: e.target.value || null })}
-              className="h-8.5 rounded-lg border border-white/15 bg-[#161c28] px-3 font-mono text-xs text-white focus:border-sky-400"
+              className="h-8.5 rounded-lg border border-line-strong bg-surface px-3 font-mono text-xs text-fg focus:border-sky-400"
             />
             <Btn className="px-3 text-xs" onClick={() => setEditingDue(false)}>
               Done
@@ -416,7 +395,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           aria-pressed={d.vivaPrep}
           onClick={() => patch({ vivaPrep: !d.vivaPrep })}
           className={`h-8.5 rounded-lg border px-3 text-xs font-medium transition-all ${
-            d.vivaPrep ? "border-white bg-white text-zinc-950 font-semibold" : "border-white/10 bg-transparent text-zinc-400 hover:text-white"
+            d.vivaPrep ? "border-white bg-white text-zinc-950 font-semibold" : "border-line bg-transparent text-muted hover:text-fg"
           }`}
         >
           Viva prep
@@ -427,24 +406,24 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           rel="noopener noreferrer"
           title="Add Deliverable to Google Calendar"
           aria-label={`Add ${d.name} to Google Calendar`}
-          className="h-8.5 rounded-lg border border-white/10 bg-transparent px-2.5 text-xs text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-all flex items-center gap-1"
+          className="h-8.5 rounded-lg border border-line bg-transparent px-2.5 text-xs text-muted hover:text-fg hover:bg-surface2 transition-all flex items-center gap-1"
         >
           <span>📅</span>
           <span>Cal</span>
         </a>
-        <Btn kind="ghost" className="ml-auto px-3 text-xs text-zinc-400 hover:text-rose-400" aria-label={`Remove ${d.name}`} onClick={() => setRemoving(true)}>
+        <Btn kind="ghost" className="ml-auto px-3 text-xs text-muted hover:text-danger" aria-label={`Remove ${d.name}`} onClick={() => setRemoving(true)}>
           Remove
         </Btn>
       </div>
 
       {removing && (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-950/20 px-4 py-3">
-          <span className="text-xs text-rose-300">Remove "{d.name}"?</span>
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3">
+          <span className="text-xs text-danger">Remove "{d.name}"?</span>
           <div className="flex gap-2">
             <Btn kind="outline" onClick={() => setRemoving(false)}>
               Cancel
             </Btn>
-            <Btn className="border-0 bg-rose-600 font-semibold text-white hover:bg-rose-500" onClick={() => act("DELETE", `/api/deliverables/${d.id}`)}>
+            <Btn className="border-0 bg-danger font-semibold text-on-solid hover:opacity-90" onClick={() => act("DELETE", `/api/deliverables/${d.id}`)}>
               Remove
             </Btn>
           </div>
@@ -464,7 +443,7 @@ function AddForm({ phaseId, act, onDone }: { phaseId: string; act: Act; onDone: 
   const [steps, setSteps] = useState("");
   const [saving, setSaving] = useState(false);
   const busy = useRef(false);
-  const field = "h-10 rounded-xl border border-white/15 bg-[#161c28] px-3.5 text-sm text-white disabled:opacity-50 focus:border-sky-400 transition-all placeholder:text-zinc-500";
+  const field = "h-10 rounded-xl border border-line-strong bg-surface px-3.5 text-sm text-fg disabled:opacity-50 focus:border-sky-400 transition-all placeholder:text-muted";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -495,15 +474,15 @@ function AddForm({ phaseId, act, onDone }: { phaseId: string; act: Act; onDone: 
 
   return (
     <form className="flex flex-col gap-3.5" onSubmit={submit}>
-      <label htmlFor={nameId} className="flex flex-col gap-1.5 text-xs font-medium text-zinc-300">
+      <label htmlFor={nameId} className="flex flex-col gap-1.5 text-xs font-medium text-fg/80">
         Deliverable Title
         <input id={nameId} value={name} onChange={(e) => setName(e.target.value)} autoFocus disabled={saving} placeholder="e.g. Science Practical Portfolio" className={field} />
       </label>
-      <label htmlFor={subjectId} className="flex flex-col gap-1.5 text-xs font-medium text-zinc-300">
+      <label htmlFor={subjectId} className="flex flex-col gap-1.5 text-xs font-medium text-fg/80">
         Subject
         <input id={subjectId} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Maths / Science" disabled={saving} className={field} />
       </label>
-      <label htmlFor={stepsId} className="flex flex-col gap-1.5 text-xs font-medium text-zinc-300">
+      <label htmlFor={stepsId} className="flex flex-col gap-1.5 text-xs font-medium text-fg/80">
         Steps to Count (Optional)
         <input
           id={stepsId}

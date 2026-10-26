@@ -7,7 +7,7 @@ export { AppleEmoji, AppleText, AppleEmojiPicker, getAppleEmojiUrl } from "./emo
 export function BrandLogo({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
     <div
-      className={`relative flex items-center justify-center rounded-[3px] bg-[#090b10] border border-white/10 shadow-sm overflow-hidden shrink-0 group ${className}`}
+      className={`relative flex items-center justify-center rounded-[3px] bg-bg border border-line shadow-sm overflow-hidden shrink-0 group ${className}`}
       style={{ width: size, height: size }}
     >
       <svg
@@ -30,7 +30,7 @@ export function BrandLogo({ size = 32, className = "" }: { size?: number; classN
 /** Icon paths for the dashboard navigation and actions in clean minimalist 24x24 geometry. */
 export const ICONS = {
   today: "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
-  syllabus: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M4 19.5B2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z",
+  syllabus: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z",
   habits: "M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12",
   week: "M18 20V10 M12 20V4 M6 20v-6",
   deliverables: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M8 2h8v4H8z M9 13l2 2 4-4",
@@ -76,7 +76,7 @@ export function Card({ children, className = "", labelledBy }: { children: React
   return (
     <section
       aria-labelledby={labelledBy}
-      className={`min-w-0 rounded-2xl bg-[#15191f] border border-white/[0.06] hover:border-white/[0.12] p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.35)] text-zinc-100 transition-all duration-200 ${className}`}
+      className={`min-w-0 rounded-3xl bg-surface border border-line p-5 sm:p-6 text-fg ${className}`}
     >
       {children}
     </section>
@@ -84,19 +84,15 @@ export function Card({ children, className = "", labelledBy }: { children: React
 }
 
 export const H2 = ({ id, children, big = false }: { id?: string; children: ReactNode; big?: boolean }) => (
-  <h2 id={id} className={`m-0 font-sans font-semibold tracking-tight text-white ${big ? "text-xl sm:text-2xl" : "text-base sm:text-lg"}`}>{children}</h2>
+  <h2 id={id} className={`m-0 font-serif font-semibold tracking-tight text-fg ${big ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"}`}>{children}</h2>
 );
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "secondary" | "ghost" | "outline" };
 const BTN = {
-  primary:
-    "bg-[#52b788] hover:bg-[#40916c] text-white font-medium shadow-xs active:scale-[0.98] border border-transparent",
-  secondary:
-    "bg-[#1c222b] hover:bg-[#252d38] text-zinc-200 border border-white/[0.08] active:bg-[#15191f]",
-  outline:
-    "bg-transparent hover:bg-white/[0.05] text-zinc-300 border border-white/[0.12] active:bg-white/[0.08]",
-  ghost:
-    "bg-transparent hover:bg-white/[0.05] text-zinc-400 hover:text-white border-0",
+  primary: "bg-fg text-bg font-semibold hover:opacity-90 active:scale-[0.98] border border-transparent",
+  secondary: "bg-surface2 hover:bg-surface3 text-fg border border-line active:bg-surface3",
+  outline: "bg-transparent hover:bg-surface2 text-fg border border-line-strong active:bg-surface3",
+  ghost: "bg-transparent hover:bg-surface2 text-muted hover:text-fg border-0",
 };
 
 /** Modern ergonomic button with clean styling and tactile feedback. */
@@ -104,7 +100,7 @@ export function Btn({ kind = "secondary", className = "", type = "button", ...re
   return (
     <button
       type={type}
-      className={`min-h-[38px] sm:min-h-[36px] shrink-0 rounded-full px-4 font-sans text-xs font-medium tracking-wide transition-all duration-200 ease-out inline-flex items-center justify-center gap-1.5 enabled:active:scale-[0.98] ${BTN[kind]} ${className}`}
+      className={`min-h-[44px] sm:min-h-[38px] shrink-0 rounded-full px-5 sm:px-4 font-sans text-sm font-medium transition-all duration-200 ease-out inline-flex items-center justify-center gap-1.5 enabled:active:scale-[0.98] ${BTN[kind]} ${className}`}
       {...rest}
     />
   );
@@ -112,32 +108,15 @@ export function Btn({ kind = "secondary", className = "", type = "button", ...re
 
 export function Pill({ children, accent = false, className = "" }: { children: ReactNode; accent?: boolean; className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-[11px] font-medium tracking-normal transition-all duration-150 ${accent ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300 font-semibold shadow-xs" : "border-white/[0.08] bg-white/[0.04] text-zinc-300"} ${className}`}>{children}</span>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-sans text-xs font-medium ${accent ? "bg-accent/15 text-accent" : "bg-surface3 text-muted"} ${className}`}>{children}</span>
   );
 }
 
 /** High-contrast, clean geometric milestone badge. */
 export function ScopeTag({ scope, className = "" }: { scope: Scope; className?: string }) {
-  const styles: Record<Scope, string> = {
-    unit1: "border-emerald-200 bg-[#c8f0d8] text-emerald-950",
-    unit2: "border-indigo-200 bg-[#ded9fd] text-indigo-950",
-    pb1: "border-orange-200 bg-[#fdd5cc] text-orange-950",
-    pb2: "border-amber-200 bg-[#fee2be] text-amber-950",
-    board: "border-zinc-300 bg-zinc-900 text-white",
-  };
-  const label: Record<Scope, string> = {
-    unit1: "UNIT 1",
-    unit2: "UNIT 2",
-    pb1: "PB 1",
-    pb2: "PB 2",
-    board: "BOARDS",
-  };
+  const label: Record<Scope, string> = { unit1: "Unit 1", unit2: "Unit 2", pb1: "Pre-Boards 1", pb2: "Pre-Boards 2", board: "Boards" };
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider ${
-        styles[scope] ?? "border-black/10 bg-[#f4efe8] text-zinc-800"
-      } ${className}`}
-    >
+    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ${scope === "board" ? "bg-fg text-bg" : "bg-surface3 text-muted"} ${className}`}>
       {label[scope] ?? scope}
     </span>
   );
@@ -150,7 +129,7 @@ export function ConfDots({ value }: { value: number }) {
         <span
           key={n}
           className={`size-2 rounded-full transition-all duration-150 ${
-            n <= value ? "bg-amber-400 shadow-xs" : "bg-black/[0.08]"
+            n <= value ? "bg-accent" : "bg-line-strong"
           }`}
         />
       ))}
@@ -166,15 +145,8 @@ export function PassPills({ passes }: { passes: (string | null)[] }) {
   return (
     <div className="flex flex-wrap gap-1">
       {PASS_SHORT.map((name, i) => (
-        <span
-          key={name}
-          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider transition-all duration-150 ${
-            passes[i]
-              ? "border-emerald-200 bg-[#c8f0d8] text-emerald-900 font-semibold"
-              : "border-black/[0.06] bg-black/[0.02] text-zinc-400 font-medium"
-          }`}
-        >
-          {passes[i] ? "✓ " : "○ "}
+        <span key={name} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${passes[i] ? "bg-accent/15 text-accent" : "bg-surface3 text-muted"}`}>
+          {passes[i] ? "✓ " : ""}
           {name}
         </span>
       ))}
@@ -204,11 +176,7 @@ export function PassToggles({
               e.stopPropagation();
               onToggle(i);
             }}
-            className={`min-h-[26px] rounded-full border px-2.5 font-mono text-[10px] uppercase font-semibold tracking-wider transition-all duration-150 active:scale-95 ${
-              done
-                ? "border-emerald-300 bg-[#c8f0d8] text-emerald-900"
-                : "border-black/[0.08] bg-white text-zinc-600 hover:border-black/20 hover:text-zinc-900 hover:bg-black/[0.02]"
-            }`}
+            className={`min-h-[32px] min-w-[44px] rounded-full px-3 text-xs font-semibold active:scale-95 ${done ? "bg-accent/15 text-accent" : "bg-surface3 text-muted hover:text-fg"}`}
           >
             {done ? "✓ " : ""}P{i + 1}
           </button>
@@ -220,7 +188,7 @@ export function PassToggles({
 
 /** Precision rounded circular checkbox with emerald check indicator. */
 export const Check = ({ on }: { on: boolean }) => (
-  <span className={`flex size-5 items-center justify-center rounded-full border transition-all duration-150 text-[11px] ${on ? "border-[#52b788] bg-[#52b788] text-white font-bold shadow-xs" : "border-white/20 bg-transparent text-transparent hover:border-white/40"}`}>
+  <span className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 text-xs ${on ? "border-accent bg-accent text-accent-text font-bold" : "border-line-strong bg-transparent text-transparent hover:border-muted"}`}>
     {on && "✓"}
   </span>
 );
@@ -238,16 +206,16 @@ export interface SubjectPastel {
 
 /**
  * Pastel Subject Palette Mapping:
- * - Mathematics: Soft Peach / Coral (`bg-[#fdd5cc] text-zinc-800 border border-orange-200/40`)
- * - Science: Soft Lavender (`bg-[#ded9fd] text-zinc-800 border border-indigo-200/40`)
- * - Social Science: Warm Honey Cream (`bg-[#fee2be] text-zinc-800 border border-amber-200/40`)
- * - Languages & IT: Mint / Celadon (`bg-[#c8f0d8] text-zinc-800 border border-emerald-200/40`)
+ * - Mathematics: Soft Peach / Coral (`bg-[#fdd5cc] text-zinc-800 border border-orange-200/40 paper`)
+ * - Science: Soft Lavender (`bg-[#ded9fd] text-zinc-800 border border-indigo-200/40 paper`)
+ * - Social Science: Warm Honey Cream (`bg-[#fee2be] text-zinc-800 border border-warn/30 paper`)
+ * - Languages & IT: Mint / Celadon (`bg-[#c8f0d8] text-zinc-800 border border-accent/30 paper`)
  */
 export function getSubjectPastel(subjectId: string): SubjectPastel {
   const id = subjectId.toLowerCase();
   if (id === "maths" || id.includes("math")) {
     return {
-      bg: "bg-[#fdd5cc]",
+      bg: "bg-[#fdd5cc] paper",
       text: "text-zinc-800",
       border: "border-orange-200/40",
       badgeBg: "bg-white/80",
@@ -259,7 +227,7 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
   }
   if (id === "physics" || id === "chemistry" || id === "biology" || id === "science") {
     return {
-      bg: "bg-[#ded9fd]",
+      bg: "bg-[#ded9fd] paper",
       text: "text-zinc-800",
       border: "border-indigo-200/40",
       badgeBg: "bg-white/80",
@@ -271,9 +239,9 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
   }
   if (id === "history" || id === "civics" || id === "geography" || id === "economics" || id === "political-science" || id === "sst") {
     return {
-      bg: "bg-[#fee2be]",
+      bg: "bg-[#fee2be] paper",
       text: "text-zinc-800",
-      border: "border-amber-200/40",
+      border: "border-warn/30",
       badgeBg: "bg-white/80",
       badgeText: "text-amber-950",
       code: "SST-087",
@@ -282,9 +250,9 @@ export function getSubjectPastel(subjectId: string): SubjectPastel {
     };
   }
   return {
-    bg: "bg-[#c8f0d8]",
+    bg: "bg-[#c8f0d8] paper",
     text: "text-zinc-800",
-    border: "border-emerald-200/40",
+    border: "border-accent/30",
     badgeBg: "bg-white/80",
     badgeText: "text-emerald-950",
     code: id.includes("it") ? "IT-402" : id.includes("eng") ? "ENG-184" : id.includes("beng") ? "BEN-005" : "LANG-102",
@@ -327,9 +295,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   chemistry: {
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-accent",
+    bg: "bg-accent/15",
+    border: "border-accent/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M10 2v5.5L5.2 16.6A3 3 0 0 0 7.8 21h8.4a3 3 0 0 0 2.6-4.4L14 7.5V2h-4z" />
@@ -351,9 +319,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   science: {
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-accent",
+    bg: "bg-accent/15",
+    border: "border-accent/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M10 2v5.5L5.2 16.6A3 3 0 0 0 7.8 21h8.4a3 3 0 0 0 2.6-4.4L14 7.5V2h-4z" />
@@ -363,9 +331,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   history: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M4 4h16 M4 20h16 M5 8h14 M7 8v12 M12 8v12 M17 8v12 M12 2l8 3H4l8-3z" />
@@ -373,9 +341,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   civics: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M12 3v18 M8 21h8 M4 7h16 M4 7l-2 6a3 3 0 0 0 6 0L6 7 M20 7l-2 6a3 3 0 0 0 6 0L22 7" />
@@ -383,9 +351,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   geography: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <circle cx="12" cy="12" r="9" />
@@ -394,9 +362,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   "political-science": {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M12 3v18 M8 21h8 M4 7h16 M4 7l-2 6a3 3 0 0 0 6 0L6 7 M20 7l-2 6a3 3 0 0 0 6 0L22 7" />
@@ -404,9 +372,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   economics: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warn",
+    bg: "bg-warn/15",
+    border: "border-warn/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M3 3v18h18 M18 9l-5 5-4-4-6 6 M14 9h4v4" />
@@ -435,9 +403,9 @@ export const SUBJECT_SVGS: Record<string, { color: string; bg: string; border: s
     ),
   },
   hindi: {
-    color: "text-rose-400",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/20",
+    color: "text-danger",
+    bg: "bg-danger/10",
+    border: "border-danger/30",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-full">
         <path d="M4 4h16 M16 4v16 M10.5 12h5.5 M10.5 6a3 3 0 0 0-3 3c0 1.5 1.5 2.5 3 3 M10.5 12c-1.8.5-3.5 1.8-3.5 3.8a3.5 3.5 0 0 0 3.8 3.2" />
@@ -497,9 +465,42 @@ export function SubjectBadge({ id, label, className = "" }: { id: string; label?
   const pastel = getSubjectPastel(id);
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-[11px] font-semibold ${pastel.bg} ${pastel.border} ${pastel.text} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-sans text-xs font-semibold ${pastel.bg} ${pastel.border} ${pastel.text} ${className}`}>
       {conf?.svg && <span className="size-3 shrink-0">{conf.svg}</span>}
       <span>{label ?? id}</span>
     </span>
+  );
+}
+
+/** One page header for every screen: eyebrow, title, optional line of help, and actions on the right. */
+export function PageHeader({ eyebrow, title, sub, children }: { eyebrow?: string; title: string; sub?: string; children?: ReactNode }) {
+  return (
+    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
+      <div className="min-w-0">
+        {eyebrow && <div className="text-xs font-medium text-muted">{eyebrow}</div>}
+        <h1 className="m-0 mt-1 text-2xl sm:text-[28px] font-semibold tracking-tight text-fg">{title}</h1>
+        {sub && <p className="m-0 mt-1 text-sm text-muted">{sub}</p>}
+      </div>
+      {children}
+    </header>
+  );
+}
+
+/** A short either/or choice (view, scope). Buttons with aria-pressed, so it reads as a group of toggles. */
+export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: readonly (readonly [T, string])[]; onChange: (v: T) => void }) {
+  return (
+    <div role="group" aria-label={label} className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-surface3 p-1">
+      {options.map(([v, text]) => (
+        <button
+          key={v}
+          type="button"
+          aria-pressed={value === v}
+          onClick={() => onChange(v)}
+          className={`min-h-9 whitespace-nowrap rounded-full border-0 px-4 text-sm font-medium cursor-pointer ${value === v ? "bg-surface text-fg shadow-sm" : "bg-transparent text-muted hover:text-fg"}`}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
   );
 }

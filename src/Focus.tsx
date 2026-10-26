@@ -193,12 +193,12 @@ export function FocusCard({
   return (
     <Card labelledBy="focus-h" className="flex flex-col gap-4">
       {/* Calm Faceplate Header */}
-      <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+      <div className="flex items-center justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2">
-          <span className={`size-2 rounded-full ${f.running ? (isFocusMode ? "bg-sky-400" : "bg-emerald-400") : "bg-zinc-600"}`} />
-          <span id="focus-h" className="font-sans text-xs font-semibold tracking-tight text-white">Focus Studio</span>
+          <span className={`size-2 rounded-full ${f.running ? (isFocusMode ? "bg-fg" : "bg-emerald-400") : "bg-zinc-600"}`} />
+          <span id="focus-h" className="font-sans text-xs font-semibold tracking-tight text-fg">Focus Studio</span>
         </div>
-        <span className="font-sans text-xs text-zinc-400">
+        <span className="font-sans text-xs text-muted">
           {f.roundText}{f.running && isFocusMode ? ` · ${f.subjectName}` : ""}
         </span>
       </div>
@@ -215,7 +215,7 @@ export function FocusCard({
               type="button"
               aria-label="Dismiss mastery prompt"
               onClick={f.dismissMasteryPrompt}
-              className="text-zinc-400 hover:text-white font-mono text-xs px-1"
+              className="text-muted hover:text-fg font-mono text-xs px-1"
             >
               ✕
             </button>
@@ -235,11 +235,11 @@ export function FocusCard({
               name="mastery"
               autoFocus
               placeholder="e.g. Solved Trigonometric identities, Chemical equations balancing..."
-              className="flex-1 h-8 rounded-lg border border-white/15 bg-[#121622] px-3 font-sans text-xs text-white placeholder:text-zinc-500 focus:border-sky-400 transition-all"
+              className="flex-1 h-8 rounded-lg border border-line-strong bg-surface px-3 font-sans text-xs text-fg placeholder:text-muted focus:border-sky-400 transition-all"
             />
             <button
               type="submit"
-              className="h-8 rounded-lg bg-sky-400 hover:bg-sky-300 text-zinc-950 px-3 font-sans text-xs font-semibold transition-all shadow-xs"
+              className="h-8 rounded-lg bg-fg hover:opacity-90 text-zinc-950 px-3 font-sans text-xs font-semibold transition-all shadow-xs"
             >
               Log Note
             </button>
@@ -249,15 +249,15 @@ export function FocusCard({
 
       {/* Break Mode Auto-Transition Banner & Stretch/Water Reminder */}
       {isBreakMode && (
-        <div className="flex flex-col gap-2 rounded-xl border border-emerald-500/25 bg-emerald-950/20 p-4 text-xs animate-fade-in">
+        <div className="flex flex-col gap-2 rounded-xl border border-accent/30 bg-emerald-950/20 p-4 text-xs animate-fade-in">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 font-sans font-semibold text-emerald-400 text-sm">
+            <span className="flex items-center gap-2 font-sans font-semibold text-accent text-sm">
               <AppleEmoji emoji="☕" size={16} />
               <span>{f.timer.mode === "long_break" ? "Long Break Active" : "5-Minute Break Active"}</span>
             </span>
-            <span className="font-mono text-emerald-300 font-bold tabular-nums text-sm">{mmss(f.remaining)}</span>
+            <span className="font-mono text-accent font-bold tabular-nums text-sm">{mmss(f.remaining)}</span>
           </div>
-          <p className="m-0 font-sans text-zinc-300 leading-relaxed text-xs">
+          <p className="m-0 font-sans text-fg/80 leading-relaxed text-xs">
             <AppleText
               text="Great focus session! Step away from the screen, stretch your body, rest your eyes, and drink some water 💧🚶"
               size={14}
@@ -267,7 +267,7 @@ export function FocusCard({
             <button
               type="button"
               onClick={() => void f.stop()}
-              className="h-8 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] text-zinc-200 px-3 font-sans text-xs font-medium transition-all"
+              className="h-8 rounded-lg bg-surface3 hover:bg-surface3 text-fg px-3 font-sans text-xs font-medium transition-all"
             >
               Skip Break & Resume Focus
             </button>
@@ -278,11 +278,11 @@ export function FocusCard({
       {/* Interval Mechanical Switcher */}
       {!f.running && (
         <div className="flex flex-col gap-1.5" role="group" aria-label="Interval presets">
-          <div className="flex items-center justify-between text-xs font-sans text-zinc-400">
+          <div className="flex items-center justify-between text-xs font-sans text-muted">
             <span>Interval Presets</span>
-            <span className="text-zinc-300 font-medium">{selectedInterval === "25_5" ? "25m Study / 5m Break" : selectedInterval === "50_10" ? "50m Deep / 10m Break" : `${customMin}m Custom`}</span>
+            <span className="text-fg/80 font-medium">{selectedInterval === "25_5" ? "25m Study / 5m Break" : selectedInterval === "50_10" ? "50m Deep / 10m Break" : `${customMin}m Custom`}</span>
           </div>
-          <div className="grid grid-cols-3 gap-1 rounded-lg border border-white/[0.06] bg-[#131720] p-1">
+          <div className="grid grid-cols-3 gap-1 rounded-lg border border-line bg-surface p-1">
             {INTERVAL_PRESETS.map((p) => (
               <button
                 key={p.id}
@@ -292,7 +292,7 @@ export function FocusCard({
                 className={`min-h-[32px] rounded-md font-sans text-xs font-medium transition-all duration-150 ${
                   selectedInterval === p.id
                     ? "bg-white text-zinc-950 font-semibold shadow-xs"
-                    : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                    : "text-muted hover:text-fg hover:bg-surface2"
                 }`}
               >
                 {p.label}
@@ -301,8 +301,8 @@ export function FocusCard({
           </div>
 
           {selectedInterval === "custom" && (
-            <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] p-2">
-              <span className="font-sans text-xs text-zinc-400">Duration:</span>
+            <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-line bg-surface2 p-2">
+              <span className="font-sans text-xs text-muted">Duration:</span>
               <div className="flex items-center gap-1">
                 {[15, 30, 45, 60].map((m) => (
                   <button
@@ -312,7 +312,7 @@ export function FocusCard({
                     className={`h-7 rounded-md border px-2.5 font-mono text-xs font-medium transition-all ${
                       customMin === m
                         ? "border-sky-500/40 bg-sky-500/20 text-sky-300"
-                        : "border-white/[0.06] bg-transparent text-zinc-400 hover:text-white"
+                        : "border-line bg-transparent text-muted hover:text-fg"
                     }`}
                   >
                     {m}m
@@ -342,42 +342,42 @@ export function FocusCard({
         </svg>
 
         <div role="timer" aria-live="off" className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center">
-          <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-sans text-[11px] font-semibold tracking-wide ${
+          <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-sans text-xs font-semibold tracking-wide ${
             f.running
               ? isFocusMode
                 ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-              : "bg-white/[0.05] text-zinc-400 border border-white/[0.06]"
+                : "bg-accent/15 text-accent border border-accent/30"
+              : "bg-surface2 text-muted border border-line"
           }`}>
             {f.running ? f.label : "READY"}
           </span>
 
-          <span className="font-mono tabular-nums text-4xl sm:text-5xl font-bold tracking-tight text-white leading-none my-1">
+          <span className="font-mono tabular-nums text-4xl sm:text-5xl font-bold tracking-tight text-fg leading-none my-1">
             {mmss(shown)}
           </span>
 
-          <span className="font-sans text-xs text-zinc-400">{f.next}</span>
+          <span className="font-sans text-xs text-muted">{f.next}</span>
         </div>
       </div>
 
       {/* Integrated Collapsible Scratchpad */}
-      <div className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-[#131720] p-3.5">
+      <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-3.5">
         <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => setScratchOpen(!scratchOpen)}
-            className="flex items-center gap-2 font-sans text-xs font-medium text-zinc-300 hover:text-white"
+            className="flex items-center gap-2 font-sans text-xs font-medium text-fg/80 hover:text-fg"
           >
-            <Icon d={ICONS.edit} size={14} className="text-zinc-400" />
+            <Icon d={ICONS.edit} size={14} className="text-muted" />
             <span>Session Scratchpad</span>
-            <span className="font-mono text-[10px] text-zinc-500">{scratchOpen ? "▲" : "▼"}</span>
+            <span className="font-mono text-[11px] text-muted">{scratchOpen ? "▲" : "▼"}</span>
           </button>
           {scratchpad.trim() && act && (
             <button
               type="button"
               disabled={savingScratch}
               onClick={() => void handleSaveScratchToCapture()}
-              className="font-sans text-[11px] font-medium text-sky-400 hover:text-sky-300 transition-colors"
+              className="font-sans text-xs font-medium text-sky-400 hover:text-sky-300 transition-colors"
             >
               {savingScratch ? "Saving…" : "Save to Captures →"}
             </button>
@@ -399,9 +399,9 @@ export function FocusCard({
                 }
               }}
               placeholder="Jot rough formulas, quick notes, or distraction thoughts here..."
-              className="w-full resize-none rounded-lg border border-white/[0.06] bg-[#0e1117] px-3 py-2 font-sans text-xs text-zinc-200 placeholder:text-zinc-500 focus:border-sky-500/40 focus:outline-hidden leading-relaxed"
+              className="w-full resize-none rounded-lg border border-line bg-bg px-3 py-2 font-sans text-xs text-fg placeholder:text-muted focus:border-sky-500/40 focus:outline-hidden leading-relaxed"
             />
-            <div className="flex items-center justify-between text-[10px] text-zinc-500 font-sans">
+            <div className="flex items-center justify-between text-[11px] text-muted font-sans">
               <span>Auto-saved to memory</span>
               {scratchpad.length > 0 && <span>{scratchpad.length} characters</span>}
             </div>
@@ -410,14 +410,14 @@ export function FocusCard({
       </div>
 
       {/* Procedural Ambient Sound Generator */}
-      <div className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-[#131720] p-3.5">
+      <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-3.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 font-sans text-xs font-medium text-zinc-300">
+          <div className="flex items-center gap-1.5 font-sans text-xs font-medium text-fg/80">
             <Icon d={ICONS.zen} size={13} stroke={2} />
             <span>Ambient Sound Generator</span>
           </div>
           {ambient !== "none" && (
-            <span className="font-sans text-[10px] text-sky-400 font-medium animate-pulse">● Active</span>
+            <span className="font-sans text-[11px] text-sky-400 font-medium animate-pulse">● Active</span>
           )}
         </div>
 
@@ -438,7 +438,7 @@ export function FocusCard({
                 className={`min-h-[32px] rounded-md border font-sans text-xs font-medium transition-all duration-150 active:scale-95 ${
                   active
                     ? "border-sky-500/40 bg-sky-500/20 text-sky-300 shadow-xs"
-                    : "border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:border-white/15 hover:text-white"
+                    : "border-line bg-surface2 text-muted hover:border-line-strong hover:text-fg"
                 }`}
               >
                 {snd.label}
@@ -448,8 +448,8 @@ export function FocusCard({
         </div>
 
         {ambient !== "none" && (
-          <div className="mt-1 flex items-center justify-between gap-2 pt-1 border-t border-white/[0.06]">
-            <span className="font-sans text-[10px] text-zinc-400">Volume</span>
+          <div className="mt-1 flex items-center justify-between gap-2 pt-1 border-t border-line">
+            <span className="font-sans text-[11px] text-muted">Volume</span>
             <input
               type="range"
               min="0"
@@ -458,12 +458,12 @@ export function FocusCard({
               value={volume}
               aria-label="Ambient volume"
               onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              className="h-1 w-28 accent-sky-400 bg-white/[0.1] rounded-full cursor-pointer"
+              className="h-1 w-28 accent-sky-400 bg-surface3 rounded-full cursor-pointer"
             />
             <button
               type="button"
               onClick={() => handleAmbient("none")}
-              className="font-sans text-[10px] text-zinc-400 hover:text-rose-400"
+              className="font-sans text-[11px] text-muted hover:text-danger"
             >
               Mute
             </button>
@@ -476,7 +476,7 @@ export function FocusCard({
         {f.running ? (
           <button
             type="button"
-            className="min-h-[44px] flex-1 rounded-xl border border-white/20 bg-white hover:bg-zinc-100 text-zinc-950 font-sans text-xs font-semibold tracking-wide transition-all active:scale-[0.98] shadow-xs cursor-pointer"
+            className="min-h-[44px] flex-1 rounded-xl border border-line-strong bg-white hover:bg-zinc-100 text-zinc-950 font-sans text-xs font-semibold tracking-wide transition-all active:scale-[0.98] shadow-xs cursor-pointer"
             onClick={f.stop}
           >
             {isFocusMode ? "Stop Cycle" : "Skip Break"}
@@ -487,7 +487,7 @@ export function FocusCard({
               aria-label="Subject"
               value={f.subject}
               onChange={(e) => f.setSubject(e.target.value)}
-              className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-white/[0.08] bg-[#131720] px-3 font-sans text-xs font-medium text-white focus:border-sky-400 transition-all cursor-pointer"
+              className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 font-sans text-xs font-medium text-fg focus:border-sky-400 transition-all cursor-pointer"
             >
               {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -506,15 +506,15 @@ export function FocusCard({
         <button
           type="button"
           onClick={onOpenZen}
-          className="flex min-h-[38px] items-center justify-center gap-2 w-full rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.08] hover:text-white py-2 font-sans text-xs font-medium text-zinc-300 transition-all"
+          className="flex min-h-[38px] items-center justify-center gap-2 w-full rounded-xl border border-line bg-surface2 hover:bg-surface3 hover:text-fg py-2 font-sans text-xs font-medium text-fg/80 transition-all"
         >
           <AppleEmoji emoji="🧘" size={15} />
           <span>Zen Studio</span>
-          <kbd className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[9px] text-zinc-400">F</kbd>
+          <kbd className="rounded-md border border-line bg-black/40 px-1.5 py-0.5 font-mono text-[11px] text-muted">F</kbd>
         </button>
       )}
 
-      {f.note && <p role="status" className="m-0 text-center font-sans text-xs text-zinc-300">{f.note}</p>}
+      {f.note && <p role="status" className="m-0 text-center font-sans text-xs text-fg/80">{f.note}</p>}
     </Card>
   );
 }
@@ -534,17 +534,17 @@ export function FocusBar({
   onOpenCapture?: () => void;
 }) {
   const f = focus;
-  if (!f.running && !onToday) return null;
+  // Only while a round is running: starting one is the job of the "Next up" card.
+  if (!f.running) return null;
   return (
-    <div className="fixed inset-x-0 bottom-[66px] z-10 px-2.5 lg:hidden">
-      <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#0e1117]/95 backdrop-blur-xl py-1.5 px-3 shadow-2xl">
-        {f.running ? (
-          <>
+    <div className="fixed inset-x-0 bottom-[76px] z-10 px-3 lg:hidden">
+      <div className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface py-2 pl-4 pr-2 shadow-lg">
+        <>
             <div className="flex-1 min-w-0 cursor-pointer" onClick={onOpenZen}>
-              <div role="timer" aria-live="off" className="font-mono tabular-nums text-base font-bold text-white tracking-tight leading-snug">
+              <div role="timer" aria-live="off" className="tabular-nums text-lg font-semibold text-fg tracking-tight leading-snug">
                 {mmss(f.remaining)}
               </div>
-              <div className="text-[11px] font-sans text-zinc-300 truncate">
+              <div className="text-xs font-sans text-fg/80 truncate">
                 {f.timer.mode === "focus" ? `${f.subjectName} · ${f.roundText}` : f.label}
               </div>
             </div>
@@ -553,7 +553,7 @@ export function FocusBar({
                 type="button"
                 onClick={onOpenZen}
                 aria-label="Zen mode"
-                className="flex size-11 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-zinc-300 hover:text-white transition-all active:scale-95"
+                className="flex size-11 items-center justify-center rounded-lg border border-line bg-surface2 text-fg/80 hover:text-fg transition-all active:scale-95"
               >
                 <AppleEmoji emoji="🧘" size={16} />
               </button>
@@ -565,39 +565,7 @@ export function FocusBar({
             >
               {f.timer.mode === "focus" ? "Stop" : "Skip"}
             </button>
-          </>
-        ) : (
-          <>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-sans text-zinc-400">{f.roundText}</div>
-              <select
-                aria-label="Subject"
-                value={f.subject}
-                onChange={(e) => f.setSubject(e.target.value)}
-                className="h-8 max-w-full bg-transparent font-sans text-xs font-semibold text-white focus:outline-hidden"
-              >
-                {state.subjects.map((s) => <option key={s.id} value={s.id} className="bg-[#0e1117] text-white">{s.name}</option>)}
-              </select>
-            </div>
-            {onOpenZen && (
-              <button
-                type="button"
-                onClick={onOpenZen}
-                aria-label="Zen mode"
-                className="flex size-11 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-zinc-300 hover:text-white transition-all active:scale-95"
-              >
-                <AppleEmoji emoji="🧘" size={16} />
-              </button>
-            )}
-            <button
-              type="button"
-              className="min-h-[44px] px-4 rounded-lg border border-transparent bg-white text-zinc-950 font-sans text-xs font-semibold tracking-wide active:scale-95 transition-all shadow-xs"
-              onClick={() => f.start()}
-            >
-              Start
-            </button>
-          </>
-        )}
+        </>
 
         {/* 1-Tap Thumb-Accessible Floating Quick Capture Action (44px target) */}
         {onOpenCapture && (
@@ -606,13 +574,13 @@ export function FocusBar({
             aria-label="Quick capture"
             onClick={onOpenCapture}
             title="Quick Capture [Ctrl+K]"
-            className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-sky-400/40 bg-sky-400 text-zinc-950 font-mono font-bold text-lg active:scale-95 hover:bg-sky-300 transition-all shadow-sm"
+            className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-sky-400/40 bg-fg text-zinc-950 font-mono font-bold text-lg active:scale-95 hover:opacity-90 transition-all shadow-sm"
           >
             +
           </button>
         )}
       </div>
-      {f.note && <p role="status" className="m-0 mt-1 text-center font-sans text-xs text-zinc-300">{f.note}</p>}
+      {f.note && <p role="status" className="m-0 mt-1 text-center font-sans text-xs text-fg/80">{f.note}</p>}
     </div>
   );
 }

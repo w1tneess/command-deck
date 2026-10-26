@@ -58,6 +58,12 @@ const TABLES: Record<string, string[]> = {
   external_events: ["id", "summary", "description", "starts_at", "ends_at", "is_study_block", "updated_at"],
 };
 /** google_sync is deliberately absent from TABLES: its OAuth tokens must never be written to (or planted from) a backup file. */
+/**
+ * Settings that never travel in a backup file: Google credentials, the sign-in allowlist, the calendar feed token and
+ * in-flight sign-in state. They are left out of an export, and a restore keeps the live values and ignores any in the file.
+ */
+const SECRET_SETTINGS = ["calendar_token", "google_client_id", "google_client_secret", "google_redirect_uri", "google_oauth_state", "google_login_state", "allowed_google_emails"];
+const only = (table: string) => (table === "settings" ? ` WHERE key NOT IN (${SECRET_SETTINGS.map((k) => `'${k}'`).join(",")})` : "");
 /** Tables added in backup version 5. An older file doesn't have them, so restoring one leaves them as they are. */
 const LIFE_TABLES = ["habits", "habit_log", "projects", "milestones", "captures", "routine", "reviews", "schedule_blocks", "external_events"];
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -985,7 +991,7 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
   app.get("/api/export", async (c) => {
     const db = c.env.DB;
     const names = Object.keys(TABLES);
-    const res = await db.batch<Row>(names.map((t) => db.prepare(`SELECT * FROM ${t}`)));
+    const res = await db.batch<Row>(names.map((t) => db.prepare(`SELECT * FROM ${t}${only(t)}`)));
     return c.json({ version: 5, ...Object.fromEntries(names.map((t, i) => [t, res[i].results])) });
   });
 
@@ -1045,10 +1051,10 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     }
     if (b.chapters.some((ch: Row) => !validScope(ch.scope)) || b.phases.some((p: Row) => !validScope(p.scope))) return fail("Backup has an invalid scope.");
     if (b.deliverables.some((d: Row) => !DELIVERABLE_STATUSES.includes(d.status))) return fail("Backup has an invalid deliverable status.");
-    const deletes = tables.map(([t]) => t).reverse().map((t) => db.prepare(`DELETE FROM ${t}`));
+    const deletes = tables.map(([t]) => t).reverse().map((t) => db.prepare(`DELETE FROM ${t}${only(t)}`));
     const inserts = tables.flatMap(([t, cols]) => {
       const sql = `INSERT INTO ${t} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`;
-      return (b[t] as Row[]).map((row) => db.prepare(sql).bind(...cols.map((col) => row[col])));
+      return (b[t] as Row[]).filter((row) => t !== "settings" || !SECRET_SETTINGS.includes(row.key)).map((row) => db.prepare(sql).bind(...cols.map((col) => row[col])));
     });
     try {
       await db.batch([...deletes, ...inserts]);

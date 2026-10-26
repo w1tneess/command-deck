@@ -1002,7 +1002,7 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     let b = await body<Row>(c);
     const fail = (msg: string) => c.json({ error: msg }, 400);
     const db = c.env.DB;
-    if (![1, 2, 3, 4, 5].includes(b.version)) return fail("This isn't an Exam Tracker backup (wrong or missing version).");
+    if (![1, 2, 3, 4, 5].includes(b.version)) return fail("This isn't a Command Deck backup (wrong or missing version).");
     if (b.version === 1) {
       for (const t of ["subjects", "chapters", "progress", "tasks", "sessions"]) {
         if (!Array.isArray(b[t])) return fail(`Backup is missing the ${t} list.`);

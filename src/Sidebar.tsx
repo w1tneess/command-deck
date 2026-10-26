@@ -20,7 +20,7 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
     <aside className="hidden min-h-screen w-60 shrink-0 select-none flex-col justify-between border-r border-line bg-bg p-5 lg:flex" aria-label="Main navigation">
       <div>
         <a href="#today" className="block">
-          <h1 className="m-0 font-serif text-2xl font-bold tracking-tight text-fg">Life OS</h1>
+          <h1 className="m-0 font-serif text-2xl font-bold tracking-tight text-fg">Command Deck</h1>
         </a>
 
         <nav className="mt-8 flex flex-col gap-1" aria-label="Main">

@@ -57,7 +57,7 @@ describe("Calendar Feed API (/api/calendar/feed.ics)", () => {
     const ics = await feedRes.text();
     expect(ics).toContain("BEGIN:VCALENDAR");
     expect(ics).toContain("VERSION:2.0");
-    expect(ics).toContain("X-WR-CALNAME:Life & Study OS (CBSE Class 10)");
+    expect(ics).toContain("X-WR-CALNAME:Command Deck (CBSE Class 10)");
     expect(ics).toContain("X-WR-TIMEZONE:Asia/Kolkata");
     expect(ics).toContain("TZID:Asia/Kolkata");
 

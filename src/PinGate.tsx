@@ -126,8 +126,8 @@ export function PinGate({ onDone }: { onDone: () => void }) {
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 py-8 text-center select-none">
       <div className="w-full rounded-3xl border border-line bg-bg/90 backdrop-blur-2xl p-7 sm:p-9 shadow-2xl flex flex-col items-center">
         <BrandLogo size={48} className="mb-3" />
-        <h1 className="m-0 text-xl font-bold tracking-tight text-fg">Study OS</h1>
-        <p className="mt-1 mb-5 text-xs text-muted">Class 10 CBSE & Life OS Dashboard</p>
+        <h1 className="m-0 text-xl font-bold tracking-tight text-fg">Command Deck</h1>
+        <p className="mt-1 mb-5 text-xs text-muted">Class 10 CBSE study dashboard</p>
 
         {/* Unauthorized Whitelist Alert Banner */}
         {urlError && (

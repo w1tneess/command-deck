@@ -297,7 +297,7 @@ describe("Google OAuth restricted login", () => {
       expect(res.status).toBe(403);
       const html = await res.text();
       expect(html).toContain("<h3>Access Denied</h3>");
-      expect(html).toContain("<p>This account is not authorized to access Study OS.</p>");
+      expect(html).toContain("<p>This account is not authorized to access Command Deck.</p>");
       const cookies = res.headers.getSetCookie?.() ?? [res.headers.get("set-cookie") ?? ""];
       expect(cookies.some((c) => c.startsWith("session="))).toBe(false);
     } finally {

@@ -294,7 +294,7 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Access Denied — Study OS</title>
+  <title>Access Denied — Command Deck</title>
   <style>
     body { background: #07080b; color: #f5f5f7; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: grid; min-height: 100vh; place-items: center; margin: 0; padding: 1.5rem; box-sizing: border-box; }
     .card { background: rgba(18, 18, 20, 0.95); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px; padding: 2.25rem 2rem; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.6); }
@@ -308,7 +308,7 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
 <body>
   <div class="card">
     <h3>Access Denied</h3>
-    <p>This account is not authorized to access Study OS.</p>
+    <p>This account is not authorized to access Command Deck.</p>
     <div><span class="email-chip">${email}</span></div>
     <a href="/?error=unauthorized">Return to Login</a>
   </div>

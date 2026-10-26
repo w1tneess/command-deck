@@ -323,8 +323,8 @@ export async function pullGoogleEvents(
     const description = item.description || null;
     const startsAt = normalizeToIstIso(item.start?.dateTime, item.start?.date, false);
     const endsAt = normalizeToIstIso(item.end?.dateTime, item.end?.date, true);
-    const isStudyBlock = /\[Exam Tracker\]|\[Study OS\]|CBSE|Study Block/i.test(summary) ||
-                         /Exam Tracker & Life OS/i.test(description || "") ? 1 : 0;
+    const isStudyBlock = /\[Command Deck\]|\[Exam Tracker\]|\[Study OS\]|CBSE|Study Block/i.test(summary) ||
+                         /Command Deck|Exam Tracker & Life OS/i.test(description || "") ? 1 : 0;
     const updatedAt = item.updated ? normalizeToIstIso(item.updated) : nowIso;
 
     stmts.push(
@@ -370,8 +370,8 @@ export async function pushBlockToGoogle(
 
   const startIso = `${dateStr}T${block.startTime}:00+05:30`;
   const endIso = `${dateStr}T${block.endTime}:00+05:30`;
-  const summary = `[Exam Tracker] ${block.title}`;
-  const description = `Study Track: ${block.category}\nManaged by Exam Tracker & Life OS (study.advaitachandra.in)`;
+  const summary = `[Command Deck] ${block.title}`;
+  const description = `Study Track: ${block.category}\nManaged by Command Deck (study.advaitachandra.in)`;
 
   const payload = {
     summary,

@@ -1,4 +1,4 @@
-# Exam Tracker & Life OS
+# Command Deck
 
 [![Cloudflare Workers](https://img.shields.io/badge/Edge%20Runtime-Cloudflare%20Workers-orange?logo=cloudflare)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Database-Cloudflare%20D1%20SQLite-F38020?logo=cloudflare)](https://developers.cloudflare.com/d1/)
@@ -7,7 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%205-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vitest](https://img.shields.io/badge/Tests-170%20Passed-brightgreen?logo=vitest)](https://vitest.dev/)
 
-A private **CBSE Class 10 exam-prep dashboard and personal Life OS**. It runs entirely on Cloudflare's edge (Worker + D1) and combines a ranked study queue, a cloud-settled Pomodoro timer, three-pass chapter revision, habits, a daily schedule synced with Google Calendar, and school deliverable tracking.
+A private **CBSE Class 10 exam-prep dashboard and personal life tracker**. It runs entirely on Cloudflare's edge (Worker + D1) and combines a ranked study queue, a cloud-settled Pomodoro timer, three-pass chapter revision, habits, a daily schedule synced with Google Calendar, and school deliverable tracking.
 
 **Live:** [study.advaitachandra.in](https://study.advaitachandra.in) *(private; PIN or allow-listed Google sign-in)*
 

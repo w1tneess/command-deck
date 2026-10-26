@@ -1,5 +1,5 @@
 /**
- * Google Calendar & iCal URL utilities for Life & Study OS.
+ * Google Calendar & iCal URL utilities for Command Deck.
  * All calendar links strictly enforce Asia/Kolkata (IST, UTC+5:30).
  */
 
@@ -149,7 +149,7 @@ export function getScheduleBlockGCalUrl(block: ScheduleBlock, todayIST: string):
   return buildGoogleCalendarUrl({
     title: `Focus Block: ${block.title}`,
     dates: `${start}/${end}`,
-    details: `Life & Study OS Time-Block\nTrack: ${block.title}\nCategory: ${block.category.toUpperCase()}\nTime: ${block.startTime} - ${block.endTime} (IST)\nhttps://study.advaitachandra.in`,
+    details: `Command Deck Time-Block\nTrack: ${block.title}\nCategory: ${block.category.toUpperCase()}\nTime: ${block.startTime} - ${block.endTime} (IST)\nhttps://study.advaitachandra.in`,
     location: "Study Desk / School",
   });
 }

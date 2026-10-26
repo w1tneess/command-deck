@@ -16,7 +16,7 @@ export function Backup({ reload, theme, setTheme }: { reload: () => Promise<void
       const data = await call("GET", "/api/export");
       const a = document.createElement("a");
       a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-      a.download = `study-dashboard-${new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date())}.json`;
+      a.download = `command-deck-${new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date())}.json`;
       a.click();
       URL.revokeObjectURL(a.href);
       try { localStorage.setItem("last-backup", new Date().toISOString()); } catch { /* optional */ }

@@ -6,6 +6,7 @@ import { CommandBar } from "./CommandBar.tsx";
 import { DeliverablesPage } from "./Deliverables.tsx";
 import { FocusBar, useFocus } from "./Focus.tsx";
 import { Habits } from "./Habits.tsx";
+import { Overview } from "./Overview.tsx";
 import { PinGate } from "./PinGate.tsx";
 import { Projects } from "./Projects.tsx";
 import { signOut } from "./session.ts";
@@ -248,6 +249,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
               onOpenCommandBar={() => setCommandBar(true)}
             />
           )}
+          {page === "overview" && <Overview state={state} />}
           {page === "syllabus" && <Syllabus state={state} act={act} />}
           {page === "habits" && <Habits state={state} act={act} />}
           {page === "week" && <Week state={state} act={act} />}

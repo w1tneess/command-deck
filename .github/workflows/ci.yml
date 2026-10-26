@@ -1,4 +1,5 @@
-name: CI and deploy
+# Deploys are done by Cloudflare Workers Builds (build, D1 migrations, deploy on every push to main).
+name: CI
 
 on:
   push:
@@ -17,28 +18,3 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
-
-  deploy:
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    concurrency: deploy
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      # Migrations are idempotent: already-applied ones are skipped.
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: e9de511ce276e9e7b0a579d9a87ab021
-          command: d1 migrations apply DB --remote
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: e9de511ce276e9e7b0a579d9a87ab021
-          command: deploy

@@ -156,7 +156,7 @@ Tests cover auth and lockout, the timer, the study queue and phases, habits and 
 
 ## Deployment
 
-Every push to `main` runs `.github/workflows/ci.yml`: build, test, then, if both pass, apply remote D1 migrations and deploy with Wrangler. Migrations are idempotent, so applied ones are skipped. It needs the `CLOUDFLARE_API_TOKEN` repository secret.
+Cloudflare Workers Builds deploys. The Worker is connected to this repository: every push to `main` runs `npm run build`, then `npx wrangler d1 migrations apply DB --remote && npx wrangler deploy` (migrations are idempotent, so applied ones are skipped). Build settings and logs are under Workers & Pages → exam-tracker → Settings → Build. `.github/workflows/ci.yml` only builds and runs the tests, on every push and pull request; it needs no secrets.
 
 Manual deploy:
 

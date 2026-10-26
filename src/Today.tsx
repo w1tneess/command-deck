@@ -24,6 +24,7 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
   const phase = activeOf(state);
   const index = chapterIndex(state);
   const queue = studyQueueFor(state, 5);
+  const suggestions = queue.filter((q) => !state.targets.some((t) => t.chapterId === q.chapterId));
 
   const istHour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Kolkata" }).format(new Date()));
   const greeting = istHour < 12 ? "Good morning" : istHour < 17 ? "Good afternoon" : "Good evening";
@@ -157,24 +158,21 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
               <Btn type="submit" disabled={!title.trim()}>Add</Btn>
             </form>
 
-            {queue.length > 0 && (
-              <details className="mt-2">
-                <summary className="flex min-h-[44px] cursor-pointer items-center rounded-xl text-sm font-medium text-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-focus">Suggested chapters</summary>
-                <ul className="m-0 mt-2 flex list-none flex-col gap-3 p-0 md:gap-4">
-                  {queue.map((q) => {
-                    const added = state.targets.some((t) => t.chapterId === q.chapterId);
-                    return (
-                      <li key={q.chapterId} className="flex items-center gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="text-base text-fg">{q.subject.name}: {q.chapter.name}</div>
-                          <div className="text-sm text-muted">{reasonFor(q.chapter)}</div>
-                        </div>
-                        <Btn onClick={() => void addSuggestion(q)} disabled={added}>{added ? "Added" : "Add"}</Btn>
-                      </li>
-                    );
-                  })}
+            {suggestions.length > 0 && (
+              <div className="mt-2">
+                <h3 className="m-0 text-sm font-medium text-muted">Suggested chapters</h3>
+                <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0 md:gap-4">
+                  {suggestions.map((q) => (
+                    <li key={q.chapterId} className="flex items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-base text-fg">{q.subject.name}: {q.chapter.name}</div>
+                        <div className="text-sm text-muted">{reasonFor(q.chapter)}</div>
+                      </div>
+                      <Btn onClick={() => void addSuggestion(q)}>Add</Btn>
+                    </li>
+                  ))}
                 </ul>
-              </details>
+              </div>
             )}
           </section>
         </div>

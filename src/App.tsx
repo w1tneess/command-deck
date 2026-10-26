@@ -210,7 +210,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
         </header>
 
         {/* Page Content */}
-        <main className="mx-auto w-full max-w-[1180px] flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 pb-24 lg:pb-8">
+        <main className={`mx-auto w-full max-w-[1180px] flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 ${focus.running ? "pb-60" : "pb-44"} lg:pb-8`}>
           {group && group.pages.length > 1 && (
             <nav aria-label={group.label} className="scrollbar-none -mb-2 flex max-w-full gap-2 overflow-x-auto">
               {group.pages.map((p) => (
@@ -290,7 +290,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
           type="button"
           aria-label="Quick add"
           onClick={() => setCommandBar(true)}
-          className={`fixed right-4 z-20 ${focus.running ? "bottom-[150px]" : "bottom-[84px]"} flex size-11 items-center justify-center rounded-full bg-fg text-bg shadow-lg hover:scale-105 transition-all active:scale-95 lg:hidden`}
+          className={`fixed right-4 z-20 ${focus.running ? "bottom-[calc(8.625rem+max(0.75rem,env(safe-area-inset-bottom)))]" : "bottom-[calc(4.5rem+max(0.75rem,env(safe-area-inset-bottom)))]"} flex size-11 items-center justify-center rounded-full bg-fg text-bg shadow-lg hover:scale-105 transition-all active:scale-95 lg:hidden`}
         >
           <Icon d={ICONS.plus} size={20} stroke={2.2} />
         </button>

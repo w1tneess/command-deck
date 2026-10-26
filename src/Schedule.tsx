@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { Act, ScheduleBlock, State } from "./api.ts";
 import { CalendarModal } from "./CalendarModal.tsx";
 import { GoogleSyncModal } from "./GoogleSyncModal.tsx";
-import { getScheduleBlockGCalUrl } from "./calendar-utils.ts";
+import { conflictFixes, getScheduleBlockGCalUrl } from "./calendar-utils.ts";
 import { AppleEmoji, AppleText, Card, H2, PageHeader } from "./ui.tsx";
 
 function getIstTimeMinutes(): { currentMinutes: number; timeStr: string } {
@@ -69,8 +69,21 @@ export function Schedule({
     busy.current = true;
     try {
       await act("POST", "/api/schedule/shift", { deltaMins, fromId });
-      setShiftFeedback(`Shifted schedule by ${deltaMins > 0 ? `+${deltaMins}m` : `${deltaMins}m`}`);
+      setShiftFeedback(`Shifted ${fromId === undefined ? "schedule" : "block and those after it"} by ${deltaMins > 0 ? `+${deltaMins}m` : `${deltaMins}m`}`);
       setTimeout(() => setShiftFeedback(""), 3000);
+    } finally {
+      busy.current = false;
+    }
+  };
+
+  const trimBlock = async (id: number, times: { startTime?: string; endTime?: string }) => {
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      if (await act("PATCH", `/api/schedule/blocks/${id}`, times)) {
+        setShiftFeedback("Block shortened.");
+        setTimeout(() => setShiftFeedback(""), 3000);
+      }
     } finally {
       busy.current = false;
     }
@@ -208,27 +221,52 @@ export function Schedule({
         )}
       </Card>
 
-      {/* Overlap Conflict Alert Banner */}
+      {/* Overlap Conflict Alert Banner: every clash, each with its own fixes */}
       {state.scheduleConflicts && state.scheduleConflicts.length > 0 && (
-        <div className="rounded-2xl bg-warn/10 ring-1 ring-warn/30 p-4 text-warn flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+        <div role="alert" className="rounded-2xl bg-warn/10 ring-1 ring-warn/30 p-4 text-warn flex flex-col gap-3 animate-fade-in">
           <div className="flex items-start gap-3">
             <AppleEmoji emoji="⚠️" size={20} />
-            <div>
-              <div className="font-semibold text-xs text-warn">
-                {state.scheduleConflicts.length} Schedule Conflict{state.scheduleConflicts.length > 1 ? "s" : ""} with Google Calendar
-              </div>
-              <div className="text-sm text-muted font-mono mt-0.5">
-                "{state.scheduleConflicts[0].eventSummary}" clashes with study block "{state.scheduleConflicts[0].blockTitle}" ({state.scheduleConflicts[0].blockStart}–{state.scheduleConflicts[0].blockEnd}).
-              </div>
+            <div className="font-semibold text-sm text-warn">
+              {state.scheduleConflicts.length} Schedule Conflict{state.scheduleConflicts.length > 1 ? "s" : ""} with Google Calendar
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => handleShiftTime(15)}
-            className="min-h-[44px] md:min-h-[38px] rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-sm px-4 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus"
-          >
-            +15m Shift Schedule →
-          </button>
+          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+            {state.scheduleConflicts.map((c) => {
+              const fix = conflictFixes(c);
+              const at = (iso: string) => iso.slice(11, 16);
+              return (
+                <li key={`${c.blockId}-${c.eventId}`} className="flex flex-col gap-2 rounded-xl bg-surface p-3 ring-1 ring-line">
+                  <div className="text-sm text-muted">
+                    <span className="font-semibold text-fg">{c.eventSummary}</span> ({at(c.eventStart)}–{at(c.eventEnd)}) clashes with <span className="font-semibold text-fg">{c.blockTitle}</span> ({c.blockStart}–{c.blockEnd}).
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {fix.moveBy !== null && (
+                      <button
+                        type="button"
+                        onClick={() => handleShiftTime(fix.moveBy!, c.blockId)}
+                        title="Delays this block and every block after it by the same amount"
+                        className="min-h-[44px] md:min-h-[38px] rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-sm px-4 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
+                      >
+                        Move block after {c.eventSummary} (+{fix.moveBy}m)
+                      </button>
+                    )}
+                    {fix.shorten && (
+                      <button
+                        type="button"
+                        onClick={() => void trimBlock(c.blockId, fix.shorten!)}
+                        className="min-h-[44px] md:min-h-[38px] rounded-xl border border-line-strong bg-surface2 hover:bg-surface3 text-fg font-sans font-semibold text-sm px-4 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
+                      >
+                        Shorten block to {fix.shorten.startTime ? `${fix.shorten.startTime}–${c.blockEnd}` : `${c.blockStart}–${fix.shorten.endTime}`}
+                      </button>
+                    )}
+                    {fix.moveBy === null && !fix.shorten && (
+                      <span className="text-sm text-muted">Too large to fix with one tap. Edit this block's times or move the event.</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 

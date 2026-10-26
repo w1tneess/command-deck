@@ -124,7 +124,7 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted">
           <span>Less</span>
-          <span className="size-3 rounded-[3px] bg-surface2 border border-line" />
+          <span className="size-3 rounded-[3px] bg-surface3" />
           <span className="size-3 rounded-[3px] bg-heat-1" />
           <span className="size-3 rounded-[3px] bg-heat-2" />
           <span className="size-3 rounded-[3px] bg-heat-3" />
@@ -136,9 +136,9 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
       <div className="relative overflow-x-auto pb-2">
         <div className="flex gap-2.5">
           {/* Day of week labels */}
-          <div className="flex flex-col justify-between py-0.5 text-[11px] text-muted shrink-0 w-6">
+          <div className="flex flex-col gap-1.5 text-xs text-muted shrink-0 w-8">
             {DAY_LABELS.map((lbl, idx) => (
-              <span key={idx} className="h-3.5 leading-3.5">
+              <span key={idx} className="h-3.5 sm:h-4 leading-[14px] sm:leading-4">
                 {lbl}
               </span>
             ))}
@@ -153,7 +153,7 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
                   const isToday = item.day === state.today;
 
                   const colorClass = isFuture
-                    ? "opacity-20 bg-surface2"
+                    ? "opacity-40 bg-surface3"
                     : item.level === 4
                     ? "bg-heat-4"
                     : item.level === 3
@@ -162,7 +162,7 @@ function HabitContributionGraph({ state, topStreak }: { state: State; topStreak:
                     ? "bg-heat-2"
                     : item.level === 1
                     ? "bg-heat-1"
-                    : "bg-surface2 hover:bg-surface3";
+                    : "bg-surface3 hover:bg-line-strong";
 
                   return (
                     <div

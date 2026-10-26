@@ -94,7 +94,9 @@ export function Overview({ state }: { state: State }) {
           <Card labelledBy="exams-h">
             <H2 id="exams-h">Next exams</H2>
             {exams.length === 0 ? (
-              <p className="m-0 mt-3 text-sm text-muted">No exam dates set for {phase.name}. Add them in Syllabus.</p>
+              <p className="m-0 mt-3 text-sm text-muted">
+                {phase.name} runs {whenOf(phase)}, but no subject exam dates are set yet. Add them in Syllabus under Subject settings.
+              </p>
             ) : (
               <ul className="m-0 mt-3 flex list-none flex-col p-0">
                 {exams.map(({ sub, date }) => {

@@ -124,16 +124,43 @@ export function findAvailableStudySlot(
     ...busyIntervals,
   ];
 
+  const isFree = (start: number) => !allBusy.some((b) => Math.max(start, b.startMins) < Math.min(start + durationMins, b.endMins));
   for (const start of candidateStarts) {
-    const end = start + durationMins;
-    const hasOverlap = allBusy.some((b) => Math.max(start, b.startMins) < Math.min(end, b.endMins));
-    if (!hasOverlap) {
-      return { startTime: minsToTimeStr(start), endTime: minsToTimeStr(end) };
-    }
+    if (isFree(start)) return { startTime: minsToTimeStr(start), endTime: minsToTimeStr(start + durationMins) };
+  }
+
+  // Nothing free in the preferred windows: take any free gap in the waking day before settling for a clash.
+  for (let start = timeStrToMins("06:30"); start + durationMins <= timeStrToMins("22:00"); start += 15) {
+    if (isFree(start)) return { startTime: minsToTimeStr(start), endTime: minsToTimeStr(start + durationMins) };
   }
 
   const fallbackStart = timeStrToMins("19:30");
   return { startTime: minsToTimeStr(fallbackStart), endTime: minsToTimeStr(fallbackStart + durationMins) };
+}
+
+export type ConflictTimes = { blockStart: string; blockEnd: string; eventStart: string; eventEnd: string };
+
+/**
+ * The two ways out of one clash between a study block and a calendar event:
+ * - `moveBy`: minutes to delay the block (and those after it) so it starts when the event ends; null if that needs more than the 180m the shift API allows, or would run past midnight.
+ * - `shorten`: the new start or end that trims the block to the free side of the event; null if under 15m would be left.
+ */
+export function conflictFixes(c: ConflictTimes): { moveBy: number | null; shorten: { startTime?: string; endTime?: string } | null } {
+  const iso = (s: string) => { const m = s.match(/T(\d{2}):(\d{2})/); return m ? Number(m[1]) * 60 + Number(m[2]) : 0; };
+  const bStart = timeStrToMins(c.blockStart), bEnd = timeStrToMins(c.blockEnd);
+  const eStart = iso(c.eventStart), eEnd = iso(c.eventEnd);
+
+  const delta = eEnd - bStart;
+  const moveBy = delta > 0 && delta <= 180 && bEnd + delta <= 23 * 60 + 59 ? delta : null;
+
+  const MIN_LEFT = 15;
+  let shorten: { startTime?: string; endTime?: string } | null = null;
+  if (eStart <= bStart) {
+    if (bEnd - eEnd >= MIN_LEFT) shorten = { startTime: minsToTimeStr(eEnd) };
+  } else if (eStart - bStart >= MIN_LEFT) {
+    shorten = { endTime: minsToTimeStr(eStart) };
+  }
+  return { moveBy, shorten };
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {

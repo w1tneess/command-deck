@@ -42,13 +42,14 @@ export function parseTargetDurationMins(dur?: string | null): number {
 }
 
 import {
+  conflictFixes,
   findAvailableStudySlot,
   minsToTimeStr,
   timeStrToMins,
   type TimeInterval,
 } from "../server/calendar.ts";
 
-export { findAvailableStudySlot, minsToTimeStr, timeStrToMins, type TimeInterval };
+export { conflictFixes, findAvailableStudySlot, minsToTimeStr, timeStrToMins, type TimeInterval };
 
 export interface TargetGCalOptions {
   externalEvents?: { startsAt?: string; starts_at?: string; endsAt?: string; ends_at?: string; summary?: string }[];

@@ -195,7 +195,7 @@ export function FocusCard({
       {/* Calm Faceplate Header */}
       <div className="flex items-center justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2">
-          <span className={`size-2 rounded-full ${f.running ? (isFocusMode ? "bg-fg" : "bg-emerald-400") : "bg-zinc-600"}`} />
+          <span className={`size-2 rounded-full ${f.running ? (isFocusMode ? "bg-fg" : "bg-accent") : "bg-line-strong"}`} />
           <span id="focus-h" className="font-sans text-xs font-semibold tracking-tight text-fg">Focus Studio</span>
         </div>
         <span className="font-sans text-xs text-muted">
@@ -205,9 +205,9 @@ export function FocusCard({
 
       {/* Session Mastery Prompt */}
       {f.masteryPrompt && (
-        <div className="flex flex-col gap-2 rounded-xl border border-sky-500/30 bg-sky-950/30 p-3.5 text-xs animate-fade-in shadow-lg">
+        <div className="flex flex-col gap-2 rounded-xl border border-focus/30 bg-focus/30 p-3.5 text-xs animate-fade-in shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="font-sans font-semibold text-sky-400 text-xs flex items-center gap-1.5">
+            <span className="font-sans font-semibold text-focus text-xs flex items-center gap-1.5">
               <AppleEmoji emoji="✨" size={14} />
               <span>What did you master this session?</span>
             </span>
@@ -235,11 +235,11 @@ export function FocusCard({
               name="mastery"
               autoFocus
               placeholder="e.g. Solved Trigonometric identities, Chemical equations balancing..."
-              className="flex-1 h-8 rounded-lg border border-line-strong bg-surface px-3 font-sans text-xs text-fg placeholder:text-muted focus:border-sky-400 transition-all"
+              className="flex-1 h-8 rounded-lg border border-line-strong bg-surface px-3 font-sans text-xs text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus transition-all"
             />
             <button
               type="submit"
-              className="h-8 rounded-lg bg-fg hover:opacity-90 text-zinc-950 px-3 font-sans text-xs font-semibold transition-all shadow-xs"
+              className="h-8 rounded-lg bg-fg hover:opacity-90 text-bg px-3 font-sans text-xs font-semibold transition-all shadow-xs"
             >
               Log Note
             </button>
@@ -249,7 +249,7 @@ export function FocusCard({
 
       {/* Break Mode Auto-Transition Banner & Stretch/Water Reminder */}
       {isBreakMode && (
-        <div className="flex flex-col gap-2 rounded-xl border border-accent/30 bg-emerald-950/20 p-4 text-xs animate-fade-in">
+        <div className="flex flex-col gap-2 rounded-xl border border-accent/30 bg-accent/20 p-4 text-xs animate-fade-in">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 font-sans font-semibold text-accent text-sm">
               <AppleEmoji emoji="☕" size={16} />
@@ -291,7 +291,7 @@ export function FocusCard({
                 onClick={() => setSelectedInterval(p.id)}
                 className={`min-h-[32px] rounded-md font-sans text-xs font-medium transition-all duration-150 ${
                   selectedInterval === p.id
-                    ? "bg-white text-zinc-950 font-semibold shadow-xs"
+                    ? "bg-fg text-bg font-semibold shadow-xs"
                     : "text-muted hover:text-fg hover:bg-surface2"
                 }`}
               >
@@ -311,7 +311,7 @@ export function FocusCard({
                     onClick={() => setCustomMin(m)}
                     className={`h-7 rounded-md border px-2.5 font-mono text-xs font-medium transition-all ${
                       customMin === m
-                        ? "border-sky-500/40 bg-sky-500/20 text-sky-300"
+                        ? "border-focus/40 bg-focus/20 text-focus"
                         : "border-line bg-transparent text-muted hover:text-fg"
                     }`}
                   >
@@ -332,7 +332,7 @@ export function FocusCard({
             cx="80"
             cy="80"
             r={RADIUS}
-            className={`transition-all duration-300 ease-out ${isFocusMode ? "stroke-sky-400" : "stroke-emerald-400"}`}
+            className={`transition-all duration-300 ease-out ${isFocusMode ? "stroke-focus" : "stroke-accent"}`}
             strokeWidth="5"
             strokeDasharray={CIRCUMFERENCE}
             strokeDashoffset={strokeDashoffset}
@@ -345,7 +345,7 @@ export function FocusCard({
           <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-sans text-xs font-semibold tracking-wide ${
             f.running
               ? isFocusMode
-                ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                ? "bg-focus/10 text-focus border border-focus/20"
                 : "bg-accent/15 text-accent border border-accent/30"
               : "bg-surface2 text-muted border border-line"
           }`}>
@@ -377,7 +377,7 @@ export function FocusCard({
               type="button"
               disabled={savingScratch}
               onClick={() => void handleSaveScratchToCapture()}
-              className="font-sans text-xs font-medium text-sky-400 hover:text-sky-300 transition-colors"
+              className="font-sans text-xs font-medium text-focus hover:text-focus transition-colors"
             >
               {savingScratch ? "Saving…" : "Save to Captures →"}
             </button>
@@ -399,7 +399,7 @@ export function FocusCard({
                 }
               }}
               placeholder="Jot rough formulas, quick notes, or distraction thoughts here..."
-              className="w-full resize-none rounded-lg border border-line bg-bg px-3 py-2 font-sans text-xs text-fg placeholder:text-muted focus:border-sky-500/40 focus:outline-hidden leading-relaxed"
+              className="w-full resize-none rounded-lg border border-line bg-bg px-3 py-2 font-sans text-xs text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus/40 focus:outline-hidden leading-relaxed"
             />
             <div className="flex items-center justify-between text-[11px] text-muted font-sans">
               <span>Auto-saved to memory</span>
@@ -417,7 +417,7 @@ export function FocusCard({
             <span>Ambient Sound Generator</span>
           </div>
           {ambient !== "none" && (
-            <span className="font-sans text-[11px] text-sky-400 font-medium animate-pulse">● Active</span>
+            <span className="font-sans text-[11px] text-focus font-medium animate-pulse">● Active</span>
           )}
         </div>
 
@@ -437,7 +437,7 @@ export function FocusCard({
                 onClick={() => handleAmbient(snd.id as any)}
                 className={`min-h-[32px] rounded-md border font-sans text-xs font-medium transition-all duration-150 active:scale-95 ${
                   active
-                    ? "border-sky-500/40 bg-sky-500/20 text-sky-300 shadow-xs"
+                    ? "border-focus/40 bg-focus/20 text-focus shadow-xs"
                     : "border-line bg-surface2 text-muted hover:border-line-strong hover:text-fg"
                 }`}
               >
@@ -458,7 +458,7 @@ export function FocusCard({
               value={volume}
               aria-label="Ambient volume"
               onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              className="h-1 w-28 accent-sky-400 bg-surface3 rounded-full cursor-pointer"
+              className="h-1 w-28 accent-focus bg-surface3 rounded-full cursor-pointer"
             />
             <button
               type="button"
@@ -476,7 +476,7 @@ export function FocusCard({
         {f.running ? (
           <button
             type="button"
-            className="min-h-[44px] flex-1 rounded-xl border border-line-strong bg-white hover:bg-zinc-100 text-zinc-950 font-sans text-xs font-semibold tracking-wide transition-all active:scale-[0.98] shadow-xs cursor-pointer"
+            className="min-h-[44px] flex-1 rounded-xl border border-line-strong bg-fg hover:bg-surface3 text-bg font-sans text-xs font-semibold tracking-wide transition-all active:scale-[0.98] shadow-xs cursor-pointer"
             onClick={f.stop}
           >
             {isFocusMode ? "Stop Cycle" : "Skip Break"}
@@ -487,13 +487,13 @@ export function FocusCard({
               aria-label="Subject"
               value={f.subject}
               onChange={(e) => f.setSubject(e.target.value)}
-              className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 font-sans text-xs font-medium text-fg focus:border-sky-400 transition-all cursor-pointer"
+              className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 font-sans text-xs font-medium text-fg focus-visible:ring-2 focus-visible:ring-focus transition-all cursor-pointer"
             >
               {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
             <button
               type="button"
-              className="min-h-[44px] px-6 rounded-xl border border-transparent bg-white hover:bg-zinc-100 text-zinc-950 font-sans text-xs font-semibold tracking-wide transition-all active:scale-[0.98] shadow-xs cursor-pointer"
+              className="min-h-[44px] px-6 rounded-xl border border-transparent bg-fg hover:bg-surface3 text-bg font-sans text-xs font-semibold tracking-wide transition-all active:scale-[0.98] shadow-xs cursor-pointer"
               onClick={handleStart}
             >
               Start Focus
@@ -560,7 +560,7 @@ export function FocusBar({
             )}
             <button
               type="button"
-              className="min-h-[44px] px-3.5 rounded-lg border border-transparent bg-white text-zinc-950 font-sans text-xs font-semibold tracking-wide active:scale-95 transition-all shadow-xs"
+              className="min-h-[44px] px-3.5 rounded-lg border border-transparent bg-fg text-bg font-sans text-xs font-semibold tracking-wide active:scale-95 transition-all shadow-xs"
               onClick={f.stop}
             >
               {f.timer.mode === "focus" ? "Stop" : "Skip"}
@@ -574,7 +574,7 @@ export function FocusBar({
             aria-label="Quick capture"
             onClick={onOpenCapture}
             title="Quick Capture [Ctrl+K]"
-            className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-sky-400/40 bg-fg text-zinc-950 font-mono font-bold text-lg active:scale-95 hover:opacity-90 transition-all shadow-sm"
+            className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-focus/40 bg-fg text-bg font-mono font-bold text-lg active:scale-95 hover:opacity-90 transition-all shadow-sm"
           >
             +
           </button>

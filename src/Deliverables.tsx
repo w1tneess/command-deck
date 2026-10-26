@@ -45,7 +45,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
   };
 
   return (
-    <Card labelledBy="viva-watchdog-h" className="mt-6 flex flex-col gap-4">
+    <Card labelledBy="viva-watchdog-h" className="flex flex-col gap-4">
       <div className="flex items-center justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2.5">
           <span className="flex size-6 items-center justify-center rounded-lg bg-warn/15 text-warn">
@@ -65,7 +65,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
         {PRACTICAL_VIVA_TARGETS.map((t) => {
           const match = findChapterAndSubject(t.chapterSearch, t.subjectId);
           const done = !!checkedLabs[t.title];
@@ -73,10 +73,8 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
           return (
             <div
               key={t.title}
-              className={`flex flex-col justify-between gap-3 rounded-xl border p-3.5 transition-all ${
-                done
-                  ? "border-accent/30 bg-emerald-950/15"
-                  : "border-line bg-surface/60 hover:border-line-strong"
+              className={`flex flex-col justify-between gap-3 rounded-2xl bg-surface2 p-4 ring-1 transition-all ${
+                done ? "ring-accent/40" : "ring-line"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -85,9 +83,11 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     type="button"
                     aria-label={`Toggle preparation status for ${t.title}`}
                     onClick={() => toggleCheck(t.title)}
-                    className="mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded border border-line-strong bg-surface2 active:scale-95 transition-all"
+                    className="-ml-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-lg border-0 bg-transparent cursor-pointer active:scale-95 transition-all md:size-8 focus-visible:ring-2 focus-visible:ring-focus"
                   >
-                    {done && <span className="text-accent text-xs font-bold">✓</span>}
+                    <span className="flex size-5 items-center justify-center rounded border border-line-strong bg-surface">
+                      {done && <span className="text-accent text-xs font-bold">✓</span>}
+                    </span>
                   </button>
                   <div className="flex flex-col min-w-0">
                     <span className={`font-sans text-xs font-semibold ${done ? "text-muted line-through" : "text-fg"}`}>
@@ -100,7 +100,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-line">
+              <div className="flex items-center justify-between pt-2">
                 <span className="font-mono text-[11px] text-muted  ">
                   {t.subjectId.toUpperCase()} VIVA
                 </span>
@@ -111,7 +111,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     rel="noopener noreferrer"
                     aria-label={`Add ${t.title} Viva Prep to Google Calendar`}
                     title="Add Viva Prep Session to Google Calendar"
-                    className="h-6 rounded border border-line bg-surface2 hover:bg-surface3 px-2 font-mono text-xs text-fg/80 hover:text-fg transition-all flex items-center gap-1"
+                    className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 font-mono text-xs text-muted hover:text-fg transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-focus"
                   >
                     <AppleEmoji emoji="📅" size={12} />
                     <span className="text-[11px]">Add Cal</span>
@@ -121,7 +121,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                       type="button"
                       aria-label={`Launch Practical Viva for ${t.title}`}
                       onClick={() => onOpenViva(match.chapter, match.subject)}
-                      className="h-6 rounded border border-warn/30 bg-warn/15 hover:bg-warn/15 px-2 font-mono text-xs font-semibold text-warn transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                      className="min-h-[44px] md:min-h-[38px] rounded-lg border border-warn/30 bg-warn/15 hover:bg-warn/15 px-3 font-mono text-xs font-semibold text-warn transition-all active:scale-95 flex items-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
                     >
                       <AppleEmoji emoji="⚡" size={12} />
                       <span>Launch Viva</span>
@@ -150,26 +150,24 @@ export function DeliverablesPage({
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   return (
-    <>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 md:max-w-3xl">
       <PageHeader title="Due dates" sub="Lab manuals, projects and practicals for Class X.">
         <button
           type="button"
           onClick={() => setShowCalendarModal(true)}
-          className="h-9 px-3 rounded-xl border border-accent/30 bg-accent/15 hover:bg-accent/15 text-accent text-xs font-medium transition-all flex items-center gap-1.5"
+          className="min-h-[44px] md:min-h-[38px] px-3 rounded-xl border border-accent/30 bg-accent/15 hover:bg-accent/15 text-accent text-sm font-medium transition-all flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-focus"
         >
           <span>📅</span>
           <span>Subscribe in Google Calendar</span>
         </button>
       </PageHeader>
-      <div className="flex flex-col gap-6 max-w-4xl">
-        <Deliverables state={state} act={act} onOpenViva={onOpenViva} />
-        <PracticalVivaWatchdog state={state} onOpenViva={onOpenViva} />
-      </div>
+      <Deliverables state={state} act={act} onOpenViva={onOpenViva} />
+      <PracticalVivaWatchdog state={state} onOpenViva={onOpenViva} />
 
       {showCalendarModal && (
         <CalendarModal state={state} act={act} onClose={() => setShowCalendarModal(false)} />
       )}
-    </>
+    </div>
   );
 }
 
@@ -205,7 +203,7 @@ export function Deliverables({
   const anyDue = items.some((d) => d.due);
   const [adding, setAdding] = useState(false);
   return (
-    <Card labelledBy="del-h">
+    <section aria-labelledby="del-h" className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <H2 id="del-h">For {phase.name}</H2>
       </div>
@@ -218,13 +216,13 @@ export function Deliverables({
         <div role="status" className="mt-4 mb-2 rounded-xl border border-line bg-surface2 px-4 py-3 text-xs text-muted">No due dates set yet. Add target dates to enable timely reminders.</div>
       ) : null}
       {items.length === 0 && <p className="m-0 mt-4 border-t border-line py-5 text-sm text-muted">Nothing to submit with {phase.name} yet. Add a deliverable below.</p>}
-      <div className="flex flex-col gap-2 mt-2">
+      <div className="mt-3 flex flex-col gap-3 md:gap-4">
         {items.map((d) => <Item key={d.id} d={d} today={state.today} act={act} />)}
       </div>
-      <div className="border-t border-line pt-4 mt-2">
+      <div className="pt-4">
         {adding ? <AddForm phaseId={phase.id} act={act} onDone={() => setAdding(false)} /> : <Btn onClick={() => setAdding(true)}>Add a due date</Btn>}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -277,23 +275,27 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
   const pct = d.totalCount ? Math.round((countToShow / d.totalCount) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface2 p-3.5 sm:p-4 transition-all hover:border-line-strong hover:bg-surface2">
+    <div className="flex flex-col gap-3 rounded-2xl bg-surface2 p-4 ring-1 ring-line">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-fg">
-              <AppleText text={d.name} size={14} />
+            <span className="text-base font-medium text-fg">
+              <AppleText text={d.name} size={16} />
             </span>
             {d.vivaPrep && (
               <span className="rounded-full bg-surface3 px-2 py-0.5 text-xs font-medium text-muted">Viva</span>
             )}
           </div>
-          <div className="mt-0.5 text-xs text-muted">
-            <span className="font-medium text-fg/80">{d.subject}</span>{d.detail ? ` · ${d.detail}` : ""}
+          <div className="mt-0.5 text-sm text-muted">
+            <span>{d.subject}</span>{d.detail ? ` · ${d.detail}` : ""}
             {d.due && (
               <span className={isOverdue ? "font-semibold text-danger" : isUrgent ? "font-semibold text-warn" : ""}>
                 {" "}· due {fmtShort(d.due)}
-                {left !== null && d.status !== "done" ? (left < 0 ? ` (${plural(-left, "day")} late)` : left === 0 ? " (today)" : ` (in ${plural(left, "day")})`) : ""}
+                {left !== null && d.status !== "done" && (
+                  <span className={`font-mono tabular-nums ${isOverdue || isUrgent ? "" : "text-accent"}`}>
+                    {left < 0 ? ` (${plural(-left, "day")} late)` : left === 0 ? " (today)" : ` (in ${plural(left, "day")})`}
+                  </span>
+                )}
               </span>
             )}
           </div>
@@ -302,7 +304,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           type="button"
           aria-label={`${d.name}: ${STATE_LABEL[d.status]}. Tap to change.`}
           onClick={() => patch({ status: NEXT[d.status] })}
-          className="-my-1 flex min-h-8 shrink-0 items-center border-0 bg-transparent cursor-pointer"
+          className="flex min-h-[44px] md:min-h-[38px] shrink-0 items-center rounded-full border-0 bg-transparent cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
         >
           <span
             className={`rounded-full border px-3 py-0.5 text-xs font-medium tracking-wide transition-all ${
@@ -313,7 +315,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
                   : d.status === "done"
                     ? "border-accent/30 bg-accent/15 font-semibold text-accent"
                     : d.status === "in_progress"
-                      ? "border-sky-500/40 bg-sky-500/10 font-semibold text-sky-400"
+                      ? "border-focus/40 bg-focus/10 font-semibold text-focus"
                       : "border-line text-muted bg-surface2"
             }`}
           >
@@ -337,7 +339,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
         <div className="flex items-center gap-3">
           <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface3">
             <span
-              className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-fg"}`}
+              className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-good" : "bg-fg"}`}
               style={{ width: `${pct}%` }}
             />
           </span>
@@ -349,7 +351,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
             aria-label={`One fewer done for ${d.name}`}
             disabled={countToShow === 0}
             onClick={() => stepCount(-1)}
-            className="size-8 rounded-lg border border-line bg-surface2 text-sm text-fg hover:bg-white hover:text-zinc-950 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95"
+            className="size-11 md:size-8 rounded-lg border border-line bg-surface2 text-sm text-fg hover:bg-surface3 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95 focus-visible:ring-2 focus-visible:ring-focus"
           >
             −
           </button>
@@ -358,14 +360,14 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
             aria-label={`One more done for ${d.name}`}
             disabled={countToShow === d.totalCount}
             onClick={() => stepCount(1)}
-            className="size-8 rounded-lg border border-line bg-surface2 text-sm text-fg hover:bg-white hover:text-zinc-950 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95"
+            className="size-11 md:size-8 rounded-lg border border-line bg-surface2 text-sm text-fg hover:bg-surface3 transition-all disabled:opacity-20 font-mono flex items-center justify-center active:scale-95 focus-visible:ring-2 focus-visible:ring-focus"
           >
             +
           </button>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-line">
+      <div className="flex flex-wrap items-center gap-2 pt-1">
         {editingDue ? (
           <>
             <input
@@ -373,7 +375,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
               aria-label={`Due date for ${d.name}`}
               value={d.due ?? ""}
               onChange={(e) => patch({ due: e.target.value || null })}
-              className="h-8.5 rounded-lg border border-line-strong bg-surface px-3 font-mono text-xs text-fg focus:border-sky-400"
+              className="h-11 md:h-[38px] rounded-lg border border-line-strong bg-surface px-3 font-mono text-sm text-fg focus-visible:ring-2 focus-visible:ring-focus"
             />
             <Btn className="px-3 text-xs" onClick={() => setEditingDue(false)}>
               Done
@@ -394,8 +396,8 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           type="button"
           aria-pressed={d.vivaPrep}
           onClick={() => patch({ vivaPrep: !d.vivaPrep })}
-          className={`h-8.5 rounded-lg border px-3 text-xs font-medium transition-all ${
-            d.vivaPrep ? "border-white bg-white text-zinc-950 font-semibold" : "border-line bg-transparent text-muted hover:text-fg"
+          className={`min-h-[44px] md:min-h-[38px] rounded-lg border px-3 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-focus ${
+            d.vivaPrep ? "border-transparent bg-fg text-bg font-semibold" : "border-line bg-transparent text-muted hover:text-fg"
           }`}
         >
           Viva prep
@@ -406,7 +408,7 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
           rel="noopener noreferrer"
           title="Add Deliverable to Google Calendar"
           aria-label={`Add ${d.name} to Google Calendar`}
-          className="h-8.5 rounded-lg border border-line bg-transparent px-2.5 text-xs text-muted hover:text-fg hover:bg-surface2 transition-all flex items-center gap-1"
+          className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-transparent px-3 text-sm text-muted hover:text-fg hover:bg-surface3 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-focus"
         >
           <span>📅</span>
           <span>Cal</span>
@@ -443,7 +445,7 @@ function AddForm({ phaseId, act, onDone }: { phaseId: string; act: Act; onDone: 
   const [steps, setSteps] = useState("");
   const [saving, setSaving] = useState(false);
   const busy = useRef(false);
-  const field = "h-10 rounded-xl border border-line-strong bg-surface px-3.5 text-sm text-fg disabled:opacity-50 focus:border-sky-400 transition-all placeholder:text-muted";
+  const field = "h-10 rounded-xl border border-line-strong bg-surface px-3.5 text-sm text-fg disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-focus transition-all placeholder:text-muted";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

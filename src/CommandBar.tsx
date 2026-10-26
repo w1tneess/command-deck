@@ -334,7 +334,7 @@ export function CommandBar({
                             </>
                           )}
                           {item.badge && !isChapter && (
-                            <span className="rounded px-1.5 py-0.2 font-mono text-[11px]   text-sky-400 border border-sky-500/20 bg-sky-500/10">
+                            <span className="rounded px-1.5 py-0.2 font-mono text-[11px]   text-focus border border-focus/20 bg-focus/10">
                               {item.badge}
                             </span>
                           )}
@@ -363,7 +363,7 @@ export function CommandBar({
                             e.stopPropagation();
                             handleFocusChapter(item.subject!);
                           }}
-                          className="flex h-7 items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 font-sans text-xs font-medium text-sky-300 hover:bg-sky-500/20 transition-all active:scale-95"
+                          className="flex h-7 items-center gap-1 rounded-md border border-focus/30 bg-focus/10 px-2 font-sans text-xs font-medium text-focus hover:bg-focus/20 transition-all active:scale-95"
                         >
                           <span>▶ Focus</span>
                         </button>

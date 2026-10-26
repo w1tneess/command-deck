@@ -25,48 +25,12 @@ function timeStrToMinutes(str: string): number {
 }
 
 const CATEGORY_STYLES: Record<string, { border: string; bg: string; text: string; badge: string; emoji: string }> = {
-  morning: {
-    border: "border-sky-500/30",
-    bg: "bg-sky-500/10",
-    text: "text-sky-300",
-    badge: "bg-sky-500/20 text-sky-300",
-    emoji: "🌅",
-  },
-  school: {
-    border: "border-warn/30",
-    bg: "bg-warn/15",
-    text: "text-warn",
-    badge: "bg-warn/15 text-warn",
-    emoji: "🏫",
-  },
-  revision: {
-    border: "border-indigo-500/30",
-    bg: "bg-indigo-500/10",
-    text: "text-indigo-300",
-    badge: "bg-indigo-500/20 text-indigo-300",
-    emoji: "⚡",
-  },
-  practice: {
-    border: "border-purple-500/30",
-    bg: "bg-purple-500/10",
-    text: "text-purple-300",
-    badge: "bg-purple-500/20 text-purple-300",
-    emoji: "🧠",
-  },
-  winddown: {
-    border: "border-danger/30",
-    bg: "bg-danger/10",
-    text: "text-danger",
-    badge: "bg-danger/10 text-danger",
-    emoji: "🌙",
-  },
-  custom: {
-    border: "border-accent/30",
-    bg: "bg-accent/15",
-    text: "text-accent",
-    badge: "bg-accent/15 text-accent",
-    emoji: "🎯",
-  },
+  morning: { border: "border-line", bg: "bg-surface3", text: "text-warn", badge: "bg-surface3 text-warn", emoji: "🌅" },
+  school: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", emoji: "🏫" },
+  revision: { border: "border-line", bg: "bg-surface3", text: "text-accent", badge: "bg-surface3 text-accent", emoji: "⚡" },
+  practice: { border: "border-line", bg: "bg-surface3", text: "text-good", badge: "bg-surface3 text-good", emoji: "🧠" },
+  winddown: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", emoji: "🌙" },
+  custom: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", emoji: "🎯" },
 };
 
 export function Schedule({
@@ -142,13 +106,13 @@ export function Schedule({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl w-full">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
       <PageHeader title="Schedule" sub="Time blocks for today. Shift them when plans slip." />
       {/* Hero Header & Google Calendar Integration Banner */}
       <Card labelledBy={`${uid}-hero-h`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
+            <div className="flex size-11 items-center justify-center rounded-xl bg-surface3 text-fg">
               <AppleEmoji emoji="⏱️" size={24} />
             </div>
             <div>
@@ -168,9 +132,9 @@ export function Schedule({
             <button
               type="button"
               onClick={() => setShowGoogleSyncModal(true)}
-              className={`flex items-center justify-center gap-2 rounded-xl font-sans font-semibold text-xs py-2.5 px-3.5 shadow-md active:scale-95 transition-all cursor-pointer shrink-0 ${
+              className={`flex min-h-[44px] md:min-h-[38px] items-center justify-center gap-2 rounded-xl px-4 font-sans font-semibold text-sm active:scale-95 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus ${
                 state.googleSync?.connected
-                  ? "bg-emerald-500 hover:bg-emerald-400 text-zinc-950"
+                  ? "bg-accent hover:bg-accent-hover text-accent-text"
                   : "bg-fg hover:opacity-90 text-bg"
               }`}
             >
@@ -181,7 +145,7 @@ export function Schedule({
             <button
               type="button"
               onClick={() => setShowCalendarModal(true)}
-              className="flex items-center justify-center gap-2 rounded-xl border border-line bg-surface2 hover:bg-surface3 text-fg font-sans font-semibold text-xs py-2.5 px-3.5 active:scale-95 transition-all cursor-pointer shrink-0"
+              className="flex min-h-[44px] md:min-h-[38px] items-center justify-center gap-2 rounded-xl border border-line bg-surface2 hover:bg-surface3 text-fg font-sans font-semibold text-sm px-4 active:scale-95 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus"
             >
               <AppleEmoji emoji="📅" size={15} />
               <span>iCal Feed</span>
@@ -190,17 +154,17 @@ export function Schedule({
         </div>
 
         {/* Quick-Tap Time Shifting Toolbar (For real-world study delays) */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-3 text-xs">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface2 p-4 text-sm ring-1 ring-line">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="font-semibold text-fg/80 text-xs">Real-World Study Delay?</span>
-            <span className="text-xs text-muted hidden sm:inline">Tap to shift all tracks forward</span>
+            <span className="font-semibold text-fg text-sm">Real-World Study Delay?</span>
+            <span className="text-sm text-muted hidden sm:inline">Tap to shift all tracks forward</span>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => handleShiftTime(-15)}
-              className="rounded-lg border border-line bg-surface2 hover:bg-surface3 px-2.5 py-1 text-xs font-mono text-fg/80 hover:text-fg transition-all cursor-pointer"
+              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
               title="Shift schedule 15m earlier"
             >
               -15m
@@ -208,7 +172,7 @@ export function Schedule({
             <button
               type="button"
               onClick={() => handleShiftTime(15)}
-              className="rounded-lg border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 py-1 text-xs font-mono font-semibold text-sky-300 transition-all cursor-pointer"
+              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-focus/40 bg-focus/10 hover:bg-focus/20 px-3 text-xs font-mono font-semibold text-focus transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
               title="Shift schedule 15m later (Study delay)"
             >
               +15m Delay
@@ -216,7 +180,7 @@ export function Schedule({
             <button
               type="button"
               onClick={() => handleShiftTime(30)}
-              className="rounded-lg border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 py-1 text-xs font-mono font-semibold text-sky-300 transition-all cursor-pointer"
+              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-focus/40 bg-focus/10 hover:bg-focus/20 px-3 text-xs font-mono font-semibold text-focus transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
               title="Shift schedule 30m later"
             >
               +30m Delay
@@ -224,7 +188,7 @@ export function Schedule({
             <button
               type="button"
               onClick={handleResetSchedule}
-              className="rounded-lg border border-line bg-surface2 hover:bg-surface3 px-2 py-1 text-xs font-sans text-muted hover:text-fg transition-all cursor-pointer"
+              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-sans text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
               title="Reset to default CBSE schedule"
             >
               ↺ Reset
@@ -242,14 +206,14 @@ export function Schedule({
 
       {/* Overlap Conflict Alert Banner */}
       {state.scheduleConflicts && state.scheduleConflicts.length > 0 && (
-        <div className="rounded-2xl border border-warn/30 bg-amber-950/30 p-4 text-warn flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in shadow-lg">
+        <div className="rounded-2xl bg-warn/10 ring-1 ring-warn/30 p-4 text-warn flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
           <div className="flex items-start gap-3">
             <AppleEmoji emoji="⚠️" size={20} />
             <div>
               <div className="font-semibold text-xs text-warn">
                 {state.scheduleConflicts.length} Schedule Conflict{state.scheduleConflicts.length > 1 ? "s" : ""} with Google Calendar
               </div>
-              <div className="text-xs text-amber-200/80 font-mono mt-0.5">
+              <div className="text-sm text-muted font-mono mt-0.5">
                 "{state.scheduleConflicts[0].eventSummary}" clashes with study block "{state.scheduleConflicts[0].blockTitle}" ({state.scheduleConflicts[0].blockStart}–{state.scheduleConflicts[0].blockEnd}).
               </div>
             </div>
@@ -257,7 +221,7 @@ export function Schedule({
           <button
             type="button"
             onClick={() => handleShiftTime(15)}
-            className="rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-sans font-semibold text-xs px-3.5 py-2 transition-all cursor-pointer shrink-0"
+            className="min-h-[44px] md:min-h-[38px] rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-sm px-4 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus"
           >
             +15m Shift Schedule →
           </button>
@@ -266,28 +230,28 @@ export function Schedule({
 
       {/* External Google Calendar Events for Today */}
       {state.externalEvents && state.externalEvents.length > 0 && (
-        <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/15 p-4 space-y-3">
+        <div className="flex flex-col gap-3 rounded-2xl bg-surface2 p-4 ring-1 ring-line">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AppleEmoji emoji="📅" size={16} />
-              <span className="font-sans text-xs font-semibold text-indigo-300">
+              <span className="font-sans text-sm font-semibold text-fg">
                 Google Calendar Events Today ({state.externalEvents.length})
               </span>
             </div>
             <button
               type="button"
               onClick={() => setShowGoogleSyncModal(true)}
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-mono cursor-pointer"
+              className="inline-flex min-h-[44px] md:min-h-[38px] items-center rounded-lg text-xs text-muted hover:text-fg font-mono cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
             >
               Sync Details →
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
             {state.externalEvents.map((ev) => (
               <div
                 key={ev.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-line bg-bg p-2.5 text-xs"
+                className="flex items-center justify-between gap-2 rounded-xl bg-surface p-3 text-sm ring-1 ring-line"
               >
                 <div className="min-w-0">
                   <div className="font-semibold text-fg truncate">
@@ -296,7 +260,7 @@ export function Schedule({
                   <div className="font-mono text-xs text-muted mt-0.5">
                     {ev.startsAt.slice(11, 16)} – {ev.endsAt.slice(11, 16)} IST
                     {ev.isStudyBlock && (
-                      <span className="ml-1.5 rounded px-1 py-0.2 bg-indigo-500/20 text-indigo-300 text-[11px] font-bold">
+                      <span className="ml-1.5 rounded px-1 py-0.2 bg-surface3 text-muted text-[11px] font-bold">
                         Study Block
                       </span>
                     )}
@@ -310,14 +274,14 @@ export function Schedule({
 
       {/* Active Focus Session Banner if Timer is Running */}
       {state.timer.mode === "focus" && (
-        <div className="rounded-2xl border border-accent/30 bg-emerald-950/20 p-4 text-accent flex items-center justify-between gap-4 animate-fade-in shadow-lg">
+        <div className="rounded-2xl bg-accent/10 ring-1 ring-accent/30 p-4 text-accent flex items-center justify-between gap-4 animate-fade-in">
           <div className="flex items-center gap-3">
-            <span className="flex size-3 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="flex size-3 rounded-full bg-accent animate-pulse" />
             <div>
               <div className="font-semibold text-sm text-accent">
                 Active Focus Session Synced
               </div>
-              <div className="text-xs text-emerald-200/80">
+              <div className="text-sm text-muted">
                 {state.timer.subjectId
                   ? `Focusing on ${state.subjects.find((s) => s.id === state.timer.subjectId)?.name || state.timer.subjectId}`
                   : "Deep Focus Round Active"}
@@ -327,7 +291,7 @@ export function Schedule({
           </div>
           <a
             href="#today"
-            className="rounded-xl bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-sans font-semibold text-xs px-3.5 py-2 transition-all cursor-pointer shrink-0"
+            className="inline-flex min-h-[44px] md:min-h-[38px] items-center rounded-xl bg-accent hover:bg-accent-hover text-accent-text font-sans font-semibold text-sm px-4 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus"
           >
             Focus Bar →
           </a>
@@ -335,7 +299,7 @@ export function Schedule({
       )}
 
       {/* Time-Blocking Timeline Grid */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 md:gap-3">
         {blocks.map((block) => {
           const style = CATEGORY_STYLES[block.category] || CATEGORY_STYLES.custom;
           const startM = timeStrToMinutes(block.startTime);
@@ -352,15 +316,13 @@ export function Schedule({
           return (
             <div
               key={block.id}
-              className={`relative rounded-2xl border p-4.5 transition-all ${
-                isCurrent
-                  ? `border-accent/30 bg-surface ring-2 ring-emerald-500/30 shadow-[0_0_24px_rgba(16,185,129,0.15)]`
-                  : `border-line bg-bg hover:border-line-strong`
+              className={`relative rounded-2xl bg-surface2 p-4 transition-all ${
+                isCurrent ? "ring-2 ring-accent/40" : "ring-1 ring-line"
               }`}
             >
               {isCurrent && (
                 <div className="mb-3 flex w-fit items-center gap-1.5 rounded-full border border-accent/30 bg-accent/15 px-2.5 py-0.5 text-[11px] font-sans font-bold text-accent  ">
-                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="size-2 rounded-full bg-accent animate-pulse" />
                   <span>Now Active</span>
                 </div>
               )}
@@ -392,13 +354,13 @@ export function Schedule({
                 </div>
 
                 {/* Block Action Buttons */}
-                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-line">
+                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
                   {/* 1-Click Export to Google Calendar */}
                   <a
                     href={gcalUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 rounded-lg border border-line bg-surface2 hover:bg-surface3 px-2.5 py-1.5 text-xs text-fg/80 hover:text-fg transition-all"
+                    className="flex min-h-[44px] md:min-h-[38px] items-center gap-1.5 rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs text-muted hover:text-fg transition-all focus-visible:ring-2 focus-visible:ring-focus"
                     title="Export this block to Google Calendar"
                   >
                     <AppleEmoji emoji="📅" size={13} />
@@ -409,7 +371,7 @@ export function Schedule({
                   <button
                     type="button"
                     onClick={() => handleShiftTime(15, block.id)}
-                    className="rounded-lg border border-line bg-surface2 hover:bg-surface3 px-2 py-1.5 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer"
+                    className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
                     title="Delay this block and following blocks by 15m"
                   >
                     +15m
@@ -420,7 +382,7 @@ export function Schedule({
                     <button
                       type="button"
                       onClick={() => onStartFocus?.()}
-                      className="rounded-lg bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-sans font-semibold text-xs px-3 py-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                      className="min-h-[44px] md:min-h-[38px] rounded-lg bg-accent hover:bg-accent-hover text-accent-text font-sans font-semibold text-xs px-3 transition-all cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-focus"
                     >
                       Start Focus
                     </button>
@@ -430,14 +392,14 @@ export function Schedule({
 
               {/* Progress bar through current active block */}
               {isCurrent && (
-                <div className="mt-3.5 pt-3 border-t border-accent/30 flex flex-col gap-1.5">
+                <div className="mt-3.5 flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-xs font-sans text-fg/80">
                     <span>Block Elapsed: {elapsedMins}m / {durMins}m</span>
                     <span className="font-mono text-accent font-semibold">{pct}%</span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-surface3 overflow-hidden">
                     <div
-                      className="h-full bg-emerald-400 transition-all duration-500 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                      className="h-full bg-accent transition-all duration-500 rounded-full"
                       style={{ width: `${pct}%` }}
                     />
                   </div>

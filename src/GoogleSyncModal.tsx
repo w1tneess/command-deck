@@ -145,7 +145,7 @@ export function GoogleSyncModal({
         {/* Modal Header */}
         <div className="flex items-start justify-between gap-4 border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-focus/10 border border-focus/20 text-focus">
               <AppleEmoji emoji="📅" size={24} />
             </div>
             <div>
@@ -153,7 +153,7 @@ export function GoogleSyncModal({
                 <H2 id={`${uid}-title`}>Google Calendar Two-Way Live Sync</H2>
                 {sync?.connected ? (
                   <span className="flex items-center gap-1 rounded-full bg-accent/15 border border-accent/30 px-2 py-0.5 text-[11px] font-mono text-accent font-bold">
-                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="size-1.5 rounded-full bg-accent animate-pulse" />
                     LIVE
                   </span>
                 ) : (
@@ -303,14 +303,14 @@ export function GoogleSyncModal({
                 </div>
                 <div className="space-y-1.5">
                   {conflicts.map((c, i) => (
-                    <div key={i} className="flex items-center justify-between gap-2 bg-amber-950/40 p-2 rounded-lg border border-warn/30 font-mono">
+                    <div key={i} className="flex items-center justify-between gap-2 bg-warn/40 p-2 rounded-lg border border-warn/30 font-mono">
                       <span>Study: <strong>{c.blockTitle}</strong> ({c.blockStart}–{c.blockEnd})</span>
                       <span>⇄</span>
                       <span className="text-warn">Google: {c.eventSummary} ({formatIsoTime(c.eventStart)}–{formatIsoTime(c.eventEnd)})</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-amber-300/80 m-0">
+                <p className="text-xs text-warn/80 m-0">
                   Tip: Use the quick "+15m Delay" button on the Schedule board to shift study blocks around external appointments.
                 </p>
               </div>
@@ -347,7 +347,7 @@ export function GoogleSyncModal({
                           <div className="font-mono text-xs text-muted mt-0.5">
                             {formatIsoTime(ev.startsAt)} – {formatIsoTime(ev.endsAt)}
                             {ev.isStudyBlock && (
-                              <span className="ml-2 rounded px-1 py-0.2 bg-indigo-500/20 text-indigo-300 text-[11px]">
+                              <span className="ml-2 rounded px-1 py-0.2 bg-focus/20 text-focus text-[11px]">
                                 Study Block
                               </span>
                             )}
@@ -397,7 +397,7 @@ export function GoogleSyncModal({
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
                   placeholder="e.g. 123456789-abcdef.apps.googleusercontent.com"
-                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none"
                 />
               </div>
 
@@ -411,7 +411,7 @@ export function GoogleSyncModal({
                   value={clientSecret}
                   onChange={(e) => setClientSecret(e.target.value)}
                   placeholder="GOCSPX-..."
-                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none"
                 />
               </div>
 
@@ -425,7 +425,7 @@ export function GoogleSyncModal({
                   value={refreshToken}
                   onChange={(e) => setRefreshToken(e.target.value)}
                   placeholder="1//04... (If you already generated an offline token)"
-                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none"
                 />
               </div>
 
@@ -439,7 +439,7 @@ export function GoogleSyncModal({
                   value={calendarId}
                   onChange={(e) => setCalendarId(e.target.value)}
                   placeholder="primary"
-                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-xs font-mono text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none"
                 />
               </div>
             </div>

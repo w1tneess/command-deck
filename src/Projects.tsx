@@ -1,28 +1,30 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 import type { Act, Project, State } from "./api.ts";
-import { AppleText, Btn, Card, Check, H2, plural, PageHeader } from "./ui.tsx";
+import { AppleText, Btn, Check, H2, plural, PageHeader } from "./ui.tsx";
+
+const CARD = "min-w-0 rounded-2xl bg-surface2 p-4 ring-1 ring-line text-fg";
 
 export function Projects({ state, act }: { state: State; act: Act }) {
   const [adding, setAdding] = useState(false);
   return (
-    <>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
       <PageHeader title="Projects" sub="Goals beyond the syllabus, in small steps.">
         <Btn kind="primary" aria-expanded={adding} onClick={() => setAdding((a) => !a)}>{adding ? "Close" : "+ Add Project"}</Btn>
       </PageHeader>
       {adding && (
-        <Card className="max-w-3xl">
+        <section className={CARD}>
           <ProjectForm saveLabel="Add Project" initial={{ name: "", detail: "" }} onCancel={() => setAdding(false)} onSave={async (v) => { if (await act("POST", "/api/projects", v)) setAdding(false); }} />
-        </Card>
+        </section>
       )}
       {state.projects.length === 0 && !adding && (
-        <Card className="max-w-3xl">
+        <section className={CARD}>
           <p className="m-0 text-sm text-muted">No personal projects yet. Track a fitness routine, a coding project, or an extracurricular goal broken down into actionable milestones.</p>
-        </Card>
+        </section>
       )}
-      <div className="flex max-w-3xl flex-col gap-4 lg:gap-6">
+      <div className="flex flex-col gap-3 md:gap-4">
         {state.projects.map((p) => <ProjectCard key={p.id} project={p} act={act} />)}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -54,7 +56,7 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
   };
 
   return (
-    <Card labelledBy={`${id}-h`}>
+    <section aria-labelledby={`${id}-h`} className={CARD}>
       {editing ? (
         <ProjectForm saveLabel="Save" initial={{ name: p.name, detail: p.detail }} onCancel={() => setEditing(false)} onSave={async (v) => { if (await act("PATCH", `/api/projects/${p.id}`, v)) setEditing(false); }} />
       ) : (
@@ -64,8 +66,8 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
             {p.detail && <p className="m-0 mt-1 text-sm text-muted leading-relaxed"><AppleText text={p.detail} size={14} /></p>}
           </div>
           <div className="flex items-center gap-1">
-            <button type="button" aria-label={`Edit ${p.name}`} onClick={() => setEditing(true)} className="flex h-8 px-2.5 items-center justify-center rounded-lg border-0 bg-transparent text-xs text-muted hover:text-fg transition-all">Edit</button>
-            <button type="button" aria-label={`Delete ${p.name}`} onClick={() => setRemoving(true)} className="flex h-8 px-2.5 items-center justify-center rounded-lg border-0 bg-transparent text-xs text-muted hover:text-danger transition-all">Delete</button>
+            <button type="button" aria-label={`Edit ${p.name}`} onClick={() => setEditing(true)} className="flex min-h-[44px] md:min-h-[38px] px-3 items-center justify-center rounded-lg border-0 bg-transparent text-sm text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus">Edit</button>
+            <button type="button" aria-label={`Delete ${p.name}`} onClick={() => setRemoving(true)} className="flex min-h-[44px] md:min-h-[38px] px-3 items-center justify-center rounded-lg border-0 bg-transparent text-sm text-muted hover:text-danger transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus">Delete</button>
           </div>
         </div>
       )}
@@ -81,28 +83,28 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
       {p.milestones.length > 0 && (
         <div className="mt-4 flex items-center gap-3">
           <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface3">
-            <span className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-emerald-400" : "bg-fg"}`} style={{ width: `${pct}%` }} />
+            <span className={`block h-full transition-all duration-300 ease-out rounded-full ${pct === 100 ? "bg-accent" : "bg-fg"}`} style={{ width: `${pct}%` }} />
           </span>
           <span className="font-mono text-xs text-muted">{done} of {p.milestones.length}</span>
         </div>
       )}
-      <ul className="m-0 mt-3 list-none p-0 flex flex-col gap-1.5">
+      <ul className="m-0 mt-3 list-none p-0 flex flex-col gap-2 md:gap-3">
         {p.milestones.map((m) => (
-          <li key={m.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface2 px-3.5 py-2.5 transition-all hover:bg-surface2">
-            <button type="button" role="switch" aria-checked={m.done} aria-label={`${m.title}: ${m.done ? "done" : "not done"}`} onClick={() => act("PATCH", `/api/milestones/${m.id}`, { done: !m.done })} className="flex size-7 shrink-0 items-center justify-center border-0 bg-transparent active:scale-95 transition-transform"><Check on={m.done} /></button>
+          <li key={m.id} className="flex items-center gap-3 rounded-xl bg-surface px-3">
+            <button type="button" role="switch" aria-checked={m.done} aria-label={`${m.title}: ${m.done ? "done" : "not done"}`} onClick={() => act("PATCH", `/api/milestones/${m.id}`, { done: !m.done })} className="flex size-11 md:size-[38px] shrink-0 items-center justify-center rounded-lg border-0 bg-transparent cursor-pointer active:scale-95 transition-transform focus-visible:ring-2 focus-visible:ring-focus"><Check on={m.done} /></button>
             <span className={`min-w-0 flex-1 text-sm ${m.done ? "text-muted line-through" : "text-fg"}`}>
               <AppleText text={m.title} size={14} />
             </span>
-            <button type="button" aria-label={`Remove ${m.title}`} onClick={() => act("DELETE", `/api/milestones/${m.id}`)} className="flex h-7 px-2 items-center rounded-lg border-0 bg-transparent text-xs text-muted hover:text-danger transition-all">Remove</button>
+            <button type="button" aria-label={`Remove ${m.title}`} onClick={() => act("DELETE", `/api/milestones/${m.id}`)} className="flex min-h-[44px] md:min-h-[38px] px-3 items-center rounded-lg border-0 bg-transparent text-sm text-muted hover:text-danger transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus">Remove</button>
           </li>
         ))}
       </ul>
-      <form className="mt-4 flex gap-2.5 border-t border-line pt-3.5" onSubmit={addMilestone}>
+      <form className="mt-4 flex gap-2.5" onSubmit={addMilestone}>
         <label htmlFor={`${id}-new`} className="sr-only">New milestone for {p.name}</label>
-        <input id={`${id}-new`} maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a specific milestone..." className="h-10 min-w-0 flex-1 rounded-xl border border-line-strong bg-surface px-3.5 text-sm text-fg focus:border-sky-400 transition-all placeholder:text-muted" />
+        <input id={`${id}-new`} maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a specific milestone..." className="h-11 md:h-10 min-w-0 flex-1 rounded-xl border border-line-strong bg-surface px-3.5 text-sm text-fg focus-visible:ring-2 focus-visible:ring-focus transition-all placeholder:text-muted" />
         <Btn type="submit" kind="primary" disabled={!title.trim() || savingMilestone}>{savingMilestone ? "Adding…" : "Add Milestone"}</Btn>
       </form>
-    </Card>
+    </section>
   );
 }
 
@@ -132,11 +134,11 @@ function ProjectForm({ initial, saveLabel, onSave, onCancel }: { initial: { name
     <form className="flex flex-col gap-3.5" onSubmit={submit}>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={nameId} className="text-xs font-medium text-fg/80">Project Title</label>
-        <input id={nameId} autoFocus maxLength={80} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="e.g. Science Exhibition Prototype" className="h-10 rounded-xl border border-line-strong bg-surface px-3.5 text-sm text-fg focus:border-sky-400 transition-all" />
+        <input id={nameId} autoFocus maxLength={80} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="e.g. Science Exhibition Prototype" className="h-11 md:h-10 rounded-xl border border-line-strong bg-surface px-3.5 text-sm text-fg focus-visible:ring-2 focus-visible:ring-focus transition-all" />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={detailId} className="text-xs font-medium text-fg/80">Objective / Details (Optional)</label>
-        <input id={detailId} maxLength={500} value={v.detail} onChange={(e) => setV({ ...v, detail: e.target.value })} placeholder="Key deliverables or target completion dates..." className="h-10 rounded-xl border border-line bg-surface px-3.5 text-sm text-fg focus:border-sky-400 transition-all" />
+        <input id={detailId} maxLength={500} value={v.detail} onChange={(e) => setV({ ...v, detail: e.target.value })} placeholder="Key deliverables or target completion dates..." className="h-11 md:h-10 rounded-xl border border-line bg-surface px-3.5 text-sm text-fg focus-visible:ring-2 focus-visible:ring-focus transition-all" />
       </div>
       <div className="flex gap-2.5 pt-1">
         <Btn type="submit" kind="primary" disabled={saving} className="px-5">{saving ? "Saving…" : saveLabel}</Btn>

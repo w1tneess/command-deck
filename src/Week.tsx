@@ -28,15 +28,14 @@ export function Week({ state, act }: { state: State; act: Act }) {
     if (energy === "high") return "border-accent/30 bg-accent/15 text-accent";
     if (energy === "ok") return "border-warn/30 bg-warn/15 text-warn";
     if (energy === "low") return "border-danger/30 bg-danger/10 text-danger";
-    return "border-line bg-white/5 text-muted";
+    return "border-line bg-surface2 text-muted";
   };
 
   return (
-    <>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
       <PageHeader title="Weekly review" />
-
-      <div className="flex flex-wrap items-start gap-4 lg:gap-6 mt-2">
-        <div className="flex min-w-0 flex-[3_1_480px] flex-col gap-4 lg:gap-6">
+      {/* cards below sit directly in the column */}
+      <div className="flex flex-col gap-4 md:gap-6">
           <Card labelledBy="bars-h">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <H2 id="bars-h">Study Time & Energy</H2>
@@ -50,7 +49,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
                     className={`w-full max-w-10 rounded-t-lg transition-all duration-300 ease-out ${
                       w.min === 0
                         ? "bg-surface2"
-                        : "bg-gradient-to-t from-emerald-600 to-emerald-400 group-hover:shadow-[0_0_12px_rgba(52,211,153,0.3)]"
+                        : "bg-good"
                     }`}
                     style={{ height: Math.max(6, Math.round((w.min / 180) * 150)) }}
                   />
@@ -69,10 +68,10 @@ export function Week({ state, act }: { state: State; act: Act }) {
               <H2 id="review-h">Study Hours vs Habits</H2>
               <span className="font-mono text-xs text-muted"><span className="text-fg font-semibold">{habitPct}%</span> of habits done this week</span>
             </div>
-            <table className="mt-3.5 w-full border-collapse text-left text-sm">
+            <table className="mt-3.5 w-full border-separate border-spacing-y-2 text-left text-sm">
               <caption className="sr-only">Study time, habits done and sleep rating for each of the last 7 days</caption>
               <thead>
-                <tr className="font-mono text-[11px] text-muted   border-b border-line">
+                <tr className="font-mono text-[11px] text-muted">
                   <th scope="col" className="pb-2.5 font-medium">Day</th>
                   <th scope="col" className="pb-2.5 font-medium">Study Hours</th>
                   <th scope="col" className="pb-2.5 font-medium">Habits</th>
@@ -81,22 +80,22 @@ export function Week({ state, act }: { state: State; act: Act }) {
               </thead>
               <tbody>
                 {week.map((w) => (
-                  <tr key={w.day} className="border-t border-line hover:bg-surface2 transition-colors">
-                    <th scope="row" className="py-3 pr-3 font-mono text-xs font-semibold text-fg ">{weekday(w.day)}</th>
-                    <td className="py-3 pr-3">
+                  <tr key={w.day}>
+                    <th scope="row" className="rounded-l-xl bg-surface py-3 pl-3 pr-3 font-mono text-xs font-semibold text-fg ">{weekday(w.day)}</th>
+                    <td className="bg-surface py-3 pr-3">
                       <div className="flex items-center gap-3">
                         <span className="h-1.5 w-full max-w-[160px] min-w-12 overflow-hidden rounded-full bg-surface3">
-                          <span className="block h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${Math.min(100, (w.min / 180) * 100)}%` }} />
+                          <span className="block h-full rounded-full transition-all duration-300 ease-out bg-good" style={{ width: `${Math.min(100, (w.min / 180) * 100)}%` }} />
                         </span>
                         <span className="font-mono text-xs text-muted">{hm(w.min)}</span>
                       </div>
                     </td>
-                    <td className="py-3 pr-3 font-mono text-xs">
+                    <td className="bg-surface py-3 pr-3 font-mono text-xs">
                       <span className={habitCount && w.habits === habitCount ? "text-accent font-semibold" : "text-fg/80"}>
                         {w.habits}/{habitCount}
                       </span>
                     </td>
-                    <td className="py-3 text-right font-mono text-xs text-muted">{w.sleep ?? "–"}</td>
+                    <td className="rounded-r-xl bg-surface py-3 pr-3 text-right font-mono text-xs text-muted">{w.sleep ?? "–"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -106,9 +105,8 @@ export function Week({ state, act }: { state: State; act: Act }) {
           <Reflection key={state.review.weekStart} state={state} act={act} />
           <Heatmap id="heat-study" title="Study, last 12 weeks" today={state.today} values={minutes} levelOf={studyLevel} text={(m) => (m ? hm(m) : "no study")} />
           <Heatmap id="heat-habits" title="Habits, last 12 weeks" today={state.today} values={habitsDone} levelOf={habitLevel} text={(n) => (n ? `${n} of ${habitCount} habits` : "no habits")} />
-        </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -150,7 +148,7 @@ function Reflection({ state, act }: { state: State; act: Act }) {
         onChange={(e) => setNote(e.target.value)}
         onBlur={() => void save()}
         placeholder="Document key insights, obstacles encountered, and strategic adjustments for next week..."
-        className="w-full resize-y rounded-xl border border-line bg-surface px-4 py-3 text-sm text-fg placeholder:text-muted/60 focus:border-accent/30 focus:outline-none transition-colors"
+        className="w-full resize-y rounded-xl border border-line bg-surface px-4 py-3 text-sm text-fg placeholder:text-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus transition-colors"
       />
     </Card>
   );
@@ -185,7 +183,7 @@ function Heatmap({ id, title, today, values, levelOf, text }: HeatProps) {
             <span
               key={c.day}
               title={c.future ? undefined : `${c.day}: ${text(c.v)}`}
-              className={`size-7 rounded-[4px] transition-transform hover:scale-110 ${c.future ? "box-border border border-dashed border-line bg-transparent" : "border border-line"} ${c.today ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-[#090b10]" : ""}`}
+              className={`size-7 rounded-[4px] transition-transform hover:scale-110 ${c.future ? "box-border border border-dashed border-line bg-transparent" : "border border-line"} ${c.today ? "ring-2 ring-focus ring-offset-1 ring-offset-bg" : ""}`}
               style={c.future ? undefined : { background: `var(--heat-${levelOf(c.v)})` }}
             />
           ))}

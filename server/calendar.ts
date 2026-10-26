@@ -306,21 +306,3 @@ export function generateIcsFeed(data: CalendarFeedData): string {
   lines.push("END:VCALENDAR");
   return lines.join(CRLF) + CRLF;
 }
-
-/** Formats a 1-click Google Calendar Event Template URL */
-export function makeGoogleCalendarUrl(opts: {
-  text: string;
-  dates: string; // "YYYYMMDDTHHmmss/YYYYMMDDTHHmmss" or "YYYYMMDD/YYYYMMDD"
-  details?: string;
-  location?: string;
-}): string {
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: opts.text,
-    dates: opts.dates,
-    ctz: "Asia/Kolkata",
-  });
-  if (opts.details) params.set("details", opts.details);
-  if (opts.location) params.set("location", opts.location);
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
-}

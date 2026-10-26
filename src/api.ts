@@ -21,6 +21,8 @@ export type Deliverable = {
   id: number; name: string; subject: string; detail: string; phaseId: string | null; status: DeliverableStatus;
   /** Steps finished and total, for a deliverable made of countable steps (the Maths portfolio has 12 activities). */
   doneCount: number | null; totalCount: number | null; due: string | null; vivaPrep: boolean;
+  /** The Google Calendar event this became when pushed (null until then). */
+  gcalEventId: string | null;
 };
 export type Phase = {
   id: string; name: string; scope: Scope; startsOn: string; endsOn: string;
@@ -45,6 +47,9 @@ export type ScheduleBlock = {
   endTime: string;   // "HH:MM"
   color: string;
   pos: number;
+  /** The Google event this block became, and the day it was pushed for (blocks repeat daily). */
+  gcalEventId?: string | null;
+  gcalEventDay?: string | null;
 };
 export type ExternalEvent = {
   id: string;
@@ -60,6 +65,10 @@ export type GoogleSyncStatus = {
   calendarId: string;
   lastSyncedAt: string | null;
   syncToken: string | null;
+  /** Connected before full calendar access existed (or Google dropped the grant): needs the consent screen again. */
+  needsReauth: boolean;
+  twoWay: boolean;
+  calendarTarget: "primary" | "deck";
 };
 export type ScheduleConflict = {
   blockId: number;
@@ -93,6 +102,8 @@ export type State = {
 };
 
 export class AuthError extends Error {}
+/** Google refused the stored credentials; the fix is the consent screen, not signing in again. */
+export class ReauthError extends Error {}
 export async function call<T = unknown>(method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
     method,
@@ -103,7 +114,10 @@ export async function call<T = unknown>(method: string, url: string, body?: unkn
   });
   if (res.status === 401) throw new AuthError();
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as { error?: string }).error ?? "Something went wrong.");
+  if (!res.ok) {
+    const msg = (data as { error?: string }).error ?? "Something went wrong.";
+    throw res.status === 403 && (data as { reauth?: boolean }).reauth ? new ReauthError(msg) : new Error(msg);
+  }
   return data as T;
 }
 

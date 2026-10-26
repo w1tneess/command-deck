@@ -5,7 +5,6 @@
  */
 
 import type { Env } from "./auth.ts";
-import { todayIST } from "./logic.ts";
 import type { ScheduleBlock } from "./calendar.ts";
 
 export type GoogleSyncRow = {
@@ -16,6 +15,8 @@ export type GoogleSyncRow = {
   calendar_id: string;
   last_synced_at: string | null;
   sync_token: string | null;
+  scope: string | null;
+  two_way: number;
 };
 
 export type ExternalEventRow = {
@@ -59,10 +60,8 @@ const DEFAULT_REDIRECT_URI = "https://deck.advaitachandra.in/api/google/callback
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const GOOGLE_CALENDAR_API_BASE = "https://www.googleapis.com/calendar/v3";
-const SCOPES = [
-  "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/calendar.readonly",
-].join(" ");
+/** Full calendar access: events plus the calendar list, so a dedicated "Command Deck" calendar can be created. */
+const SCOPES = "https://www.googleapis.com/auth/calendar";
 
 /** Map category to Google Calendar colorId */
 export function categoryToGoogleColorId(category: string): string {
@@ -150,6 +149,7 @@ export function buildGoogleAuthUrl(creds: GoogleCredentials, stateToken: string)
     scope: SCOPES,
     access_type: "offline",
     prompt: "consent",
+    include_granted_scopes: "true",
     state: stateToken,
   });
   return `${GOOGLE_AUTH_ENDPOINT}?${p.toString()}`;
@@ -160,7 +160,7 @@ export async function exchangeGoogleAuthCode(
   code: string,
   creds: GoogleCredentials,
   fetchFn: typeof fetch = fetch
-): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+): Promise<{ accessToken: string; refreshToken: string; expiresIn: number; scope: string }> {
   const p = new URLSearchParams({
     code,
     client_id: creds.clientId,
@@ -180,7 +180,7 @@ export async function exchangeGoogleAuthCode(
     throw new Error(`Google token exchange failed (${res.status}): ${errText}`);
   }
 
-  const data = await res.json() as { access_token?: string; refresh_token?: string; expires_in?: number; error?: string };
+  const data = await res.json() as { access_token?: string; refresh_token?: string; expires_in?: number; scope?: string; error?: string };
   if (!data.access_token || !data.refresh_token) {
     throw new Error(data.error || "Missing access_token or refresh_token in Google response.");
   }
@@ -189,6 +189,7 @@ export async function exchangeGoogleAuthCode(
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
     expiresIn: data.expires_in ?? 3600,
+    scope: data.scope ?? "",
   };
 }
 
@@ -267,7 +268,6 @@ export async function pullGoogleEvents(
   const auth = await getValidAccessToken(db, env, nowMs, fetchFn);
   if (!auth) throw new Error("Google Calendar is not connected.");
 
-  const todayStr = todayIST(nowMs);
   // Default window: -7 days to +35 days in IST
   const dPast = new Date(nowMs - 7 * 86_400_000);
   const dFuture = new Date(nowMs + 35 * 86_400_000);
@@ -421,23 +421,6 @@ export async function pushBlockToGoogle(
   return { eventId: created.id, htmlLink: created.htmlLink };
 }
 
-/** Pushes all schedule blocks for a given date to Google Calendar */
-export async function pushAllBlocksToGoogle(
-  db: D1Database,
-  env: Env["Bindings"],
-  blocks: ScheduleBlock[],
-  dateStr: string,
-  nowMs: number = Date.now(),
-  fetchFn: typeof fetch = fetch
-): Promise<{ pushed: number; eventIds: string[] }> {
-  const eventIds: string[] = [];
-  for (const b of blocks) {
-    const res = await pushBlockToGoogle(db, env, b, dateStr, nowMs, fetchFn);
-    eventIds.push(res.eventId);
-  }
-  return { pushed: eventIds.length, eventIds };
-}
-
 /** Deletes an event from Google Calendar and the local external_events table */
 export async function deleteGoogleCalendarEvent(
   db: D1Database,
@@ -515,4 +498,169 @@ export function detectScheduleConflicts(
   }
 
   return conflicts;
+}
+
+/** Thrown when Google rejects the stored credentials (expired, revoked, or missing the calendar scope); the UI answers with a consent prompt. */
+export class GoogleAuthError extends Error {}
+
+const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
+export const hasCalendarScope = (scope: string | null | undefined) => (scope ?? "").split(" ").includes(CALENDAR_SCOPE);
+
+/** True for any failure that only a fresh Google consent can fix. */
+export const isAuthFailure = (err: unknown) =>
+  err instanceof GoogleAuthError || /\((401|403)\)|invalid_grant|refresh failed|not connected/i.test(err instanceof Error ? err.message : "");
+
+const STUDY_RE = /\[Command Deck\]|\[Exam Tracker\]|\[Study OS\]|CBSE|Study Block/i;
+
+/**
+ * One Google Calendar call. "{cal}" in the path becomes the selected calendar. A 401 refreshes the access
+ * token once and retries; a call Google still rejects for credentials or scope throws GoogleAuthError.
+ */
+async function googleApi<T>(
+  db: D1Database,
+  env: Env["Bindings"],
+  method: string,
+  path: string,
+  body: unknown,
+  nowMs: number,
+  fetchFn: typeof fetch,
+  okStatuses: number[] = [],
+): Promise<T | null> {
+  const authed = async () => {
+    try {
+      const auth = await getValidAccessToken(db, env, nowMs, fetchFn);
+      if (!auth) throw new GoogleAuthError("Google Calendar is not connected.");
+      return auth;
+    } catch (err) {
+      if (err instanceof GoogleAuthError) throw err;
+      throw new GoogleAuthError(err instanceof Error ? err.message : "Google token refresh failed.");
+    }
+  };
+  const call = (auth: { accessToken: string; calendarId: string }) =>
+    fetchFn(`${GOOGLE_CALENDAR_API_BASE}${path.replace("{cal}", encodeURIComponent(auth.calendarId))}`, {
+      method,
+      headers: { Authorization: `Bearer ${auth.accessToken}`, ...(body ? { "Content-Type": "application/json" } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+  let res = await call(await authed());
+  if (res.status === 401) {
+    await db.prepare("UPDATE google_sync SET expires_at = 0 WHERE id = 1").run();
+    res = await call(await authed());
+  }
+  if (res.ok || okStatuses.includes(res.status)) return res.status === 204 || !res.ok ? null : ((await res.json()) as T);
+  const text = await res.text();
+  if (res.status === 401 || (res.status === 403 && /insufficient|scope/i.test(text))) {
+    throw new GoogleAuthError(`Google rejected the calendar credentials (${res.status}). Reconnect to grant calendar access.`);
+  }
+  throw new Error(`Google Calendar request failed (${res.status}): ${text}`);
+}
+
+export type CalendarEventInput = { title?: string; description?: string; start?: string; end?: string; reminderMinutes?: number };
+
+const eventBody = (e: CalendarEventInput) => ({
+  ...(e.title !== undefined && { summary: e.title }),
+  ...(e.description !== undefined && { description: e.description }),
+  ...(e.start && { start: { dateTime: e.start, timeZone: "Asia/Kolkata" } }),
+  ...(e.end && { end: { dateTime: e.end, timeZone: "Asia/Kolkata" } }),
+  ...(e.reminderMinutes !== undefined && { reminders: { useDefault: false, overrides: [{ method: "popup", minutes: e.reminderMinutes }] } }),
+});
+
+type GoogleEventItem = { id: string; status?: string; summary?: string; description?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string } };
+
+/** Live read of the selected calendar between two instants (not the D1 cache). */
+export async function listCalendarEvents(
+  db: D1Database,
+  env: Env["Bindings"],
+  fromMs: number,
+  toMs: number,
+  nowMs: number = Date.now(),
+  fetchFn: typeof fetch = fetch,
+): Promise<{ id: string; summary: string; description: string; startsAt: string; endsAt: string; isStudyBlock: boolean }[]> {
+  const q = new URLSearchParams({ timeMin: new Date(fromMs).toISOString(), timeMax: new Date(toMs).toISOString(), singleEvents: "true", orderBy: "startTime", maxResults: "250" });
+  const data = await googleApi<{ items?: GoogleEventItem[] }>(db, env, "GET", `/calendars/{cal}/events?${q}`, null, nowMs, fetchFn);
+  return (data?.items ?? [])
+    .filter((i) => i.status !== "cancelled")
+    .map((i) => {
+      const summary = i.summary || "(no title)";
+      return {
+        id: i.id,
+        summary,
+        description: i.description || "",
+        startsAt: normalizeToIstIso(i.start?.dateTime, i.start?.date),
+        endsAt: normalizeToIstIso(i.end?.dateTime, i.end?.date, true),
+        isStudyBlock: STUDY_RE.test(summary),
+      };
+    });
+}
+
+/** Creates an event and mirrors it into external_events so conflicts see it straight away. */
+export async function createCalendarEvent(
+  db: D1Database,
+  env: Env["Bindings"],
+  input: Required<Pick<CalendarEventInput, "title" | "start" | "end">> & CalendarEventInput,
+  nowMs: number = Date.now(),
+  fetchFn: typeof fetch = fetch,
+): Promise<{ id: string; htmlLink?: string }> {
+  const created = await googleApi<{ id: string; htmlLink?: string }>(db, env, "POST", "/calendars/{cal}/events", eventBody({ reminderMinutes: 10, ...input }), nowMs, fetchFn);
+  if (!created) throw new Error("Google returned no event.");
+  await db.prepare(
+    `INSERT INTO external_events (id, summary, description, starts_at, ends_at, is_study_block, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET summary = excluded.summary, description = excluded.description, starts_at = excluded.starts_at, ends_at = excluded.ends_at, is_study_block = excluded.is_study_block, updated_at = excluded.updated_at`,
+  ).bind(created.id, input.title, input.description ?? "", input.start, input.end, STUDY_RE.test(input.title) ? 1 : 0, toIstIso(nowMs)).run();
+  return created;
+}
+
+/** Patches only the fields given, then keeps the cached row in step. */
+export async function updateCalendarEvent(
+  db: D1Database,
+  env: Env["Bindings"],
+  eventId: string,
+  input: CalendarEventInput,
+  nowMs: number = Date.now(),
+  fetchFn: typeof fetch = fetch,
+): Promise<void> {
+  await googleApi(db, env, "PATCH", `/calendars/{cal}/events/${encodeURIComponent(eventId)}`, eventBody(input), nowMs, fetchFn);
+  await db.prepare(
+    `UPDATE external_events SET summary = COALESCE(?, summary), description = COALESCE(?, description), starts_at = COALESCE(?, starts_at), ends_at = COALESCE(?, ends_at), updated_at = ? WHERE id = ?`,
+  ).bind(input.title ?? null, input.description ?? null, input.start ?? null, input.end ?? null, toIstIso(nowMs), eventId).run();
+}
+
+/** Removes the event from Google (already gone counts as removed) and from the cache. Unlike deleteGoogleCalendarEvent, auth failures surface. */
+export async function removeCalendarEvent(
+  db: D1Database,
+  env: Env["Bindings"],
+  eventId: string,
+  nowMs: number = Date.now(),
+  fetchFn: typeof fetch = fetch,
+): Promise<void> {
+  await googleApi(db, env, "DELETE", `/calendars/{cal}/events/${encodeURIComponent(eventId)}`, null, nowMs, fetchFn, [404, 410]);
+  await db.prepare("DELETE FROM external_events WHERE id = ?").bind(eventId).run();
+}
+
+/** Switches between the primary calendar and a dedicated "Command Deck" one (created on first use). Cached events belong to the old calendar, so they are cleared. */
+export async function selectCalendar(
+  db: D1Database,
+  env: Env["Bindings"],
+  target: "primary" | "deck",
+  nowMs: number = Date.now(),
+  fetchFn: typeof fetch = fetch,
+): Promise<string> {
+  let id = "primary";
+  if (target === "deck") {
+    const list = await googleApi<{ items?: { id: string; summary?: string }[] }>(db, env, "GET", "/users/me/calendarList?minAccessRole=owner", null, nowMs, fetchFn);
+    id = list?.items?.find((c) => c.summary === "Command Deck")?.id ?? "";
+    if (!id) {
+      const made = await googleApi<{ id: string }>(db, env, "POST", "/calendars", { summary: "Command Deck", timeZone: "Asia/Kolkata" }, nowMs, fetchFn);
+      if (!made) throw new Error("Google returned no calendar.");
+      id = made.id;
+    }
+  }
+  await db.batch([
+    db.prepare("UPDATE google_sync SET calendar_id = ?, sync_token = NULL, last_synced_at = NULL WHERE id = 1").bind(id),
+    db.prepare("DELETE FROM external_events"),
+    db.prepare("UPDATE deliverables SET gcal_event_id = NULL"),
+    db.prepare("UPDATE schedule_blocks SET gcal_event_id = NULL, gcal_event_day = NULL"),
+  ]);
+  return id;
 }

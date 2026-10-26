@@ -1,6 +1,6 @@
 import type { State } from "./api.ts";
 import { GROUPS, type Page } from "./nav.ts";
-import { ICONS, Icon } from "./ui.tsx";
+import { BrandLogo, ICONS, Icon } from "./ui.tsx";
 
 export interface SidebarProps {
   page: Page;
@@ -19,7 +19,8 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
   return (
     <aside className="hidden min-h-screen w-60 shrink-0 select-none flex-col justify-between border-r border-line bg-bg p-5 lg:flex" aria-label="Main navigation">
       <div>
-        <a href="#today" className="block">
+        <a href="#today" className="flex items-center gap-3">
+          <BrandLogo size={32} />
           <h1 className="m-0 font-serif text-2xl font-bold tracking-tight text-fg">Command Deck</h1>
         </a>
 

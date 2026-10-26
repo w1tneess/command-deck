@@ -5,6 +5,7 @@ import {
   categoryToGoogleColorId,
   detectScheduleConflicts,
   exchangeGoogleAuthCode,
+  hasCalendarScope,
   normalizeToIstIso,
   pullGoogleEvents,
   pushBlockToGoogle,
@@ -68,7 +69,7 @@ describe("Google Calendar Pure Utilities", () => {
     expect(u.searchParams.get("access_type")).toBe("offline");
     expect(u.searchParams.get("prompt")).toBe("consent");
     expect(u.searchParams.get("state")).toBe("xyz-state-token");
-    expect(u.searchParams.get("scope")).toContain("https://www.googleapis.com/auth/calendar.events");
+    expect(u.searchParams.get("scope")).toBe("https://www.googleapis.com/auth/calendar");
   });
 
   it("detects schedule overlap conflicts between external events and study blocks", () => {
@@ -302,6 +303,198 @@ describe("security hardening", () => {
       const b = await start();
       await t.db.prepare("UPDATE settings SET value = ? WHERE key = 'google_oauth_state'").bind(`${b.state}:1`).run();
       expect(await callback(b.state)).toContain("state_mismatch");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("Full-access calendar API", () => {
+  const seed = async (scope: string | null = "https://www.googleapis.com/auth/calendar") => {
+    await t.db.prepare("INSERT INTO settings (key, value) VALUES ('google_client_id', 'id'), ('google_client_secret', 'secret')").run();
+    await t.db.prepare("INSERT INTO google_sync (id, refresh_token, access_token, expires_at, calendar_id, scope) VALUES (1, 'ref', 'tok', 9999999999999, 'primary', ?)").bind(scope).run();
+    return cookieOf(await login());
+  };
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  const call = (cookie: string, method: string, url: string, payload?: unknown) => t.inject({ method, url, payload, headers: { cookie } });
+
+  it("asks for the full calendar scope and flags connections that predate it", async () => {
+    expect(hasCalendarScope("https://www.googleapis.com/auth/calendar.events")).toBe(false);
+    expect(hasCalendarScope("openid https://www.googleapis.com/auth/calendar")).toBe(true);
+    const url = new URL(buildGoogleAuthUrl({ clientId: "id", clientSecret: "s", redirectUri: "https://x/cb" }, "st"));
+    expect(url.searchParams.get("scope")).toBe("https://www.googleapis.com/auth/calendar");
+    expect(url.searchParams.get("include_granted_scopes")).toBe("true");
+
+    const cookie = await seed(null);
+    expect(((await (await call(cookie, "GET", "/api/google/status")).json()) as any).needsReauth).toBe(true);
+    await t.db.prepare("UPDATE google_sync SET scope = 'https://www.googleapis.com/auth/calendar'").run();
+    expect(((await (await call(cookie, "GET", "/api/google/status")).json()) as any).needsReauth).toBe(false);
+  });
+
+  it("validates event input before touching Google", async () => {
+    const cookie = await seed();
+    vi.stubGlobal("fetch", async () => { throw new Error("must not call Google"); });
+    try {
+      expect((await call(cookie, "POST", "/api/calendar/events", { title: "x" })).status).toBe(400);
+      expect((await call(cookie, "POST", "/api/calendar/events", { title: "x", start: "2026-10-26T10:00:00+05:30", end: "2026-10-26T09:00:00+05:30" })).status).toBe(400);
+      expect((await call(cookie, "PATCH", "/api/calendar/events/abc", {})).status).toBe(400);
+      expect((await call(cookie, "PUT", "/api/calendar/settings", { twoWay: "yes" })).status).toBe(400);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("creates, lists, updates and deletes events, keeping the cache in step", async () => {
+    const cookie = await seed();
+    const seen: string[] = [];
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      seen.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`);
+      if (init?.method === "POST") return json({ id: "ev1", htmlLink: "https://cal/ev1" });
+      if (init?.method === "PATCH") return json({ id: "ev1" });
+      if (init?.method === "DELETE") return new Response(null, { status: 204 });
+      return json({ items: [{ id: "ev1", summary: "[Command Deck] Maths", start: { dateTime: "2026-10-26T10:00:00+05:30" }, end: { dateTime: "2026-10-26T11:00:00+05:30" } }, { id: "gone", status: "cancelled" }] });
+    });
+    try {
+      const made = await call(cookie, "POST", "/api/calendar/events", { title: "[Command Deck] Maths", start: "2026-10-26T10:00:00+05:30", end: "2026-10-26T11:00:00+05:30" });
+      expect(((await made.json()) as any).id).toBe("ev1");
+      expect((await t.db.prepare("SELECT is_study_block AS s FROM external_events WHERE id = 'ev1'").first<{ s: number }>())?.s).toBe(1);
+
+      const list = (await (await call(cookie, "GET", "/api/calendar/events?range=month")).json()) as any;
+      expect(list.range).toBe("month");
+      expect(list.events.map((e: any) => e.id)).toEqual(["ev1"]);
+
+      expect((await call(cookie, "PATCH", "/api/calendar/events/ev1", { start: "2026-10-26T12:00:00+05:30", end: "2026-10-26T13:00:00+05:30" })).status).toBe(200);
+      expect((await t.db.prepare("SELECT starts_at AS s FROM external_events WHERE id = 'ev1'").first<{ s: string }>())?.s).toBe("2026-10-26T12:00:00+05:30");
+
+      expect((await call(cookie, "DELETE", "/api/calendar/events/ev1")).status).toBe(200);
+      expect((await t.db.prepare("SELECT COUNT(*) AS c FROM external_events").first<{ c: number }>())?.c).toBe(0);
+      expect(seen).toContain("PATCH /calendar/v3/calendars/primary/events/ev1");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("refreshes once on 401, and answers 403 with reauth when Google keeps refusing", async () => {
+    const cookie = await seed();
+    let eventCalls = 0;
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("oauth2.googleapis.com")) return json({ access_token: "fresh", expires_in: 3600 });
+      eventCalls++;
+      return eventCalls === 1 ? new Response("expired", { status: 401 }) : json({ items: [] });
+    });
+    try {
+      expect((await call(cookie, "GET", "/api/calendar/events")).status).toBe(200);
+      expect(eventCalls).toBe(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    vi.stubGlobal("fetch", async () => json({ error: { message: "Request had insufficient authentication scopes." } }, 403));
+    try {
+      const res = await call(cookie, "GET", "/api/calendar/events");
+      expect(res.status).toBe(403);
+      expect(((await res.json()) as any).reauth).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("switches to a dedicated Command Deck calendar and honours the two-way switch", async () => {
+    const cookie = await seed();
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === "POST") return json({ id: "deck@group.calendar.google.com" });
+      return json({ items: [{ id: "primary-id", summary: "Me" }] });
+    });
+    try {
+      expect((await call(cookie, "POST", "/api/calendar/target", { target: "nope" })).status).toBe(400);
+      expect((await call(cookie, "POST", "/api/calendar/target", { target: "deck" })).status).toBe(200);
+      const status = (await (await call(cookie, "GET", "/api/google/status")).json()) as any;
+      expect(status.calendarTarget).toBe("deck");
+
+      expect((await call(cookie, "PUT", "/api/calendar/settings", { twoWay: false })).status).toBe(200);
+      const sync = (await (await call(cookie, "POST", "/api/google/sync")).json()) as any;
+      expect(sync.skipped).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("Pushed events stay linked", () => {
+  const J = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  const connect = async () => {
+    await t.db.prepare("INSERT INTO settings (key, value) VALUES ('google_client_id', 'id'), ('google_client_secret', 'secret')").run();
+    await t.db.prepare("INSERT INTO google_sync (id, refresh_token, access_token, expires_at, calendar_id, scope) VALUES (1, 'ref', 'tok', 9999999999999, 'primary', 'https://www.googleapis.com/auth/calendar')").run();
+    return cookieOf(await login());
+  };
+  const send = (cookie: string, method: string, url: string, payload?: unknown) => t.inject({ method, url, payload, headers: { cookie } });
+  const EV = { title: "[Command Deck] Lab file", start: "2026-11-01T16:00:00+05:30", end: "2026-11-01T17:00:00+05:30" };
+
+  it("a deliverable's second push updates its event instead of adding another", async () => {
+    const cookie = await connect();
+    await t.db.prepare("INSERT INTO deliverables (id, name, subject, detail, due) VALUES (900, 'Lab file', 'Science', '', '2026-11-01')").run();
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (_u: RequestInfo | URL, init?: RequestInit) => {
+      calls.push(init?.method ?? "GET");
+      return init?.method === "POST" ? J({ id: "ev-900" }) : J({ id: "ev-900" });
+    });
+    try {
+      expect(((await (await send(cookie, "POST", "/api/calendar/events", { ...EV, deliverableId: 900 })).json()) as any).id).toBe("ev-900");
+      const link = () => t.db.prepare("SELECT gcal_event_id AS id FROM deliverables WHERE id = 900").first<{ id: string | null }>();
+      expect((await link())?.id).toBe("ev-900");
+      const state = (await (await send(cookie, "GET", "/api/state")).json()) as any;
+      expect(state.deliverables.find((d: any) => d.id === 900).gcalEventId).toBe("ev-900");
+
+      // pushing again (e.g. after a reload) patches the same event
+      const again = (await (await send(cookie, "POST", "/api/calendar/events", { ...EV, deliverableId: 900 })).json()) as any;
+      expect(again.updated).toBe(true);
+      expect(calls.filter((m) => m === "POST")).toHaveLength(1);
+
+      // deleting it in Google through us clears the link
+      expect((await send(cookie, "DELETE", "/api/calendar/events/ev-900")).status).toBe(200);
+      expect((await link())?.id).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("forgets the link when Google no longer has the event, so the next push recreates it", async () => {
+    const cookie = await connect();
+    await t.db.prepare("INSERT INTO deliverables (id, name, subject, detail, due, gcal_event_id) VALUES (901, 'Poster', 'SST', '', '2026-11-02', 'gone')").run();
+    vi.stubGlobal("fetch", async () => new Response("not found", { status: 404 }));
+    try {
+      const res = await send(cookie, "PATCH", "/api/calendar/events/gone", { title: "[Command Deck] Poster" });
+      expect(res.status).toBe(404);
+      expect((await t.db.prepare("SELECT gcal_event_id AS id FROM deliverables WHERE id = 901").first<{ id: string | null }>())?.id).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("a block pushed twice on one day is one event; a new day gets a new one", async () => {
+    const cookie = await connect();
+    const blocks = ((await (await send(cookie, "GET", "/api/state")).json()) as any).scheduleBlocks;
+    const id = blocks[0].id;
+    const calls: string[] = [];
+    let n = 0;
+    vi.stubGlobal("fetch", async (_u: RequestInfo | URL, init?: RequestInit) => {
+      calls.push(init?.method ?? "GET");
+      return J({ id: init?.method === "POST" ? `blk-${++n}` : "ok" });
+    });
+    try {
+      await send(cookie, "POST", "/api/google/push", { blockId: id, date: "2026-11-03" });
+      await send(cookie, "POST", "/api/google/push", { blockId: id, date: "2026-11-03" });
+      expect(calls).toEqual(["POST", "PATCH"]);
+      const row = await t.db.prepare("SELECT gcal_event_id AS e, gcal_event_day AS d FROM schedule_blocks WHERE id = ?").bind(id).first<{ e: string; d: string }>();
+      expect(row).toEqual({ e: "blk-1", d: "2026-11-03" });
+
+      await send(cookie, "POST", "/api/google/push", { blockId: id, date: "2026-11-04" });
+      expect((await t.db.prepare("SELECT gcal_event_id AS e FROM schedule_blocks WHERE id = ?").bind(id).first<{ e: string }>())?.e).toBe("blk-2");
+
+      // moving to the dedicated calendar orphans every link
+      await send(cookie, "POST", "/api/calendar/target", { target: "deck" });
+      expect((await t.db.prepare("SELECT gcal_event_id AS e FROM schedule_blocks WHERE id = ?").bind(id).first<{ e: string | null }>())?.e).toBeNull();
     } finally {
       vi.unstubAllGlobals();
     }

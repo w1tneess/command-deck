@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { inScope, type Scope } from "../server/logic.ts";
+import { inScope } from "../server/logic.ts";
 import type { Act, Chapter, State, Subject } from "./api.ts";
 import { activeOf } from "./model.ts";
-import { AppleEmoji, ConfDots, PASS_SHORT, Pill, ScopeTag, SubjectIcon } from "./ui.tsx";
+import { AppleEmoji, ConfDots, PASS_SHORT, ScopeTag, SubjectIcon } from "./ui.tsx";
 
 type FilterTab = "all" | "blindspots" | "pyqs" | "pb1" | "mastered";
 
@@ -17,7 +17,6 @@ export function RevisionMatrix({
 }) {
   const phase = activeOf(state);
   const [filter, setFilter] = useState<FilterTab>("all");
-  const [hoveredChapter, setHoveredChapter] = useState<{ chapter: Chapter; subject: Subject } | null>(null);
 
   // Criteria for filtering chapters
   const matchesFilter = (c: Chapter, s: Subject) => {
@@ -141,7 +140,6 @@ export function RevisionMatrix({
                     return (
                       <div
                         key={c.id}
-                        onMouseEnter={() => setHoveredChapter({ chapter: c, subject })}
                         className={`group relative flex flex-col justify-between rounded-xl border ${tileBorder} p-3.5 transition-all hover:bg-surface2`}
                       >
                         <div className="flex items-start justify-between gap-2.5">

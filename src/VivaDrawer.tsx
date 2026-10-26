@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Act, Chapter, Subject } from "./api.ts";
-import { AppleEmoji, Btn, ConfDots, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill } from "./ui.tsx";
+import { AppleEmoji, ConfDots, PASS_NAMES, PASS_SHORT } from "./ui.tsx";
 
 type Flashcard = {
   question: string;

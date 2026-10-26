@@ -33,7 +33,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
-      <PageHeader title="Weekly review" />
+      <PageHeader title="Review" sub="The last seven days, and a note for the week." />
       {/* cards below sit directly in the column */}
       <div className="flex flex-col gap-4 md:gap-6">
           <Card labelledBy="bars-h">

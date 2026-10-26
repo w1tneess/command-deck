@@ -7,7 +7,7 @@ export { AppleEmoji, AppleText, AppleEmojiPicker, getAppleEmojiUrl } from "./emo
 export function BrandLogo({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
     <div
-      className={`relative flex items-center justify-center rounded-[3px] bg-bg border border-line shadow-sm overflow-hidden shrink-0 group ${className}`}
+      className={`relative flex items-center justify-center rounded-lg bg-shell border border-line overflow-hidden shrink-0 group ${className}`}
       style={{ width: size, height: size }}
     >
       <svg
@@ -18,10 +18,10 @@ export function BrandLogo({ size = 32, className = "" }: { size?: number; classN
         aria-hidden="true"
         className="transition-transform duration-300 group-hover:scale-105"
       >
-        <circle cx="12" cy="12" r="8.5" stroke="#34d399" strokeWidth="1.5" className="opacity-90" />
-        <line x1="2" y1="12" x2="22" y2="12" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" className="opacity-80" />
-        <circle cx="12" cy="12" r="2.5" fill="#ffffff" />
-        <circle cx="12" cy="12" r="5" stroke="#ffffff" strokeWidth="0.75" strokeDasharray="1.5 2" className="opacity-40" />
+        <circle cx="12" cy="12" r="8.5" strokeWidth="1.5" className="stroke-accent opacity-90" />
+        <line x1="2" y1="12" x2="22" y2="12" strokeWidth="1.5" strokeLinecap="round" className="stroke-accent opacity-80" />
+        <circle cx="12" cy="12" r="2.5" className="fill-fg" />
+        <circle cx="12" cy="12" r="5" strokeWidth="0.75" strokeDasharray="1.5 2" className="stroke-fg opacity-40" />
       </svg>
     </div>
   );
@@ -63,13 +63,6 @@ export const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`
 const dayOf = (iso: string) => new Date(iso + "T00:00:00Z");
 /** "19 Nov" */
 export const fmtShort = (iso: string) => dayOf(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-/** "19 Nov 2026" */
-export const fmtLong = (iso: string) => dayOf(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-/** "Thursday 22 October" */
-export function fmtWeekdayDate(iso: string) {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).formatToParts(dayOf(iso)).map((p) => [p.type, p.value]));
-  return `${parts.weekday} ${parts.day} ${parts.month}`;
-}
 export const daysBetween = (from: string, to: string) => Math.round((dayOf(to).getTime() - dayOf(from).getTime()) / 86_400_000);
 
 export function Card({ children, className = "", labelledBy }: { children: ReactNode; className?: string; labelledBy?: string }) {
@@ -139,52 +132,6 @@ export function ConfDots({ value }: { value: number }) {
 
 export const PASS_NAMES = ["Concept", "PYQs", "Sample papers"] as const;
 export const PASS_SHORT = ["Concept", "PYQs", "Sample"] as const;
-
-/** Read-only pass pills. */
-export function PassPills({ passes }: { passes: (string | null)[] }) {
-  return (
-    <div className="flex flex-wrap gap-1">
-      {PASS_SHORT.map((name, i) => (
-        <span key={name} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${passes[i] ? "bg-accent/15 text-accent" : "bg-surface3 text-muted"}`}>
-          {passes[i] ? "✓ " : ""}
-          {name}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-/** 1-Click Interactive Pass Toggles (P1, P2, P3) */
-export function PassToggles({
-  passes,
-  onToggle,
-}: {
-  passes: (string | null)[];
-  onToggle: (passIdx: number) => void;
-}) {
-  return (
-    <div className="flex items-center gap-1" role="group" aria-label="Revision passes">
-      {PASS_SHORT.map((name, i) => {
-        const done = !!passes[i];
-        return (
-          <button
-            key={name}
-            type="button"
-            aria-pressed={done}
-            title={`Toggle Pass ${i + 1}: ${PASS_NAMES[i]}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle(i);
-            }}
-            className={`min-h-[32px] min-w-[44px] rounded-full px-3 text-xs font-semibold active:scale-95 ${done ? "bg-accent/15 text-accent" : "bg-surface3 text-muted hover:text-fg"}`}
-          >
-            {done ? "✓ " : ""}P{i + 1}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 /** Precision rounded circular checkbox with emerald check indicator. */
 export const Check = ({ on }: { on: boolean }) => (

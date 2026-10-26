@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
-import { call, type Act, type State } from "./api.ts";
-import { AppleEmoji, AppleText, Btn, H2 } from "./ui.tsx";
+import { call, ReauthError, type Act, type State } from "./api.ts";
+import { AppleEmoji, AppleText, Btn, H2, Segmented } from "./ui.tsx";
 
 export function GoogleSyncModal({
   state,
@@ -17,6 +17,7 @@ export function GoogleSyncModal({
   const [statusMsg, setStatusMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [reauthSeen, setReauthSeen] = useState(false);
 
   // Manual setup form state
   const [clientId, setClientId] = useState("");
@@ -84,11 +85,12 @@ export function GoogleSyncModal({
     setErrorMsg("");
 
     try {
-      const res = await call<{ syncedCount?: number; deletedCount?: number }>("POST", "/api/google/sync");
+      const res = await call<{ syncedCount?: number; skipped?: boolean }>("POST", "/api/google/sync");
       await act("GET", "/api/state");
-      setStatusMsg(`Synced successfully: ${res?.syncedCount ?? 0} events loaded.`);
+      setStatusMsg(res?.skipped ? "Two-way sync is off, so nothing was pulled." : `Synced successfully: ${res?.syncedCount ?? 0} events loaded.`);
       setTimeout(() => setStatusMsg(""), 4000);
     } catch (err: any) {
+      if (err instanceof ReauthError) setReauthSeen(true);
       setErrorMsg(err.message || "Sync failed");
     } finally {
       setIsSyncing(false);
@@ -108,7 +110,35 @@ export function GoogleSyncModal({
       setStatusMsg(`Pushed ${res?.pushed ?? 0} schedule blocks to Google Calendar!`);
       setTimeout(() => setStatusMsg(""), 4000);
     } catch (err: any) {
+      if (err instanceof ReauthError) setReauthSeen(true);
       setErrorMsg(err.message || "Push failed");
+    } finally {
+      busy.current = false;
+    }
+  };
+
+  const handleTwoWay = async () => {
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      await act("PUT", "/api/calendar/settings", { twoWay: !sync?.twoWay });
+    } finally {
+      busy.current = false;
+    }
+  };
+
+  const handleTarget = async (target: "primary" | "deck") => {
+    if (busy.current || target === sync?.calendarTarget) return;
+    busy.current = true;
+    setErrorMsg("");
+    try {
+      await call("POST", "/api/calendar/target", { target });
+      await act("GET", "/api/state");
+      setStatusMsg(target === "deck" ? "Now using the Command Deck calendar." : "Now using your primary calendar.");
+      setTimeout(() => setStatusMsg(""), 4000);
+    } catch (err: any) {
+      if (err instanceof ReauthError) setReauthSeen(true);
+      setErrorMsg(err.message || "Could not switch calendars");
     } finally {
       busy.current = false;
     }
@@ -141,9 +171,9 @@ export function GoogleSyncModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl border border-line bg-bg p-6 shadow-2xl text-fg flex flex-col gap-5">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-surface2 p-5 ring-1 ring-line shadow-2xl text-fg flex flex-col gap-5">
         {/* Modal Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-line pb-4">
+        <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex size-11 items-center justify-center rounded-2xl bg-focus/10 border border-focus/20 text-focus">
               <AppleEmoji emoji="📅" size={24} />
@@ -171,7 +201,7 @@ export function GoogleSyncModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-full bg-surface2 hover:bg-surface3 text-muted hover:text-fg transition-all cursor-pointer text-sm"
+            className="flex size-11 md:size-9 shrink-0 items-center justify-center rounded-full bg-surface3 hover:bg-surface3 text-muted hover:text-fg transition-all cursor-pointer text-sm focus-visible:ring-2 focus-visible:ring-focus"
             aria-label="Close"
           >
             ✕
@@ -179,13 +209,13 @@ export function GoogleSyncModal({
         </div>
 
         {/* Tab switcher: Sync & Status vs Credentials Setup */}
-        <div className="flex rounded-xl bg-surface2 p-1 border border-line text-xs font-semibold">
+        <div className="flex rounded-xl bg-surface3 p-1 text-sm font-semibold">
           <button
             type="button"
             onClick={() => setTab("sync")}
-            className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 min-h-[44px] md:min-h-[38px] rounded-lg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${
               tab === "sync"
-                ? "bg-fg text-bg shadow-sm font-bold"
+                ? "bg-surface2 text-fg ring-1 ring-line font-bold"
                 : "text-muted hover:text-fg"
             }`}
           >
@@ -194,9 +224,9 @@ export function GoogleSyncModal({
           <button
             type="button"
             onClick={() => setTab("setup")}
-            className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 min-h-[44px] md:min-h-[38px] rounded-lg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${
               tab === "setup"
-                ? "bg-fg text-bg shadow-sm font-bold"
+                ? "bg-surface2 text-fg ring-1 ring-line font-bold"
                 : "text-muted hover:text-fg"
             }`}
           >
@@ -222,13 +252,13 @@ export function GoogleSyncModal({
         {tab === "sync" && (
           <div className="space-y-4">
             {/* Sync Status Card */}
-            <div className="rounded-2xl border border-line bg-surface p-4 flex flex-col gap-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="rounded-2xl bg-surface p-4 ring-1 ring-line flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
                 <div>
-                  <div className="text-muted">Connection Status:</div>
-                  <div className="font-semibold text-fg mt-0.5">
+                  <div className="text-muted">Connection</div>
+                  <div className="font-semibold mt-0.5">
                     {sync?.connected ? (
-                      <span className="text-accent">● Connected to primary calendar</span>
+                      <span className="text-good">● Connected to {sync.calendarTarget === "deck" ? "the Command Deck calendar" : "your primary calendar"}</span>
                     ) : (
                       <span className="text-warn">○ Not connected to Google Calendar</span>
                     )}
@@ -237,61 +267,75 @@ export function GoogleSyncModal({
 
                 {sync?.lastSyncedAt && (
                   <div className="sm:text-right">
-                    <div className="text-muted">Last Synced:</div>
-                    <div className="font-mono text-fg mt-0.5">
+                    <div className="text-muted">Last synced</div>
+                    <div className="font-mono tabular-nums text-muted text-xs mt-0.5">
                       {sync.lastSyncedAt.replace("T", " ").slice(0, 19)} IST
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-line">
-                {sync?.connected ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleLiveSync}
-                      disabled={isSyncing}
-                      className="flex items-center gap-1.5 rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-xs py-2 px-3.5 shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <AppleEmoji emoji="🔄" size={14} />
-                      <span>{isSyncing ? "Syncing..." : "Sync Events Now"}</span>
-                    </button>
+              {sync?.connected && (sync.needsReauth || reauthSeen) && (
+                <div role="alert" className="flex flex-col items-start gap-2 rounded-xl bg-warn/10 p-3 text-sm text-warn ring-1 ring-warn/30">
+                  <span>Google needs your permission again to read and edit your calendars.</span>
+                  <Btn kind="primary" onClick={handleOAuthConnect}>Grant calendar access</Btn>
+                </div>
+              )}
 
+              {sync?.connected ? (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div id={`${uid}-tw`} className="text-sm font-medium text-fg">Two-way sync</div>
+                      <div className="text-xs text-muted">Pull your Google events and flag clashes. Off still lets you push.</div>
+                    </div>
                     <button
                       type="button"
-                      onClick={handlePushBlocks}
-                      className="flex items-center gap-1.5 rounded-xl border border-line bg-surface2 hover:bg-surface3 text-fg font-sans font-semibold text-xs py-2 px-3.5 active:scale-95 transition-all cursor-pointer"
+                      role="switch"
+                      aria-checked={sync.twoWay}
+                      aria-labelledby={`${uid}-tw`}
+                      onClick={handleTwoWay}
+                      className={`flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-0 bg-transparent cursor-pointer focus-visible:ring-2 focus-visible:ring-focus`}
                     >
-                      <AppleEmoji emoji="📤" size={14} />
-                      <span>Push Today's Study Blocks</span>
+                      <span className={`relative h-6 w-11 rounded-full transition-colors ${sync.twoWay ? "bg-accent" : "bg-surface3"}`}>
+                        <span className={`absolute top-0.5 size-5 rounded-full bg-bg transition-all ${sync.twoWay ? "left-[22px]" : "left-0.5"}`} />
+                      </span>
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={handleDisconnect}
-                      className="ml-auto rounded-xl border border-danger/30 bg-danger/10 hover:bg-danger/10 text-danger font-sans text-xs py-2 px-3 transition-all cursor-pointer"
-                    >
-                      Disconnect
-                    </button>
-                  </>
-                ) : (
-                  <div className="w-full space-y-1.5">
-                    <button
-                      type="button"
-                      onClick={handleOAuthConnect}
-                      className="flex items-center gap-2 rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-xs py-2.5 px-4 shadow-md active:scale-95 transition-all cursor-pointer w-full justify-center"
-                    >
-                      <AppleEmoji emoji="🔗" size={16} />
-                      <span>Authorize with Google Calendar (OAuth 2.0)</span>
-                    </button>
-                    <p className="text-xs text-muted text-center m-0">
-                      If your Google Cloud app is in <em>Testing</em>, your email must be added to <strong>OAuth consent screen &gt; Test users</strong>.
-                    </p>
                   </div>
-                )}
-              </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="text-sm font-medium text-fg">Calendar</div>
+                    <Segmented
+                      label="Calendar"
+                      value={sync.calendarTarget}
+                      onChange={handleTarget}
+                      options={[["primary", "Primary"], ["deck", "Command Deck"]]}
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Btn kind="primary" onClick={handleLiveSync} disabled={isSyncing}>
+                      <AppleEmoji emoji="🔄" size={14} />
+                      <span>{isSyncing ? "Syncing…" : "Sync now"}</span>
+                    </Btn>
+                    <Btn onClick={handlePushBlocks}>
+                      <AppleEmoji emoji="📤" size={14} />
+                      <span>Push today's study blocks</span>
+                    </Btn>
+                    <Btn kind="ghost" className="ml-auto text-danger hover:text-danger" onClick={handleDisconnect}>Disconnect</Btn>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Btn kind="primary" onClick={handleOAuthConnect} className="w-full">
+                    <AppleEmoji emoji="🔗" size={16} />
+                    <span>Authorize with Google Calendar</span>
+                  </Btn>
+                  <p className="text-xs text-muted text-center m-0">
+                    If your Google Cloud app is in <em>Testing</em>, your email must be added to <strong>OAuth consent screen &gt; Test users</strong>.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Overlap Conflicts Alert if Any */}

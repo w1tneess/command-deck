@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Act, State } from "./api.ts";
 import { getCalendarFeedUrls } from "./calendar-utils.ts";
-import { AppleEmoji, Btn, Card, H2 } from "./ui.tsx";
+import { AppleEmoji, Btn } from "./ui.tsx";
 
 export function CalendarModal({
   state,
@@ -17,7 +17,7 @@ export function CalendarModal({
   const resetBusy = useRef(false);
   const modalId = useId();
 
-  const { httpFeedUrl, webcalUrl, gcalSubscribeUrl } = getCalendarFeedUrls(
+  const { httpFeedUrl, gcalSubscribeUrl } = getCalendarFeedUrls(
     state.calendarToken || ""
   );
 

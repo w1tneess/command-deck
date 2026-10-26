@@ -3,7 +3,7 @@ import type { Act, ScheduleBlock, State } from "./api.ts";
 import { CalendarModal } from "./CalendarModal.tsx";
 import { GoogleSyncModal } from "./GoogleSyncModal.tsx";
 import { getScheduleBlockGCalUrl } from "./calendar-utils.ts";
-import { AppleEmoji, AppleText, Btn, Card, H2, PageHeader } from "./ui.tsx";
+import { AppleEmoji, AppleText, Card, H2, PageHeader } from "./ui.tsx";
 
 function getIstTimeMinutes(): { currentMinutes: number; timeStr: string } {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -44,7 +44,6 @@ export function Schedule({
 }) {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showGoogleSyncModal, setShowGoogleSyncModal] = useState(false);
-  const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [shiftFeedback, setShiftFeedback] = useState("");
   const [currentTime, setCurrentTime] = useState(() => getIstTimeMinutes());
   const busy = useRef(false);
@@ -77,6 +76,26 @@ export function Schedule({
     }
   };
 
+  const pushBusy = useRef(false);
+  /** First push creates the event; once linked for today, the same button updates it (a rescheduled block moves its event). */
+  const pushToGoogle = async (block: ScheduleBlock) => {
+    if (pushBusy.current) return;
+    pushBusy.current = true;
+    try {
+      if (block.gcalEventId && block.gcalEventDay === state.today) {
+        await act("PATCH", `/api/calendar/events/${encodeURIComponent(block.gcalEventId)}`, {
+          title: `[Command Deck] ${block.title}`,
+          start: `${state.today}T${block.startTime}:00+05:30`,
+          end: `${state.today}T${block.endTime}:00+05:30`,
+        });
+      } else {
+        await act("POST", "/api/google/push", { blockId: block.id, date: state.today });
+      }
+    } finally {
+      pushBusy.current = false;
+    }
+  };
+
   const handleResetSchedule = async () => {
     if (busy.current) return;
     if (!confirm("Reset all schedule tracks back to default CBSE study hours?")) return;
@@ -85,21 +104,6 @@ export function Schedule({
       await act("POST", "/api/schedule/reset");
       setShiftFeedback("Schedule reset to default tracks.");
       setTimeout(() => setShiftFeedback(""), 3000);
-    } finally {
-      busy.current = false;
-    }
-  };
-
-  const handleSaveBlockEdit = async (b: ScheduleBlock, newStart: string, newEnd: string, newTitle: string) => {
-    if (busy.current) return;
-    busy.current = true;
-    try {
-      await act("PATCH", `/api/schedule/blocks/${b.id}`, {
-        startTime: newStart,
-        endTime: newEnd,
-        title: newTitle,
-      });
-      setEditingBlockId(null);
     } finally {
       busy.current = false;
     }
@@ -312,6 +316,7 @@ export function Schedule({
           const pct = isCurrent && durMins > 0 ? Math.min(100, Math.round((elapsedMins / durMins) * 100)) : 0;
 
           const gcalUrl = getScheduleBlockGCalUrl(block, state.today);
+          const synced = !!block.gcalEventId && block.gcalEventDay === state.today;
 
           return (
             <div
@@ -366,6 +371,15 @@ export function Schedule({
                     <AppleEmoji emoji="📅" size={13} />
                     <span className="hidden sm:inline">Add to Cal</span>
                   </a>
+
+                  {/* Push this block to Google Calendar, or show why it can't be */}
+                  <button
+                    type="button"
+                    onClick={() => (state.googleSync?.connected && !state.googleSync.needsReauth ? void pushToGoogle(block) : setShowGoogleSyncModal(true))}
+                    className={`min-h-[44px] md:min-h-[38px] rounded-full border border-line bg-surface hover:bg-surface3 px-3 text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${synced ? "text-good" : "text-muted hover:text-fg"}`}
+                  >
+                    {!state.googleSync?.connected ? "Connect Google" : state.googleSync.needsReauth ? "Reconnect Google" : synced ? "Synced ✓ · Update" : "Push to GCal"}
+                  </button>
 
                   {/* Quick Shift for this block */}
                   <button

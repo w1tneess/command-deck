@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Act, Habit, State } from "./api.ts";
-import { AppleEmoji, AppleEmojiPicker, AppleText, Btn, Check, H2, ICONS, Icon, PageHeader } from "./ui.tsx";
+import { AppleEmoji, AppleEmojiPicker, AppleText, Btn, Check, H2, PageHeader } from "./ui.tsx";
 
 const LETTER = (day: string) => new Date(day + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "narrow", timeZone: "UTC" });
 const addDays = (day: string, n: number) => new Date(Date.parse(day + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);

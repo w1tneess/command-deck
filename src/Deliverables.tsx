@@ -217,7 +217,7 @@ export function Deliverables({
       ) : null}
       {items.length === 0 && <p className="m-0 mt-4 border-t border-line py-5 text-sm text-muted">Nothing to submit with {phase.name} yet. Add a deliverable below.</p>}
       <div className="mt-3 flex flex-col gap-3 md:gap-4">
-        {items.map((d) => <Item key={d.id} d={d} today={state.today} act={act} />)}
+        {items.map((d) => <Item key={d.id} d={d} today={state.today} act={act} google={state.googleSync} />)}
       </div>
       <div className="pt-4">
         {adding ? <AddForm phaseId={phase.id} act={act} onDone={() => setAdding(false)} /> : <Btn onClick={() => setAdding(true)}>Add a due date</Btn>}
@@ -226,13 +226,32 @@ export function Deliverables({
   );
 }
 
-function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
+function Item({ d, today, act, google }: { d: Deliverable; today: string; act: Act; google: State["googleSync"] }) {
   const [editingDue, setEditingDue] = useState(false);
   const [removing, setRemoving] = useState(false);
   const isOverdue = !!d.due && d.status !== "done" && d.due < today;
   const left = d.due ? daysBetween(today, d.due) : null;
   const isUrgent = !!d.due && d.status !== "done" && !isOverdue && left !== null && left <= 3;
   const patch = (body: object) => act("PATCH", `/api/deliverables/${d.id}`, body);
+
+  // Push the due date to Google Calendar as a one-hour 4 pm IST event; once pushed, the same button updates that event.
+  const pushBusy = useRef(false);
+  const pushToGoogle = async () => {
+    if (pushBusy.current || !d.due) return;
+    pushBusy.current = true;
+    try {
+      const event = {
+        title: `[Command Deck] ${d.name}`,
+        description: [d.subject, d.detail].filter(Boolean).join(" · "),
+        start: `${d.due}T16:00:00+05:30`,
+        end: `${d.due}T17:00:00+05:30`,
+        reminderMinutes: 1440,
+      };
+      await (d.gcalEventId ? act("PATCH", `/api/calendar/events/${encodeURIComponent(d.gcalEventId)}`, event) : act("POST", "/api/calendar/events", { ...event, deliverableId: d.id }));
+    } finally {
+      pushBusy.current = false;
+    }
+  };
 
   // Optimistic stepper with promise queue to avoid dropping rapid clicks
   const [optimisticCount, setOptimisticCount] = useState(d.doneCount ?? 0);
@@ -402,6 +421,20 @@ function Item({ d, today, act }: { d: Deliverable; today: string; act: Act }) {
         >
           Viva prep
         </button>
+        {d.due && (google.connected && !google.needsReauth ? (
+          <button
+            type="button"
+            onClick={() => void pushToGoogle()}
+            aria-label={d.gcalEventId ? `Update the Google Calendar event for ${d.name}` : `Push ${d.name} to Google Calendar`}
+            className={`min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-transparent px-3 text-sm hover:bg-surface3 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${d.gcalEventId ? "text-good" : "text-muted hover:text-fg"}`}
+          >
+            {d.gcalEventId ? "Synced ✓ · Update" : "Push to GCal"}
+          </button>
+        ) : (
+          <a href="#schedule" className="min-h-[44px] md:min-h-[38px] flex items-center rounded-lg border border-line bg-transparent px-3 text-sm text-muted hover:text-fg hover:bg-surface3 transition-all focus-visible:ring-2 focus-visible:ring-focus">
+            {google.connected ? "Reconnect Google" : "Connect Google"}
+          </a>
+        ))}
         <a
           href={getDeliverableGCalUrl(d, today)}
           target="_blank"

@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
 import { registerAuth, type Env, hasValidSession, isLocalDev, same } from "./auth.ts";
 import { SCOPES, STATUSES, activePhase, computeChapterDuration, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
@@ -13,11 +13,17 @@ import {
   exchangeGoogleAuthCode,
   getGoogleCredentials,
   pullGoogleEvents,
-  pushAllBlocksToGoogle,
   pushBlockToGoogle,
   deleteGoogleCalendarEvent,
+  createCalendarEvent,
+  hasCalendarScope,
+  isAuthFailure,
+  listCalendarEvents,
+  removeCalendarEvent,
+  selectCalendar,
+  updateCalendarEvent,
+  type CalendarEventInput,
   type ExternalEvent,
-  type ExternalEventRow,
 } from "./google-calendar.ts";
 
 export const DEFAULT_SCHEDULE_BLOCKS: Omit<ScheduleBlock, "id">[] = [
@@ -71,7 +77,6 @@ const validDate = (d: unknown): d is string => typeof d === "string" && ISO.test
 const validScope = (s: unknown): s is Scope => SCOPES.includes(s as Scope);
 const TARGETS_PER_DAY = 3;
 const MAX_TARGETS = 8;
-const DAY_MS = 86_400_000;
 
 /** Everything the planner needs: phases, the active one, and subjects with chapters, passes and exam dates. */
 async function loadModel(db: D1Database, t: string) {
@@ -205,14 +210,14 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
 
     const since90 = new Date(Date.parse(t + "T00:00:00Z") - 90 * DAY_MS).toISOString().slice(0, 10);
     const [deliverableRes, sessionRes, targetRes, checkinRes, heatRes, scheduleRes, calTokenRes, googleSyncRes, externalEventsRes] = await db.batch<Row>([
-      db.prepare("SELECT id, name, subject, detail, phase_id AS phaseId, status, done_count AS doneCount, total_count AS totalCount, due, viva_prep AS vivaPrep FROM deliverables ORDER BY id"),
+      db.prepare("SELECT id, name, subject, detail, phase_id AS phaseId, status, done_count AS doneCount, total_count AS totalCount, due, viva_prep AS vivaPrep, gcal_event_id AS gcalEventId FROM deliverables ORDER BY id"),
       db.prepare("SELECT day, subject_id AS subjectId, SUM(minutes) AS minutes FROM sessions WHERE day >= ? GROUP BY day, subject_id ORDER BY day").bind(since),
       db.prepare("SELECT t.id, t.title, t.chapter_id AS chapterId, COALESCE(t.subject_id, c.subject_id) AS subjectId, COALESCE(t.duration, '45m') AS duration, t.done FROM daily_targets t LEFT JOIN chapters c ON c.id = t.chapter_id WHERE t.day = ? ORDER BY t.id").bind(t),
       db.prepare("SELECT day, energy FROM checkins WHERE day >= ? ORDER BY day").bind(since14),
       db.prepare("SELECT day, SUM(minutes) AS minutes FROM sessions WHERE day >= ? GROUP BY day ORDER BY day").bind(since90),
-      db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time"),
+      db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos, gcal_event_id AS gcalEventId, gcal_event_day AS gcalEventDay FROM schedule_blocks ORDER BY pos, start_time"),
       db.prepare("SELECT value FROM settings WHERE key = 'calendar_token'"),
-      db.prepare("SELECT id, calendar_id AS calendarId, last_synced_at AS lastSyncedAt, sync_token AS syncToken FROM google_sync WHERE id = 1"),
+      db.prepare("SELECT id, calendar_id AS calendarId, last_synced_at AS lastSyncedAt, sync_token AS syncToken, scope, two_way AS twoWay FROM google_sync WHERE id = 1"),
       db.prepare("SELECT id, summary, description, starts_at AS startsAt, ends_at AS endsAt, is_study_block AS isStudyBlock, updated_at AS updatedAt FROM external_events WHERE starts_at >= ? AND starts_at <= ? ORDER BY starts_at").bind(`${t}T00:00:00+05:30`, `${t}T23:59:59+05:30`),
     ]);
 
@@ -224,7 +229,7 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
             .bind(b.title, b.category, b.startTime, b.endTime, b.color, b.pos)
         )
       );
-      scheduleBlocks = (await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time").all<ScheduleBlock>()).results;
+      scheduleBlocks = (await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos, gcal_event_id AS gcalEventId, gcal_event_day AS gcalEventDay FROM schedule_blocks ORDER BY pos, start_time").all<ScheduleBlock>()).results;
     }
 
     let calToken = calTokenRes.results[0]?.value as string | undefined;
@@ -233,7 +238,7 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
       await db.prepare("INSERT INTO settings (key, value) VALUES ('calendar_token', ?) ON CONFLICT(key) DO NOTHING").bind(calToken).run();
     }
 
-    const syncRow = googleSyncRes.results[0] as { calendarId?: string; lastSyncedAt?: string; syncToken?: string } | undefined;
+    const syncRow = googleSyncRes.results[0] as { calendarId?: string; lastSyncedAt?: string; syncToken?: string; scope?: string | null; twoWay?: number } | undefined;
     const rawEvents = (externalEventsRes.results || []) as any[];
     const externalEvents = rawEvents.map((e) => ({
       ...e,
@@ -254,6 +259,9 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
         calendarId: syncRow?.calendarId || "primary",
         lastSyncedAt: syncRow?.lastSyncedAt || null,
         syncToken: syncRow?.syncToken || null,
+        needsReauth: !!syncRow && !hasCalendarScope(syncRow.scope),
+        twoWay: syncRow ? !!syncRow.twoWay : true,
+        calendarTarget: (syncRow?.calendarId || "primary") === "primary" ? "primary" : "deck",
       },
       externalEvents,
       scheduleConflicts,
@@ -770,10 +778,10 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
   app.get("/api/google/status", async (c) => {
     const db = c.env.DB;
     const [syncRow, eventCountRes] = await db.batch<Row>([
-      db.prepare("SELECT id, calendar_id AS calendarId, last_synced_at AS lastSyncedAt, sync_token AS syncToken FROM google_sync WHERE id = 1"),
+      db.prepare("SELECT id, calendar_id AS calendarId, last_synced_at AS lastSyncedAt, sync_token AS syncToken, scope, two_way AS twoWay FROM google_sync WHERE id = 1"),
       db.prepare("SELECT COUNT(*) AS count FROM external_events"),
     ]);
-    const sync = syncRow.results[0] as { calendarId?: string; lastSyncedAt?: string; syncToken?: string } | undefined;
+    const sync = syncRow.results[0] as { calendarId?: string; lastSyncedAt?: string; syncToken?: string; scope?: string | null; twoWay?: number } | undefined;
     const creds = await getGoogleCredentials(db, c.env, new URL(c.req.url).origin);
     const count = (eventCountRes.results[0]?.count as number) ?? 0;
     return c.json({
@@ -782,6 +790,9 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
       calendarId: sync?.calendarId || "primary",
       lastSyncedAt: sync?.lastSyncedAt || null,
       syncToken: sync?.syncToken || null,
+      needsReauth: !!sync && !hasCalendarScope(sync.scope),
+      twoWay: sync ? !!sync.twoWay : true,
+      calendarTarget: (sync?.calendarId || "primary") === "primary" ? "primary" : "deck",
       eventCount: count,
       clientIdPreview: creds ? `${creds.clientId.slice(0, 8)}...` : null,
     });
@@ -854,13 +865,14 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
       const expiresAt = now() + tokens.expiresIn * 1000;
 
       await db.prepare(
-        `INSERT INTO google_sync (id, refresh_token, access_token, expires_at, calendar_id, last_synced_at, sync_token)
-         VALUES (1, ?, ?, ?, 'primary', NULL, NULL)
+        `INSERT INTO google_sync (id, refresh_token, access_token, expires_at, calendar_id, last_synced_at, sync_token, scope)
+         VALUES (1, ?, ?, ?, 'primary', NULL, NULL, ?)
          ON CONFLICT(id) DO UPDATE SET
            refresh_token = excluded.refresh_token,
            access_token = excluded.access_token,
-           expires_at = excluded.expires_at`
-      ).bind(tokens.refreshToken, tokens.accessToken, expiresAt).run();
+           expires_at = excluded.expires_at,
+           scope = excluded.scope`
+      ).bind(tokens.refreshToken, tokens.accessToken, expiresAt, tokens.scope).run();
 
       // Immediately pull recent events
       await pullGoogleEvents(db, c.env, now()).catch(() => null);
@@ -919,15 +931,40 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     return c.json({ ok: true, syncedCount });
   });
 
+  /** Credential or scope failures answer 403 with reauth (401 is the app session, which signs the user out), so the UI can offer the consent screen instead of a dead end. */
+  const googleFail = (c: Context, err: unknown, fallback: string) =>
+    isAuthFailure(err)
+      ? c.json({ error: err instanceof Error ? err.message : fallback, reauth: true }, 403)
+      : c.json({ error: (err instanceof Error && err.message) || fallback }, 400);
+
   app.post("/api/google/sync", async (c) => {
     const db = c.env.DB;
     try {
+      const mode = await db.prepare("SELECT two_way AS twoWay FROM google_sync WHERE id = 1").first<{ twoWay: number }>();
+      if (mode && !mode.twoWay) return c.json({ ok: true, skipped: true });
       const res = await pullGoogleEvents(db, c.env, now());
       return c.json({ ok: true, ...res });
-    } catch (err: any) {
-      return c.json({ error: err?.message || "Sync failed" }, 400);
+    } catch (err) {
+      return googleFail(c, err, "Sync failed");
     }
   });
+
+  type TrackedBlock = ScheduleBlock & { gcalEventId?: string | null; gcalEventDay?: string | null };
+  /** Pushes a block for one day: updates the event it already became that day, otherwise creates one and remembers it. */
+  const pushBlockTracked = async (c: Context<Env>, block: TrackedBlock, date: string) => {
+    const db = c.env.DB;
+    if (block.gcalEventId && block.gcalEventDay === date) {
+      try {
+        await updateCalendarEvent(db, c.env, block.gcalEventId, { title: `[Command Deck] ${block.title}`, start: `${date}T${block.startTime}:00+05:30`, end: `${date}T${block.endTime}:00+05:30` }, now());
+        return block.gcalEventId;
+      } catch (err) {
+        if (!/\((404|410)\)/.test(err instanceof Error ? err.message : "")) throw err; // deleted in Google: fall through and create it again
+      }
+    }
+    const res = await pushBlockToGoogle(db, c.env, block, date, now());
+    await db.prepare("UPDATE schedule_blocks SET gcal_event_id = ?, gcal_event_day = ? WHERE id = ?").bind(res.eventId, date, block.id).run();
+    return res.eventId;
+  };
 
   app.post("/api/google/push", async (c) => {
     const { blockId, date } = await body<{ blockId?: number; date?: string }>(c);
@@ -936,17 +973,17 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
 
     try {
       if (blockId) {
-        const block = await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks WHERE id = ?").bind(blockId).first<ScheduleBlock>();
+        const block = await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos, gcal_event_id AS gcalEventId, gcal_event_day AS gcalEventDay FROM schedule_blocks WHERE id = ?").bind(blockId).first<TrackedBlock>();
         if (!block) return c.json({ error: "Schedule block not found." }, 404);
-        const res = await pushBlockToGoogle(db, c.env, block, targetDate, now());
-        return c.json({ ok: true, pushed: 1, eventId: res.eventId });
+        return c.json({ ok: true, pushed: 1, eventId: await pushBlockTracked(c, block, targetDate) });
       }
 
-      const blocks = (await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos FROM schedule_blocks ORDER BY pos, start_time").all<ScheduleBlock>()).results;
-      const res = await pushAllBlocksToGoogle(db, c.env, blocks, targetDate, now());
-      return c.json({ ok: true, pushed: res.pushed, eventIds: res.eventIds });
-    } catch (err: any) {
-      return c.json({ error: err?.message || "Push failed" }, 400);
+      const blocks = (await db.prepare("SELECT id, title, category, start_time AS startTime, end_time AS endTime, color, pos, gcal_event_id AS gcalEventId, gcal_event_day AS gcalEventDay FROM schedule_blocks ORDER BY pos, start_time").all<TrackedBlock>()).results;
+      const eventIds: string[] = [];
+      for (const b of blocks) eventIds.push(await pushBlockTracked(c, b, targetDate));
+      return c.json({ ok: true, pushed: eventIds.length, eventIds });
+    } catch (err) {
+      return googleFail(c, err, "Push failed");
     }
   });
 
@@ -955,6 +992,8 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     await db.batch([
       db.prepare("DELETE FROM google_sync WHERE id = 1"),
       db.prepare("DELETE FROM external_events"),
+      db.prepare("UPDATE deliverables SET gcal_event_id = NULL"),
+      db.prepare("UPDATE schedule_blocks SET gcal_event_id = NULL, gcal_event_day = NULL"),
     ]);
     return c.json({ ok: true });
   });
@@ -982,9 +1021,126 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     try {
       await deleteGoogleCalendarEvent(db, c.env, id, now());
       return c.json({ ok: true });
-    } catch (err: any) {
-      return c.json({ error: err?.message || "Delete failed" }, 400);
+    } catch (err) {
+      return googleFail(c, err, "Delete failed");
     }
+  });
+
+  // --- Live calendar API: read, create, reschedule and cancel events on the selected Google calendar ---
+  const DAY_MS = 86_400_000;
+  const parseEvent = (b: Row, partial: boolean): { input: CalendarEventInput } | { error: string } => {
+    const input: CalendarEventInput = {};
+    if (b.title !== undefined) {
+      if (typeof b.title !== "string" || !b.title.trim() || b.title.length > 200) return { error: "Title must be 1 to 200 characters." };
+      input.title = b.title.trim();
+    }
+    if (b.description !== undefined) {
+      if (typeof b.description !== "string" || b.description.length > 2000) return { error: "Description must be text up to 2000 characters." };
+      input.description = b.description;
+    }
+    for (const k of ["start", "end"] as const) {
+      if (b[k] === undefined) continue;
+      if (typeof b[k] !== "string" || Number.isNaN(Date.parse(b[k]))) return { error: `${k} must be an ISO date-time.` };
+      input[k] = b[k];
+    }
+    if (b.reminderMinutes !== undefined) {
+      if (!Number.isInteger(b.reminderMinutes) || b.reminderMinutes < 0 || b.reminderMinutes > 40_320) return { error: "reminderMinutes must be a whole number from 0 to 40320." };
+      input.reminderMinutes = b.reminderMinutes;
+    }
+    if (input.start && input.end && Date.parse(input.end) <= Date.parse(input.start)) return { error: "end must be after start." };
+    if (!partial && (!input.title || !input.start || !input.end)) return { error: "title, start and end are required." };
+    if (partial && Object.keys(input).length === 0) return { error: "Nothing to update." };
+    return { input };
+  };
+
+  const unlinkEvent = (db: D1Database, eventId: string) =>
+    db.batch([
+      db.prepare("UPDATE deliverables SET gcal_event_id = NULL WHERE gcal_event_id = ?").bind(eventId),
+      db.prepare("UPDATE schedule_blocks SET gcal_event_id = NULL, gcal_event_day = NULL WHERE gcal_event_id = ?").bind(eventId),
+    ]);
+
+  app.get("/api/calendar/events", async (c) => {
+    const days = c.req.query("range") === "month" ? 31 : 7;
+    const from = Date.parse(`${today()}T00:00:00+05:30`);
+    try {
+      return c.json({ range: days === 7 ? "week" : "month", events: await listCalendarEvents(c.env.DB, c.env, from, from + days * DAY_MS, now()) });
+    } catch (err) {
+      return googleFail(c, err, "Could not read the calendar");
+    }
+  });
+
+  app.post("/api/calendar/events", async (c) => {
+    const b = await body<Row>(c);
+    const parsed = parseEvent(b, false);
+    if ("error" in parsed) return c.json({ error: parsed.error }, 400);
+    const db = c.env.DB;
+    // deliverableId links the new event to that deliverable, so it can be updated later instead of duplicated.
+    const deliverableId = Number.isInteger(b.deliverableId) ? (b.deliverableId as number) : null;
+    try {
+      if (deliverableId !== null) {
+        const row = await db.prepare("SELECT gcal_event_id AS eventId FROM deliverables WHERE id = ?").bind(deliverableId).first<{ eventId: string | null }>();
+        if (!row) return c.json({ error: "Deliverable not found." }, 404);
+        if (row.eventId) {
+          try {
+            await updateCalendarEvent(db, c.env, row.eventId, parsed.input, now());
+            return c.json({ ok: true, id: row.eventId, updated: true });
+          } catch (err) {
+            if (!/\((404|410)\)/.test(err instanceof Error ? err.message : "")) throw err; // deleted in Google: create it again below
+          }
+        }
+      }
+      const created = await createCalendarEvent(db, c.env, parsed.input as Required<Pick<CalendarEventInput, "title" | "start" | "end">>, now());
+      if (deliverableId !== null) await db.prepare("UPDATE deliverables SET gcal_event_id = ? WHERE id = ?").bind(created.id, deliverableId).run();
+      return c.json({ ok: true, id: created.id, htmlLink: created.htmlLink ?? null });
+    } catch (err) {
+      return googleFail(c, err, "Could not create the event");
+    }
+  });
+
+  app.patch("/api/calendar/events/:id", async (c) => {
+    const parsed = parseEvent(await body<Row>(c), true);
+    if ("error" in parsed) return c.json({ error: parsed.error }, 400);
+    const id = c.req.param("id");
+    try {
+      await updateCalendarEvent(c.env.DB, c.env, id, parsed.input, now());
+      return c.json({ ok: true });
+    } catch (err) {
+      if (/\((404|410)\)/.test(err instanceof Error ? err.message : "")) {
+        // The event was removed in Google itself: forget the link so the next push creates it fresh.
+        await unlinkEvent(c.env.DB, id);
+        return c.json({ error: "That event no longer exists in Google Calendar. Push it again to recreate it." }, 404);
+      }
+      return googleFail(c, err, "Could not update the event");
+    }
+  });
+
+  app.delete("/api/calendar/events/:id", async (c) => {
+    try {
+      await removeCalendarEvent(c.env.DB, c.env, c.req.param("id"), now());
+      await unlinkEvent(c.env.DB, c.req.param("id"));
+      return c.json({ ok: true });
+    } catch (err) {
+      return googleFail(c, err, "Could not delete the event");
+    }
+  });
+
+  app.post("/api/calendar/target", async (c) => {
+    const { target } = await body<{ target?: string }>(c);
+    if (target !== "primary" && target !== "deck") return c.json({ error: "target must be primary or deck." }, 400);
+    try {
+      await selectCalendar(c.env.DB, c.env, target, now());
+      return c.json({ ok: true, calendarTarget: target });
+    } catch (err) {
+      return googleFail(c, err, "Could not switch calendars");
+    }
+  });
+
+  app.put("/api/calendar/settings", async (c) => {
+    const { twoWay } = await body<{ twoWay?: unknown }>(c);
+    if (typeof twoWay !== "boolean") return c.json({ error: "twoWay must be true or false." }, 400);
+    const res = await c.env.DB.prepare("UPDATE google_sync SET two_way = ? WHERE id = 1").bind(twoWay ? 1 : 0).run();
+    if (!res.meta.changes) return c.json({ error: "Google Calendar is not connected." }, 404);
+    return c.json({ ok: true, twoWay });
   });
 
   // Whole-database export, so a wiped database or a move to another host never loses progress.

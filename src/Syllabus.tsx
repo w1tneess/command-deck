@@ -1,9 +1,9 @@
 import { useId, useRef, useState } from "react";
 import { SCOPES, inScope, type Scope } from "../server/logic.ts";
 import type { Act, Chapter, State, Subject } from "./api.ts";
-import { activeOf, chaptersLabel, startedCount } from "./model.ts";
+import { activeOf, chaptersLabel } from "./model.ts";
 import { RevisionMatrix } from "./RevisionMatrix.tsx";
-import { AppleEmoji, Btn, Segmented, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_NAMES, PASS_SHORT, Pill, ScopeTag, SubjectBadge, SubjectIcon, plural, PageHeader } from "./ui.tsx";
+import { Btn, Segmented, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_NAMES, PASS_SHORT, ScopeTag, SubjectIcon, plural, PageHeader } from "./ui.tsx";
 import { VivaDrawer } from "./VivaDrawer.tsx";
 
 const SCOPE_LABEL: Record<Scope, string> = { unit1: "Unit 1", unit2: "Unit 2", pb1: "PB1", pb2: "PB2", board: "Boards" };

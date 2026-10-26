@@ -19,7 +19,7 @@ import { Schedule } from "./Schedule.tsx";
 import { CalendarModal } from "./CalendarModal.tsx";
 import { Sidebar } from "./Sidebar.tsx";
 import { Today } from "./Today.tsx";
-import { AppleEmoji, BrandLogo, ICONS, Icon } from "./ui.tsx";
+import { BrandLogo, ICONS, Icon } from "./ui.tsx";
 import { VivaDrawer } from "./VivaDrawer.tsx";
 import { Week } from "./Week.tsx";
 import { ZenFocusStudio } from "./ZenFocus.tsx";
@@ -190,7 +190,10 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
       <div className="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto">
         {/* Top Header Bar */}
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-bg/90 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-8">
-          <div className="text-sm font-medium text-muted">{istDateTime}</div>
+          <div className="flex items-center gap-3 text-sm font-medium text-muted">
+            <BrandLogo size={28} className="lg:hidden" />
+            <span>{istDateTime}</span>
+          </div>
           <div className="flex items-center gap-2">
             <ThemeToggle theme={theme} setTheme={setTheme} />
             <button

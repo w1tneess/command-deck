@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
 import type { Act, State } from "./api.ts";
-import { Btn, Card, H2, PageHeader, Segmented } from "./ui.tsx";
+import { Btn, H2, PageHeader, Segmented } from "./ui.tsx";
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
 const istHour = () => Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }).format(new Date())) % 24;
@@ -11,7 +11,7 @@ export function Morning({ state, act }: { state: State; act: Act }) {
   const r = state.routine;
   const big3 = state.targets.slice(0, 3);
   return (
-    <Card labelledBy="morning-h">
+    <section aria-labelledby="morning-h" className="min-w-0 rounded-2xl bg-surface2 p-4 ring-1 ring-line text-fg">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <H2 id="morning-h">Morning</H2>
         {r.kickoffAt && <span className="text-sm text-muted">Started at {clock(r.kickoffAt)}</span>}
@@ -32,9 +32,9 @@ export function Morning({ state, act }: { state: State; act: Act }) {
         {big3.length === 0 ? (
           <p className="m-0 text-sm text-muted">Nothing planned yet. Add targets on Today.</p>
         ) : (
-          <ul className="m-0 flex list-none flex-col p-0">
+          <ul className="m-0 flex list-none flex-col gap-2 p-0 md:gap-3">
             {big3.map((t) => (
-              <li key={t.id} className="flex items-center justify-between gap-3 border-b border-line py-3 last:border-b-0">
+              <li key={t.id} className="flex min-h-[44px] items-center justify-between gap-3 rounded-xl bg-surface px-3 py-2">
                 <span className={`text-base ${t.done ? "text-muted line-through" : "text-fg"}`}>{t.title}</span>
                 {t.done && <span className="shrink-0 text-sm font-medium text-accent">Done</span>}
               </li>
@@ -54,7 +54,7 @@ export function Morning({ state, act }: { state: State; act: Act }) {
           </Btn>
         )}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -93,12 +93,12 @@ export function Evening({ state, act }: { state: State; act: Act }) {
     }
   };
 
-  const field = "w-full resize-none rounded-2xl border border-line-strong bg-surface px-4 py-3 text-base text-fg placeholder:text-muted";
+  const field = "w-full resize-none rounded-2xl border border-line-strong bg-surface px-4 py-3 text-base text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus";
 
   return (
-    <Card labelledBy="evening-h">
+    <section aria-labelledby="evening-h" className="min-w-0 rounded-2xl bg-surface2 p-4 ring-1 ring-line text-fg">
       <details open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
-        <summary className="flex min-h-10 cursor-pointer flex-wrap items-baseline justify-between gap-2">
+        <summary className="flex min-h-[44px] cursor-pointer flex-wrap items-baseline justify-between gap-2">
           <H2 id="evening-h">Evening</H2>
           <span className="text-sm text-muted">
             {r.shutdownAt ? `Closed at ${clock(r.shutdownAt)}` : `${doneTargets} of ${state.targets.length} targets, ${doneHabits} of ${state.habits.length} habits`}
@@ -150,13 +150,13 @@ export function Evening({ state, act }: { state: State; act: Act }) {
           </div>
         </div>
       </details>
-    </Card>
+    </section>
   );
 }
 
 export function Routine({ state, act }: { state: State; act: Act }) {
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
       <PageHeader title="Routine" sub="Start the day, then close it." />
       <Morning state={state} act={act} />
       <Evening key={state.routine.day} state={state} act={act} />

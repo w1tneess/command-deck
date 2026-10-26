@@ -116,13 +116,13 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
             placeholder="Jot down a quick thought, task, or study reminder..."
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void save(); } }}
-            className="w-full resize-none rounded-xl border border-line-strong bg-surface px-4 py-3 text-sm text-fg focus:border-sky-400 transition-all placeholder:text-muted leading-relaxed font-sans"
+            className="w-full resize-none rounded-xl border border-line-strong bg-surface px-4 py-3 text-sm text-fg focus-visible:ring-2 focus-visible:ring-focus transition-all placeholder:text-muted leading-relaxed font-sans"
           />
 
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               {[
-                { tag: "#task", k: "todo" as const, color: "border-sky-500/40 bg-sky-500/10 text-sky-300" },
+                { tag: "#task", k: "todo" as const, color: "border-focus/40 bg-focus/10 text-focus" },
                 { tag: "#note", k: "note" as const, color: "border-accent/30 bg-accent/15 text-accent" },
                 { tag: "#doubt", k: "todo" as const, color: "border-warn/30 bg-warn/15 text-warn" },
               ].map(({ tag, k, color }) => (
@@ -133,7 +133,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                     setKind(k);
                     setText((cur) => (cur.includes(tag) ? cur : cur ? `${cur} ${tag}` : `${tag} `));
                   }}
-                  className={`h-6 rounded-[3px] border px-2 font-mono text-[11px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
+                  className={`min-h-[44px] md:min-h-[38px] rounded-[3px] border px-2 font-mono text-[11px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
                 >
                   {tag}
                 </button>
@@ -147,9 +147,9 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                   type="button"
                   aria-pressed={kind === k}
                   onClick={() => setKind(k)}
-                  className={`h-7 rounded-lg border px-2.5 text-xs font-medium transition-all ${
+                  className={`min-h-[44px] md:min-h-[38px] rounded-lg border px-2.5 text-xs font-medium transition-all ${
                     kind === k
-                      ? "border-sky-500/40 bg-sky-500/20 text-sky-300 font-semibold shadow-xs"
+                      ? "border-focus/40 bg-focus/20 text-focus font-semibold shadow-xs"
                       : "border-line bg-surface2 text-muted hover:text-fg"
                   }`}
                 >
@@ -169,7 +169,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                 {c.kind === "todo" ? (
                   <button type="button" role="switch" aria-checked={c.done} aria-label={`${c.text}: ${doneText(c.done)}`} onClick={() => act("PATCH", `/api/captures/${c.id}`, { done: !c.done })} className="flex size-6 shrink-0 items-center justify-center border-0 bg-transparent active:scale-95 transition-transform"><Check on={c.done} /></button>
                 ) : (
-                  <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center text-sky-400 text-sm">•</span>
+                  <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center text-focus text-sm">•</span>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className={`text-sm break-words whitespace-pre-wrap ${c.done ? "text-muted line-through" : "text-fg"}`}>
@@ -186,21 +186,21 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                   <button
                     type="button"
                     onClick={() => void convertToTask(c)}
-                    className="h-5.5 rounded border border-sky-500/30 bg-sky-500/10 px-2 font-mono text-[11px] text-sky-300 hover:bg-sky-500/20 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-2 font-mono text-[11px] text-focus hover:bg-focus/20 transition-all"
                   >
                     → Today's Task
                   </button>
                   <button
                     type="button"
                     onClick={() => void convertToDeliverable(c)}
-                    className="h-5.5 rounded border border-indigo-500/30 bg-indigo-500/10 px-2 font-mono text-[11px] text-indigo-300 hover:bg-indigo-500/20 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-2 font-mono text-[11px] text-focus hover:bg-focus/20 transition-all"
                   >
                     → School Deliverable
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveDoubtId(activeDoubtId === c.id ? null : c.id)}
-                    className="h-5.5 rounded border border-warn/30 bg-warn/15 px-2 font-mono text-[11px] text-warn hover:bg-warn/15 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-warn/30 bg-warn/15 px-2 font-mono text-[11px] text-warn hover:bg-warn/15 transition-all"
                   >
                     → Link Doubt
                   </button>
@@ -220,7 +220,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                       await act("PATCH", `/api/captures/${c.id}`, { done: true });
                       setActiveDoubtId(null);
                     }}
-                    className="h-7 text-xs bg-surface border border-warn/30 text-warn rounded px-2 font-mono flex-1 focus:outline-none focus:border-amber-400"
+                    className="min-h-[44px] md:min-h-[38px] text-xs bg-surface border border-warn/30 text-warn rounded px-2 font-mono flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                   >
                     <option value="" disabled>Select chapter to link doubt...</option>
                     {state.subjects.map((s) => (
@@ -333,7 +333,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
             placeholder={kind === "todo" ? "Add to-do, task, or #doubt..." : "Quick thought or #note..."}
             onChange={(e) => setText(e.target.value)}
             disabled={saving}
-            className="h-8.5 flex-1 rounded-[2px] border border-line-strong bg-surface px-3 font-mono text-xs text-fg placeholder:text-muted focus:border-sky-400 transition-all"
+            className="min-h-[44px] md:min-h-[38px] flex-1 rounded-[2px] border border-line-strong bg-surface px-3 font-mono text-xs text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus transition-all"
           />
           <Btn type="submit" kind="primary" disabled={!text.trim() || saving}>
             {saving ? "…" : "+ Add"}
@@ -344,7 +344,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
           <div className="flex items-center gap-1.5">
             <span className="font-mono text-[11px]   text-muted">Quick Tags:</span>
             {[
-              { tag: "#task", k: "todo" as const, color: "border-sky-500/40 bg-sky-500/10 text-sky-300" },
+              { tag: "#task", k: "todo" as const, color: "border-focus/40 bg-focus/10 text-focus" },
               { tag: "#note", k: "note" as const, color: "border-accent/30 bg-accent/15 text-accent" },
               { tag: "#doubt", k: "todo" as const, color: "border-warn/30 bg-warn/15 text-warn" },
             ].map(({ tag, k, color }) => (
@@ -355,7 +355,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                   setKind(k);
                   setText((cur) => (cur.includes(tag) ? cur : cur ? `${cur} ${tag}` : `${tag} `));
                 }}
-                className={`h-5.5 rounded-[2px] border px-1.5 font-mono text-[11px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
+                className={`min-h-[44px] md:min-h-[38px] rounded-[2px] border px-1.5 font-mono text-[11px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
               >
                 {tag}
               </button>
@@ -369,9 +369,9 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                 type="button"
                 aria-pressed={kind === k}
                 onClick={() => setKind(k)}
-                className={`h-5.5 rounded-[2px] border px-2 font-mono text-[11px]  font-bold  transition-all ${
+                className={`min-h-[44px] md:min-h-[38px] rounded-[2px] border px-2 font-mono text-[11px]  font-bold  transition-all ${
                   kind === k
-                    ? "border-sky-500/40 bg-sky-500/20 text-sky-300"
+                    ? "border-focus/40 bg-focus/20 text-focus"
                     : "border-line bg-transparent text-muted hover:text-fg"
                 }`}
               >
@@ -425,21 +425,21 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                   <button
                     type="button"
                     onClick={() => void convertToTask(c)}
-                    className="h-5 rounded border border-sky-500/30 bg-sky-500/10 px-1.5 font-mono text-[11px] text-sky-300 hover:bg-sky-500/20 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-1.5 font-mono text-[11px] text-focus hover:bg-focus/20 transition-all"
                   >
                     → Task
                   </button>
                   <button
                     type="button"
                     onClick={() => void convertToDeliverable(c)}
-                    className="h-5 rounded border border-indigo-500/30 bg-indigo-500/10 px-1.5 font-mono text-[11px] text-indigo-300 hover:bg-indigo-500/20 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-1.5 font-mono text-[11px] text-focus hover:bg-focus/20 transition-all"
                   >
                     → Deliverable
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveDoubtId(activeDoubtId === c.id ? null : c.id)}
-                    className="h-5 rounded border border-warn/30 bg-warn/15 px-1.5 font-mono text-[11px] text-warn hover:bg-warn/15 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-warn/30 bg-warn/15 px-1.5 font-mono text-[11px] text-warn hover:bg-warn/15 transition-all"
                   >
                     → Doubt
                   </button>
@@ -459,7 +459,7 @@ export function QuickCaptureInbox({ state, act, onOpenDrawer }: { state: State; 
                       await act("PATCH", `/api/captures/${c.id}`, { done: true });
                       setActiveDoubtId(null);
                     }}
-                    className="h-6 text-xs bg-surface border border-warn/30 text-warn rounded px-1.5 font-mono flex-1 focus:outline-none focus:border-amber-400"
+                    className="min-h-[44px] md:min-h-[38px] text-xs bg-surface border border-warn/30 text-warn rounded px-1.5 font-mono flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                   >
                     <option value="" disabled>Select chapter to link doubt...</option>
                     {state.subjects.map((s) => (

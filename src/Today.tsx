@@ -69,7 +69,7 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
   const nextNote = nextChapter ? reasonFor(nextChapter.chapter) : "";
 
   return (
-    <div className="flex w-full flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-8 md:max-w-3xl">
       <header>
         <h1 className="m-0 font-serif text-3xl font-bold tracking-tight text-fg sm:text-4xl">{greeting}, Advaita</h1>
         <p className="m-0 mt-1 text-base text-muted">
@@ -78,10 +78,10 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div className="contents">
           {/* Next up: the single thing to do now */}
-          <section aria-labelledby="next-h" className="rounded-3xl border border-line bg-surface p-6 sm:p-8">
+          <section aria-labelledby="next-h" className="rounded-2xl bg-surface2 p-5 ring-1 ring-line md:col-span-2">
             <h2 id="next-h" className="m-0 text-sm font-medium text-muted">Next up</h2>
             {nextTitle ? (
               <>
@@ -111,20 +111,20 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
           </section>
 
           {/* Today's list */}
-          <section aria-labelledby="plan-h" className="flex flex-col gap-3">
+          <section aria-labelledby="plan-h" className="flex flex-col gap-4">
             <div className="flex items-baseline justify-between">
               <h2 id="plan-h" className="m-0 font-serif text-xl font-semibold tracking-tight text-fg">Today's plan</h2>
               <span className="text-sm text-muted">{state.targets.filter((t) => t.done).length} of {state.targets.length} done</span>
             </div>
             {state.targets.length > 0 && (
-              <ul className="m-0 flex list-none flex-col p-0">
+              <ul className="m-0 flex list-none flex-col gap-3 p-0 md:gap-4">
                 {state.targets.map((t) => (
-                  <li key={t.id} className="group flex items-center gap-3 border-b border-line py-3 last:border-b-0">
+                  <li key={t.id} className="group flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => void toggleTarget(t.id, t.done)}
                       aria-label={`${t.done ? "Mark not done" : "Mark done"}: ${t.title}`}
-                      className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left cursor-pointer"
+                      className="flex min-h-[44px] min-w-0 flex-1 items-center gap-3 rounded-xl border-0 bg-transparent p-0 text-left cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
                     >
                       <Check on={t.done} />
                       <span className={`min-w-0 text-base ${t.done ? "text-muted line-through" : "text-fg"}`}>{t.title}</span>
@@ -134,7 +134,7 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
                       type="button"
                       onClick={() => void removeTarget(t.id)}
                       aria-label={`Remove ${t.title}`}
-                      className="shrink-0 rounded-full border-0 bg-transparent px-2 py-1 text-sm text-muted hover:text-danger cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+                      className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-0 bg-transparent px-2 text-sm text-muted hover:text-danger cursor-pointer focus-visible:ring-2 focus-visible:ring-focus lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                     >
                       Remove
                     </button>
@@ -152,19 +152,19 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Add something to do today"
-                className="h-11 min-w-0 flex-1 rounded-full border border-line-strong bg-surface px-4 text-base text-fg placeholder:text-muted"
+                className="h-11 min-w-0 flex-1 rounded-full border border-line-strong bg-surface px-4 text-base text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus"
               />
               <Btn type="submit" disabled={!title.trim()}>Add</Btn>
             </form>
 
             {queue.length > 0 && (
               <details className="mt-2">
-                <summary className="cursor-pointer text-sm font-medium text-muted hover:text-fg">Suggested chapters</summary>
-                <ul className="m-0 mt-2 flex list-none flex-col p-0">
+                <summary className="flex min-h-[44px] cursor-pointer items-center rounded-xl text-sm font-medium text-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-focus">Suggested chapters</summary>
+                <ul className="m-0 mt-2 flex list-none flex-col gap-3 p-0 md:gap-4">
                   {queue.map((q) => {
                     const added = state.targets.some((t) => t.chapterId === q.chapterId);
                     return (
-                      <li key={q.chapterId} className="flex items-center gap-3 border-b border-line py-3 last:border-b-0">
+                      <li key={q.chapterId} className="flex items-center gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="text-base text-fg">{q.subject.name}: {q.chapter.name}</div>
                           <div className="text-sm text-muted">{reasonFor(q.chapter)}</div>
@@ -179,21 +179,21 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-8">
-          <section aria-labelledby="due-h" className="flex flex-col gap-3">
+        <aside className="flex flex-col gap-8 md:items-stretch">
+          <section aria-labelledby="due-h" className="flex flex-col gap-4">
             <div className="flex items-baseline justify-between">
               <h2 id="due-h" className="m-0 font-serif text-xl font-semibold tracking-tight text-fg">Due soon</h2>
-              <a href="#deliverables" className="text-sm font-medium text-muted hover:text-fg">All due dates</a>
+              <a href="#deliverables" className="inline-flex min-h-[44px] items-center rounded-xl text-sm font-medium text-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-focus">All due dates</a>
             </div>
             {dueShown.length === 0 ? (
               <p className="m-0 text-sm text-muted">Nothing due. Nice.</p>
             ) : (
-              <ul className="m-0 flex list-none flex-col p-0">
+              <ul className="m-0 flex list-none flex-col gap-3 p-0 md:gap-4">
                 {dueShown.map((d) => {
                   const left = daysUntil(state.today, d.due!);
                   const late = left < 0;
                   return (
-                    <li key={d.id} className="flex items-baseline justify-between gap-3 border-b border-line py-3 last:border-b-0">
+                    <li key={d.id} className="flex items-baseline justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-base text-fg">{d.name}</div>
                         <div className="text-sm text-muted">{d.subject}</div>
@@ -209,10 +209,10 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
           </section>
 
           {state.habits.length > 0 && (
-            <section aria-labelledby="habits-h" className="flex flex-col gap-3">
+            <section aria-labelledby="habits-h" className="flex flex-col gap-4">
               <div className="flex items-baseline justify-between">
                 <h2 id="habits-h" className="m-0 font-serif text-xl font-semibold tracking-tight text-fg">Habits</h2>
-                <a href="#habits" className="text-sm font-medium text-muted hover:text-fg">All habits</a>
+                <a href="#habits" className="inline-flex min-h-[44px] items-center rounded-xl text-sm font-medium text-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-focus">All habits</a>
               </div>
               <div className="flex flex-wrap gap-2">
                 {state.habits.map((h) => {
@@ -224,7 +224,7 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
                       type="button"
                       aria-pressed={done}
                       onClick={() => void toggleHabit(h.id, h.today, h.goal)}
-                      className={`min-h-11 rounded-full border px-4 text-sm font-medium cursor-pointer ${done ? "border-transparent bg-accent/15 text-accent" : "border-line-strong bg-transparent text-fg hover:bg-surface3"}`}
+                      className={`min-h-[44px] rounded-full border px-3 text-sm font-medium cursor-pointer md:min-h-[36px] focus-visible:ring-2 focus-visible:ring-focus ${done ? "border-transparent bg-accent/15 text-accent" : "border-line-strong bg-transparent text-muted hover:bg-surface3 hover:text-fg"}`}
                     >
                       {done ? "✓ " : ""}{label}
                     </button>

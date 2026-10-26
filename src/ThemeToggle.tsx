@@ -17,7 +17,7 @@ export function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: T
       onClick={() => setTheme(NEXT[theme])}
       title={`Theme: ${LABEL[theme]} (click for ${LABEL[NEXT[theme]]})`}
       aria-label={`Theme: ${LABEL[theme]}. Switch to ${LABEL[NEXT[theme]]}`}
-      className="flex size-8 items-center justify-center rounded-full border border-line-strong text-muted hover:text-fg hover:bg-white/[0.06] cursor-pointer"
+      className="flex size-11 md:size-8 items-center justify-center rounded-full border border-line-strong text-muted hover:text-fg hover:bg-surface3 cursor-pointer"
     >
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d={ICON[theme]} />

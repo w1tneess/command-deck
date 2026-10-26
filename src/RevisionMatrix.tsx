@@ -47,18 +47,18 @@ export function RevisionMatrix({
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface/80 p-4 lg:p-5 backdrop-blur-md shadow-sm">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2 font-mono text-[11px] font-semibold   text-muted">
-            <span className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+            <span className="inline-flex size-2 rounded-full bg-accent" />
             <span>Syllabus Radar</span>
             <span className="text-muted">/</span>
             <span className="text-muted">{totalChapters} Total Chapters</span>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-fg/80">
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
+              <span className="size-2 rounded-full bg-accent" />
               <span>{masteredChapters} Mastered</span>
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
+              <span className="size-2 rounded-full bg-danger" />
               <span className="text-danger font-semibold">{blindSpotChapters} Urgent Blind Spots</span>
             </span>
           </div>
@@ -80,7 +80,7 @@ export function RevisionMatrix({
               onClick={() => setFilter(tab.id as FilterTab)}
               className={`h-8 rounded-lg border px-3 text-xs font-medium transition-all tracking-wide ${
                 filter === tab.id
-                  ? "border-line-strong bg-white text-zinc-950 font-semibold shadow-sm"
+                  ? "border-line-strong bg-fg text-bg font-semibold shadow-sm"
                   : "border-transparent bg-transparent text-muted hover:text-fg hover:bg-surface2"
               }`}
             >
@@ -113,7 +113,7 @@ export function RevisionMatrix({
                   </div>
                 </div>
                 {examDate && (
-                  <span className="font-mono text-[11px] rounded-full border border-line bg-white/5 px-2.5 py-0.5 text-fg/80">
+                  <span className="font-mono text-[11px] rounded-full border border-line bg-surface2 px-2.5 py-0.5 text-fg/80">
                     Exam: {examDate}
                   </span>
                 )}
@@ -133,9 +133,9 @@ export function RevisionMatrix({
 
                     // Color theme for tile
                     const tileBorder = isMastered
-                      ? "border-accent/30 hover:border-accent/30 bg-emerald-500/[0.04]"
+                      ? "border-accent/30 hover:border-accent/30 bg-accent/[0.04]"
                       : isBlindSpot
-                      ? "border-danger/30 hover:border-danger/30 bg-rose-500/[0.04]"
+                      ? "border-danger/30 hover:border-danger/30 bg-danger/[0.04]"
                       : "border-line hover:border-line-strong bg-surface2";
 
                     return (
@@ -178,7 +178,7 @@ export function RevisionMatrix({
                                   onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${pIdx + 1}`, { done: !done })}
                                   className={`flex size-6 items-center justify-center rounded-md text-[11px] font-mono transition-all ${
                                     done
-                                      ? "bg-emerald-500 text-zinc-950 font-bold shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+                                      ? "bg-accent text-bg font-bold"
                                       : "bg-surface border border-line text-muted hover:border-line-strong hover:text-fg"
                                   }`}
                                 >

@@ -321,11 +321,11 @@ function SubjectCard({
         </p>
       )}
 
-      <ol className="m-0 list-none p-0">
+      <ol className="m-0 flex list-none flex-col gap-2 p-0 md:gap-3">
         {visible.map((c) => {
           if (editing === c.id) {
             return (
-              <li key={c.id} className="border-t border-line">
+              <li key={c.id} className="rounded-2xl bg-surface2 px-3 [&>form]:border-t-0">
                 <ChapterForm
                   subject={subject}
                   initial={{ name: c.name, scope: c.scope, confidence: c.confidence }}
@@ -341,8 +341,8 @@ function SubjectCard({
             );
           }
           return (
-            <li key={c.id} data-chapter-id={c.id} className={`border-t ${drag?.over === c.id && drag.id !== c.id ? "border-accent" : "border-line"} ${drag?.id === c.id ? "opacity-50" : ""} transition-colors`}>
-              <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 py-4 sm:grid-cols-[32px_minmax(0,1fr)_auto]">
+            <li key={c.id} data-chapter-id={c.id} className={`rounded-2xl bg-surface2 px-3 ${drag?.over === c.id && drag.id !== c.id ? "ring-1 ring-accent" : ""} ${drag?.id === c.id ? "opacity-50" : ""} transition-colors`}>
+              <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 py-3 sm:grid-cols-[32px_minmax(0,1fr)_auto]">
                 <button
                   type="button"
                   aria-label={`Reorder ${c.name}. Drag, or use the up and down arrow keys.`}
@@ -368,7 +368,7 @@ function SubjectCard({
                       aria-pressed={!!c.passes[i]}
                       aria-label={`${PASS_SHORT[i]} pass for ${c.name}`}
                       onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${i + 1}`, { done: !c.passes[i] })}
-                      className={`min-h-9 rounded-full border-0 px-3 text-sm font-medium cursor-pointer ${c.passes[i] ? "bg-accent/15 text-accent" : "bg-surface3 text-muted hover:text-fg"}`}
+                      className={`min-h-[44px] rounded-full border-0 px-3 text-sm font-medium cursor-pointer md:min-h-9 ${c.passes[i] ? "bg-accent/15 text-accent" : "bg-surface3 text-muted hover:text-fg"}`}
                     >
                       {c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}
                     </button>
@@ -378,12 +378,12 @@ function SubjectCard({
                     type="button"
                     aria-label={`Quiz me on ${c.name}`}
                     onClick={() => onOpenViva(c)}
-                    className="min-h-9 rounded-full border border-line-strong bg-transparent px-3 text-sm font-medium text-fg hover:bg-surface3 cursor-pointer"
+                    className="min-h-[44px] rounded-full border border-line-strong bg-transparent px-3 text-sm font-medium text-fg hover:bg-surface3 cursor-pointer md:min-h-9"
                   >
                     Quiz
                   </button>
-                  <button type="button" aria-label={`Edit ${c.name}`} onClick={() => { setEditing(c.id); setDeleting(null); }} className="flex size-9 items-center justify-center rounded-full border-0 bg-transparent text-muted hover:text-fg hover:bg-surface3 cursor-pointer"><Icon d={ICONS.edit} size={16} /></button>
-                  <button type="button" aria-label={`Delete ${c.name}`} onClick={() => setDeleting(c.id)} className="flex size-9 items-center justify-center rounded-full border-0 bg-transparent text-muted hover:text-danger hover:bg-surface3 cursor-pointer"><Icon d={ICONS.trash} size={16} /></button>
+                  <button type="button" aria-label={`Edit ${c.name}`} onClick={() => { setEditing(c.id); setDeleting(null); }} className="flex size-11 items-center justify-center rounded-full border-0 bg-transparent text-muted md:size-9 hover:text-fg hover:bg-surface3 cursor-pointer"><Icon d={ICONS.edit} size={16} /></button>
+                  <button type="button" aria-label={`Delete ${c.name}`} onClick={() => setDeleting(c.id)} className="flex size-11 items-center justify-center rounded-full border-0 bg-transparent text-muted md:size-9 hover:text-danger hover:bg-surface3 cursor-pointer"><Icon d={ICONS.trash} size={16} /></button>
                 </div>
               </div>
               {deleting === c.id && (
@@ -431,11 +431,11 @@ function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subjec
     <form className="flex flex-wrap items-end gap-3.5 py-4 border-t border-line" onSubmit={submit}>
       <div className="flex flex-[1_1_240px] flex-col gap-1.5">
         <label htmlFor={`${id}-name`} className="font-mono text-xs   text-muted">Chapter name</label>
-        <input id={`${id}-name`} autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-9 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors" />
+        <input id={`${id}-name`} autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className="h-9 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none transition-colors" />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${id}-scope`} className="font-mono text-xs   text-muted">Scope</label>
-        <select id={`${id}-scope`} value={v.scope} onChange={(e) => setV({ ...v, scope: e.target.value as Scope })} className="h-9 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors">
+        <select id={`${id}-scope`} value={v.scope} onChange={(e) => setV({ ...v, scope: e.target.value as Scope })} className="h-9 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none transition-colors">
           {SCOPES.map((s) => <option key={s} value={s}>{SCOPE_LABEL[s]}</option>)}
         </select>
       </div>
@@ -471,11 +471,11 @@ function PhaseDates({ state, act }: { state: State; act: Act }) {
           <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-3.5">
             <strong className="text-xs   text-fg">{p.name}</strong>
             <span className="flex flex-wrap items-center gap-2.5">
-              <input type="date" aria-label={`${p.name} starts`} value={p.startsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { startsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors" />
+              <input type="date" aria-label={`${p.name} starts`} value={p.startsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { startsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none transition-colors" />
               <span className="font-mono text-xs text-muted">to</span>
-              <input type="date" aria-label={`${p.name} ends`} value={p.endsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { endsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus:border-accent/30 focus:outline-none transition-colors" />
-              <label className="flex min-h-8 items-center gap-2 text-xs font-medium text-fg/80">
-                <input type="checkbox" checked={p.confirmed} onChange={(e) => act("PUT", `/api/phases/${p.id}`, { confirmed: e.target.checked })} className="size-4 rounded-md accent-emerald-500" />
+              <input type="date" aria-label={`${p.name} ends`} value={p.endsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { endsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none transition-colors" />
+              <label className="flex min-h-[44px] md:min-h-[38px] items-center gap-2 text-xs font-medium text-fg/80">
+                <input type="checkbox" checked={p.confirmed} onChange={(e) => act("PUT", `/api/phases/${p.id}`, { confirmed: e.target.checked })} className="size-5 rounded-md accent-accent focus-visible:ring-2 focus-visible:ring-focus" />
                 Confirmed
               </label>
             </span>

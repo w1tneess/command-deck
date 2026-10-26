@@ -121,7 +121,7 @@ export function ZenFocusStudio({
       {/* Top Telemetry & Controls */}
       <div className="flex items-center justify-between border-b border-line pb-5">
         <div className="flex items-center gap-3">
-          <span className="size-2.5 rounded-full bg-fg shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
+          <span className="size-2.5 rounded-full bg-fg" />
           <span className="text-sm font-semibold tracking-wide text-fg">
             Zen Focus Studio · {isFocusMode ? "Deep Session" : f.label}
           </span>
@@ -136,7 +136,7 @@ export function ZenFocusStudio({
             onClick={() => setScratchOpen(!scratchOpen)}
             className={`flex h-8.5 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition-all ${
               scratchOpen
-                ? "border-sky-500/40 bg-sky-500/20 text-sky-300"
+                ? "border-focus/40 bg-focus/20 text-focus"
                 : "border-line-strong bg-surface2 text-fg/80 hover:text-fg hover:bg-surface3"
             }`}
           >
@@ -150,7 +150,7 @@ export function ZenFocusStudio({
             type="button"
             aria-label="Exit Zen Focus Studio"
             onClick={onClose}
-            className="flex h-8.5 items-center gap-1.5 rounded-lg border border-line-strong bg-surface2 px-3.5 text-xs font-semibold text-fg hover:bg-white hover:text-zinc-950 transition-all shadow-xs"
+            className="flex h-8.5 items-center gap-1.5 rounded-lg border border-line-strong bg-surface2 px-3.5 text-xs font-semibold text-fg hover:bg-surface3 hover:text-fg transition-all shadow-xs"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
             <span>Exit</span>
@@ -160,9 +160,9 @@ export function ZenFocusStudio({
 
       {/* Session Mastery Prompt Modal */}
       {f.masteryPrompt && (
-        <div className="mx-auto my-3 w-full max-w-xl rounded-2xl border border-sky-500/40 bg-bg p-5 shadow-2xl animate-fade-in">
+        <div className="mx-auto my-3 w-full max-w-xl rounded-2xl border border-focus/40 bg-bg p-5 shadow-2xl animate-fade-in">
           <div className="flex items-center justify-between pb-2">
-            <span className="font-semibold text-sky-400 text-sm flex items-center gap-2">
+            <span className="font-semibold text-focus text-sm flex items-center gap-2">
               <AppleEmoji emoji="✨" size={15} />
               <span>What did you master this session?</span>
             </span>
@@ -190,11 +190,11 @@ export function ZenFocusStudio({
               name="zenMastery"
               autoFocus
               placeholder="e.g. Electric potential derivation, Carbon allotropes..."
-              className="flex-1 h-9 rounded-lg border border-line-strong bg-surface px-3 font-sans text-xs text-fg placeholder:text-muted focus:border-sky-400 transition-all"
+              className="flex-1 h-9 rounded-lg border border-line-strong bg-surface px-3 font-sans text-xs text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus transition-all"
             />
             <button
               type="submit"
-              className="h-9 rounded-lg bg-fg hover:opacity-90 text-zinc-950 px-4 font-sans text-xs font-semibold transition-all shadow-xs"
+              className="h-9 rounded-lg bg-fg hover:opacity-90 text-bg px-4 font-sans text-xs font-semibold transition-all shadow-xs"
             >
               Save Mastery
             </button>
@@ -229,7 +229,7 @@ export function ZenFocusStudio({
               setScratchpad(val);
               try { localStorage.setItem("focus_scratchpad", val); } catch {}
             }}
-            className="w-full resize-none rounded-lg border border-line bg-bg p-3 font-mono text-xs text-fg placeholder:text-muted focus:border-sky-400 transition-all focus:outline-none"
+            className="w-full resize-none rounded-lg border border-line bg-bg p-3 font-mono text-xs text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus transition-all focus:outline-none"
           />
           <div className="flex items-center justify-between pt-1">
             <span className="font-mono text-[11px] text-muted">Auto-saved locally</span>
@@ -238,7 +238,7 @@ export function ZenFocusStudio({
                 type="button"
                 disabled={!scratchpad.trim() || savingScratch}
                 onClick={() => void handleSaveScratchToCapture()}
-                className="h-7 rounded-md border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 font-sans text-xs font-semibold text-sky-300 transition-all disabled:opacity-40"
+                className="h-7 rounded-md border border-focus/30 bg-focus/10 hover:bg-focus/20 px-2.5 font-sans text-xs font-semibold text-focus transition-all disabled:opacity-40"
               >
                 {savingScratch ? "Saving…" : "→ Push to Quick Capture"}
               </button>
@@ -251,18 +251,18 @@ export function ZenFocusStudio({
       <div className="my-auto flex flex-col items-center justify-center py-8 max-w-3xl mx-auto w-full">
         <div className="relative w-full rounded-3xl border border-line-strong bg-gradient-to-b from-shell/90 to-bg/90 p-8 sm:p-14 flex flex-col items-center justify-center text-center shadow-2xl backdrop-blur-xl">
           {/* Ambient Glow */}
-          <div className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-sky-500/10 blur-3xl rounded-full" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-focus/10 blur-3xl rounded-full" aria-hidden="true" />
 
           {/* Mode Chip */}
           <div className="mb-4">
             <span
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-1 text-xs font-medium tracking-wide ${
                 f.running
-                  ? "border-sky-500/30 bg-sky-500/10 text-sky-300"
+                  ? "border-focus/30 bg-focus/10 text-focus"
                   : "border-line bg-surface2 text-muted"
               }`}
             >
-              <span className={`size-1.5 rounded-full ${f.running ? "bg-emerald-400 animate-pulse" : "bg-zinc-500"}`} />
+              <span className={`size-1.5 rounded-full ${f.running ? "bg-accent animate-pulse" : "bg-surface3"}`} />
               {f.running ? `${isFocusMode ? f.subjectName : f.label} Active` : "Console Ready"}
             </span>
           </div>
@@ -276,7 +276,7 @@ export function ZenFocusStudio({
           <div className="my-6 w-full max-w-md h-2 rounded-full bg-surface3 overflow-hidden" role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100}>
             <div
               className={`h-full rounded-full transition-all duration-300 ease-out ${
-                isFocusMode ? "bg-gradient-to-r from-sky-400 to-indigo-500" : "bg-emerald-400"
+                isFocusMode ? "bg-gradient-to-r from-focus to-focus" : "bg-accent"
               }`}
               style={{ width: `${progressPct}%` }}
             />
@@ -292,7 +292,7 @@ export function ZenFocusStudio({
               <button
                 type="button"
                 onClick={f.stop}
-                className="h-11 rounded-xl border border-transparent bg-white hover:bg-zinc-100 text-zinc-950 px-8 text-xs sm:text-sm font-semibold transition-all active:scale-95 shadow-md"
+                className="h-11 rounded-xl border border-transparent bg-fg hover:bg-surface3 text-bg px-8 text-xs sm:text-sm font-semibold transition-all active:scale-95 shadow-md"
               >
                 {isFocusMode ? "Stop Cycle" : "Skip Break"}
               </button>
@@ -302,7 +302,7 @@ export function ZenFocusStudio({
                   aria-label="Study Subject"
                   value={f.subject}
                   onChange={(e) => f.setSubject(e.target.value)}
-                  className="h-10 rounded-[3px] border border-line-strong bg-surface px-4 font-mono text-xs sm:text-sm text-fg focus:border-sky-400 cursor-pointer"
+                  className="h-10 rounded-[3px] border border-line-strong bg-surface px-4 font-mono text-xs sm:text-sm text-fg focus-visible:ring-2 focus-visible:ring-focus cursor-pointer"
                 >
                   {state.subjects.map((s) => (
                     <option key={s.id} value={s.id} className="bg-bg text-fg">
@@ -313,7 +313,7 @@ export function ZenFocusStudio({
                 <button
                   type="button"
                   onClick={() => f.start()}
-                  className="h-10 rounded-[3px] border border-transparent bg-white hover:bg-zinc-100 text-zinc-950 px-8 font-mono text-xs sm:text-sm  font-bold  transition-all active:scale-95 shadow-sm inline-flex items-center gap-2"
+                  className="h-10 rounded-[3px] border border-transparent bg-fg hover:bg-surface3 text-bg px-8 font-mono text-xs sm:text-sm  font-bold  transition-all active:scale-95 shadow-sm inline-flex items-center gap-2"
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <polygon points="5 3 19 12 5 21 5 3" />
@@ -338,7 +338,7 @@ export function ZenFocusStudio({
                 </div>
                 <div className="h-1.5 w-full bg-surface3 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-300 ${done ? "bg-emerald-400" : "bg-fg"}`}
+                    className={`h-full rounded-full transition-all duration-300 ${done ? "bg-accent" : "bg-fg"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -371,7 +371,7 @@ export function ZenFocusStudio({
                   onClick={() => handleAmbientChange(snd.id as typeof ambient)}
                   className={`h-8.5 rounded-lg border px-3 text-xs font-medium transition-all ${
                     active
-                      ? "border-sky-500/40 bg-sky-500/20 text-sky-300 font-semibold shadow-xs"
+                      ? "border-focus/40 bg-focus/20 text-focus font-semibold shadow-xs"
                       : "border-line bg-surface2 text-muted hover:border-line-strong hover:text-fg"
                   }`}
                 >
@@ -394,7 +394,7 @@ export function ZenFocusStudio({
               value={volume}
               onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
               aria-label="Ambient volume"
-              className="h-1.5 w-24 sm:w-32 cursor-pointer appearance-none rounded-full bg-surface3 accent-sky-400 focus:outline-none"
+              className="h-1.5 w-24 sm:w-32 cursor-pointer appearance-none rounded-full bg-surface3 accent-focus focus:outline-none"
             />
             <span className="font-mono text-xs text-muted w-8">{Math.round(volume * 100)}%</span>
           </div>

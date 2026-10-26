@@ -175,7 +175,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
     >
       {saving && (
         <div aria-hidden="true" className="fixed inset-x-0 top-0 z-50 h-[3px] overflow-hidden bg-black/20">
-          <div className="h-full w-1/3 animate-[slide_1s_cubic-bezier(0.16,1,0.3,1)_infinite] bg-accent shadow-[0_0_8px_rgba(82,183,136,0.8)]" />
+          <div className="h-full w-1/3 animate-[slide_1s_cubic-bezier(0.16,1,0.3,1)_infinite] bg-accent" />
         </div>
       )}
 
@@ -199,7 +199,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
               aria-controls="account-menu"
               aria-label="Menu"
               onClick={() => setMore((m) => !m)}
-              className="flex size-9 items-center justify-center rounded-full bg-fg text-sm font-semibold text-bg cursor-pointer"
+              className="flex size-11 md:size-9 items-center justify-center rounded-full bg-fg text-sm font-semibold text-bg cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
             >
               A
             </button>
@@ -209,13 +209,13 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
         {/* Page Content */}
         <main className="mx-auto w-full max-w-[1180px] flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 pb-24 lg:pb-8">
           {group && group.pages.length > 1 && (
-            <nav aria-label={group.label} className="-mb-2 flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-surface3 p-1">
+            <nav aria-label={group.label} className="scrollbar-none -mb-2 flex max-w-full gap-2 overflow-x-auto">
               {group.pages.map((p) => (
                 <a
                   key={p.id}
                   href={`#${p.id}`}
                   aria-current={page === p.id ? "page" : undefined}
-                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium ${page === p.id ? "bg-surface text-fg shadow-sm" : "text-muted hover:text-fg"}`}
+                  className={`inline-flex min-h-[44px] md:min-h-[38px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium focus-visible:ring-2 focus-visible:ring-focus ${page === p.id ? "bg-surface2 text-fg ring-1 ring-line" : "text-muted hover:text-fg"}`}
                 >
                   {p.label}
                 </a>
@@ -225,17 +225,17 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
           {error && (
             <div role="alert" className="m-0 flex items-center justify-between gap-3 rounded-2xl border border-danger/30 bg-danger/10 text-danger px-4.5 py-3 text-xs sm:text-sm shadow-xs">
               <div className="flex items-center gap-2.5">
-                <span className="size-2 rounded-full bg-rose-500" />
+                <span className="size-2 rounded-full bg-danger" />
                 <span>{error}</span>
               </div>
-              <button type="button" onClick={() => setError("")} aria-label="Dismiss error" className="rounded-lg p-1 transition-opacity hover:opacity-75 cursor-pointer">
+              <button type="button" onClick={() => setError("")} aria-label="Dismiss error" className="flex size-11 md:size-8 shrink-0 items-center justify-center rounded-lg transition-opacity hover:opacity-75 cursor-pointer focus-visible:ring-2 focus-visible:ring-focus">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
             </div>
           )}
           {!online && (
             <div role="status" className="m-0 flex items-center gap-2.5 rounded-2xl border border-warn/30 bg-warn/15 text-warn px-4.5 py-3 text-xs sm:text-sm shadow-xs">
-              <span className="size-2 rounded-full bg-amber-500" />
+              <span className="size-2 rounded-full bg-warn" />
               <span>Offline mode: Changes will synchronize when network connection is re-established.</span>
             </div>
           )}
@@ -367,7 +367,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
       )}
 
       {/* Phone: four places to go */}
-      <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center border-t border-line bg-bg/95 px-2 backdrop-blur-xl lg:hidden">
+      <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-30 flex items-stretch gap-1 border-t border-line bg-bg/95 px-2 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
         {GROUPS.map((g) => {
           const active = group?.id === g.id;
           return (
@@ -375,9 +375,9 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
               key={g.id}
               href={`#${g.pages[0].id}`}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-1 ${active ? "text-fg font-semibold" : "text-muted"}`}
+              className={`flex min-h-[48px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl focus-visible:ring-2 focus-visible:ring-focus ${active ? "text-accent font-semibold" : "text-muted"}`}
             >
-              <span className={`flex h-7 w-14 items-center justify-center rounded-full ${active ? "bg-surface3" : ""}`}>
+              <span className={`flex h-7 w-14 items-center justify-center rounded-full ${active ? "bg-surface2" : ""}`}>
                 <Icon d={g.icon} size={20} stroke={active ? 2.2 : 1.7} />
               </span>
               <span className="text-xs">{g.label}</span>

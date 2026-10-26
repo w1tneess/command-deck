@@ -100,7 +100,7 @@ export function Btn({ kind = "secondary", className = "", type = "button", ...re
   return (
     <button
       type={type}
-      className={`min-h-[44px] sm:min-h-[38px] shrink-0 rounded-full px-5 sm:px-4 font-sans text-sm font-medium transition-all duration-200 ease-out inline-flex items-center justify-center gap-1.5 enabled:active:scale-[0.98] ${BTN[kind]} ${className}`}
+      className={`min-h-[44px] md:min-h-[38px] shrink-0 rounded-full px-4 font-sans text-sm font-medium transition-all duration-200 ease-out inline-flex items-center justify-center gap-1.5 enabled:active:scale-[0.98] ${BTN[kind]} ${className}`}
       {...rest}
     />
   );
@@ -496,7 +496,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
           type="button"
           aria-pressed={value === v}
           onClick={() => onChange(v)}
-          className={`min-h-9 whitespace-nowrap rounded-full border-0 px-4 text-sm font-medium cursor-pointer ${value === v ? "bg-surface text-fg shadow-sm" : "bg-transparent text-muted hover:text-fg"}`}
+          className={`min-h-10 whitespace-nowrap rounded-full border-0 px-4 text-sm font-medium cursor-pointer ${value === v ? "bg-surface text-fg shadow-sm" : "bg-transparent text-muted hover:text-fg"}`}
         >
           {text}
         </button>

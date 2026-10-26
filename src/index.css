@@ -381,6 +381,7 @@
   --color-warn: var(--warn);
   --color-warn-ink: var(--warn-ink);
   --color-danger: var(--danger);
+  --color-focus: var(--focus);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-text: var(--accent-text);
@@ -421,6 +422,8 @@
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--text); }
 
+  .scrollbar-none, .no-scrollbar { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar { display: none; }
   /* Sleek modern rounded scrollbars */
   ::-webkit-scrollbar {
     width: 6px;

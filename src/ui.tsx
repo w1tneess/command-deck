@@ -115,16 +115,26 @@ export function ScopeTag({ scope, className = "" }: { scope: Scope; className?: 
   );
 }
 
-export function ConfDots({ value }: { value: number }) {
+/** Five dots for "how sure you feel". With `onChange` each dot is a button: 24px on a mouse, 44px on touch. */
+export function ConfDots({ value, onChange }: { value: number; onChange?: (n: number) => void }) {
+  const dot = (n: number) => <span className={`size-2 rounded-full transition-all duration-150 ${n <= value ? "bg-accent" : "bg-line-strong"}`} />;
+  if (!onChange) {
+    return <span role="img" aria-label={`Confidence ${value} of 5`} data-tip={`Confidence ${value} of 5`} className="flex items-center">{[1, 2, 3, 4, 5].map((n) => <span key={n} className="mx-0.5">{dot(n)}</span>)}</span>;
+  }
   return (
-    <span role="img" aria-label={`Confidence ${value} of 5`} className="flex gap-1.5 items-center">
+    <span role="group" aria-label="Confidence, 1 shaky to 5 solid" className="flex items-center">
       {[1, 2, 3, 4, 5].map((n) => (
-        <span
+        <button
           key={n}
-          className={`size-2 rounded-full transition-all duration-150 ${
-            n <= value ? "bg-accent" : "bg-line-strong"
-          }`}
-        />
+          type="button"
+          aria-label={`Confidence ${n} of 5`}
+          aria-pressed={n === value}
+          data-tip={`Confidence ${n} of 5`}
+          onClick={() => onChange(n)}
+          className="flex size-6 pointer-coarse:size-11 items-center justify-center rounded-full border-0 bg-transparent cursor-pointer hover:bg-surface3 focus-visible:ring-2 focus-visible:ring-focus"
+        >
+          {dot(n)}
+        </button>
       ))}
     </span>
   );
@@ -132,6 +142,8 @@ export function ConfDots({ value }: { value: number }) {
 
 export const PASS_NAMES = ["Concept", "PYQs", "Sample papers"] as const;
 export const PASS_SHORT = ["Concept", "PYQs", "Sample"] as const;
+/** One line per revision pass, shown as a tooltip on its button. */
+export const PASS_HELP = ["Pass 1: learn the chapter from NCERT", "Pass 2: past papers (PYQs) and Exemplar", "Pass 3: timed sample papers"] as const;
 
 /** Precision rounded circular checkbox with emerald check indicator. */
 export const Check = ({ on }: { on: boolean }) => (

@@ -1,3 +1,4 @@
+import { phaseTarget, rankWeakest } from "../server/logic.ts";
 import type { State } from "./api.ts";
 
 const DAY = 86_400_000;
@@ -19,11 +20,14 @@ export function overviewStats(state: State) {
 
   const chapters = state.subjects.flatMap((s) => s.chapters);
   const started = chapters.filter((c) => c.passes.some(Boolean)).length;
-  const weak = state.subjects
-    .flatMap((s) => s.chapters.map((c) => ({ chapter: c, subject: s })))
-    .filter((x) => x.chapter.status !== "mastered")
-    .sort((a, b) => a.chapter.confidence - b.chapter.confidence || a.chapter.passes.filter(Boolean).length - b.chapter.passes.filter(Boolean).length)
-    .slice(0, 5);
+  const phase = state.phases.find((p) => p.id === state.activePhaseId) ?? state.phases[0];
+  const weak = rankWeakest(
+    state.subjects.flatMap((s) => s.chapters
+      .filter((c) => c.status !== "mastered")
+      .map((c) => ({ chapter: c, subject: s, confidence: c.confidence, passesDone: c.passes.filter(Boolean).length, examDate: phase ? s.examDates[phase.id] ?? null : null, lastRevised: c.lastRevised }))),
+    state.today,
+    phase ? phaseTarget(phase, state.today) : state.today,
+  ).slice(0, 5);
 
   const weekStart = shift(state.today, -6);
   const bySubject = new Map<string, number>();

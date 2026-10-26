@@ -31,12 +31,12 @@ export function studyQueueFor(state: State, n = 5, subjectId?: string | null) {
 
 const PASS_WORDS = ["concept", "PYQs", "sample papers"];
 
-/** "confidence 2 of 5, no pass done" / "concept pass done" */
+/** "you rate it 2 of 5, not started yet" / "concept pass done" */
 export function reasonFor(chapter: Chapter) {
   const done = chapter.passes.flatMap((d, i) => (d ? [PASS_WORDS[i]] : []));
   const parts: string[] = [];
-  if (chapter.confidence <= 3) parts.push(`confidence ${chapter.confidence} of 5`);
-  parts.push(done.length === 0 ? "no pass done" : done.length === 3 ? "all passes done" : `${done.join(" and ")} ${done.length === 1 ? "pass" : "passes"} done`);
+  if (chapter.confidence <= 3) parts.push(`you rate it ${chapter.confidence} of 5`);
+  parts.push(done.length === 0 ? "not started yet" : done.length === 3 ? "all passes done" : `${done.join(" and ")} ${done.length === 1 ? "pass" : "passes"} done`);
   return parts.join(", ");
 }
 

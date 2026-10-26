@@ -6,6 +6,7 @@ import { Card, daysBetween, fmtShort, H2, PageHeader, plural, SubjectBadge } fro
 
 const hm = (m: number) => `${Math.floor(m / 60)}h ${m % 60}m`;
 const weekday = (d: string) => new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "narrow", timeZone: "UTC" });
+const dayNum = (d: string) => String(Number(d.slice(8)));
 
 /** Flips true after first paint so bars grow from zero (the global reduced-motion rule makes them snap). */
 function useGrow() {
@@ -54,6 +55,12 @@ export function Overview({ state }: { state: State }) {
               <H2 id="trend-h">Study time, 14 days</H2>
               <span className="text-sm text-muted">{hm(s.last14.reduce((a, d) => a + d.minutes, 0))} in total</span>
             </div>
+            {s.last14.every((d) => d.minutes === 0) ? (
+              <div className="mt-5 flex h-40 flex-col items-center justify-center gap-3 rounded-2xl bg-surface2 px-4 text-center">
+                <p className="m-0 text-sm text-muted">No study time logged in the last 14 days.</p>
+                <a href="#today" className="inline-flex min-h-[44px] md:min-h-[38px] items-center rounded-full bg-fg px-4 text-sm font-semibold text-bg hover:opacity-90">Log your first session</a>
+              </div>
+            ) : (<>
             <div role="img" aria-label={`Study minutes per day: ${s.last14.map((d) => `${fmtShort(d.day)} ${d.minutes}`).join(", ")}`} className="mt-5 flex h-40 items-end gap-1.5 border-b border-line">
               {s.last14.map((d) => (
                 <div key={d.day} title={`${fmtShort(d.day)}: ${hm(d.minutes)}`} className="flex h-full min-w-0 flex-1 items-end">
@@ -65,8 +72,9 @@ export function Overview({ state }: { state: State }) {
               ))}
             </div>
             <div aria-hidden="true" className="mt-1.5 flex gap-1.5 text-xs text-muted">
-              {s.last14.map((d) => <span key={d.day} className="flex-1 text-center">{weekday(d.day)}</span>)}
+              {s.last14.map((d) => <span key={d.day} className="flex-1 text-center leading-tight"><span className="block">{weekday(d.day)}</span><span className="block font-medium text-fg">{dayNum(d.day)}</span></span>)}
             </div>
+            </>)}
           </Card>
 
           <Card labelledBy="subj-h">
@@ -121,7 +129,7 @@ export function Overview({ state }: { state: State }) {
                 {s.weak.map(({ chapter, subject }) => (
                   <li key={chapter.id} className="flex items-baseline justify-between gap-3 border-b border-line py-2.5 last:border-b-0">
                     <span className="min-w-0 text-base text-fg">{chapter.name}<span className="block text-sm text-muted">{subject.name}</span></span>
-                    <span className="shrink-0 text-sm text-muted">{chapter.confidence} of 5</span>
+                    <span className="shrink-0 text-sm text-muted" title="Your confidence in this chapter: 1 is shaky, 5 is solid">confidence {chapter.confidence} of 5</span>
                   </li>
                 ))}
               </ul>

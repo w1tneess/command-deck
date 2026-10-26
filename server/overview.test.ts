@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { State } from "../src/api.ts";
 import { overviewStats } from "../src/overviewStats.ts";
 
-const base = { today: "2026-10-26", heat: [], sessions: [], subjects: [], habits: [], deliverables: [] } as unknown as State;
+const base = { today: "2026-10-26", heat: [], phases: [], sessions: [], subjects: [], habits: [], deliverables: [] } as unknown as State;
 const heat = (...days: [string, number][]) => days.map(([day, minutes]) => ({ day, minutes }));
 
 describe("overviewStats", () => {

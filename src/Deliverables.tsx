@@ -428,7 +428,7 @@ function Item({ d, today, act, google }: { d: Deliverable; today: string; act: A
             aria-label={d.gcalEventId ? `Update the Google Calendar event for ${d.name}` : `Push ${d.name} to Google Calendar`}
             className={`min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-transparent px-3 text-sm hover:bg-surface3 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${d.gcalEventId ? "text-good" : "text-muted hover:text-fg"}`}
           >
-            {d.gcalEventId ? "Synced ✓ · Update" : "Push to GCal"}
+            {d.gcalEventId ? "Synced ✓ · Update" : "Sync to Google Calendar"}
           </button>
         ) : (
           <a href="#schedule" className="min-h-[44px] md:min-h-[38px] flex items-center rounded-lg border border-line bg-transparent px-3 text-sm text-muted hover:text-fg hover:bg-surface3 transition-all focus-visible:ring-2 focus-visible:ring-focus">

@@ -62,6 +62,17 @@ export type Candidate = {
 };
 
 /**
+ * Tie-breaker for chapters that score the same: the nearer exam first (a past exam counts as far), then the one
+ * studied longest ago (never studied is the longest). Returns 0 when still tied, so a stable sort keeps syllabus order.
+ */
+export function tieBreak(a: { days: number; lastRevised: string | null }, b: { days: number; lastRevised: string | null }): number {
+  const da = a.days < 0 ? Infinity : a.days;
+  const db = b.days < 0 ? Infinity : b.days;
+  if (da !== db) return da < db ? -1 : 1;
+  return (a.lastRevised ?? "").localeCompare(b.lastRevised ?? "");
+}
+
+/**
  * Explainable "study next" order. Score = (6 - confidence) * 10 / (days to that subject's exam + 1),
  * so a shaky chapter in a subject tested soon outranks a shakier one tested later.
  * Subjects with no date use the fallback (PB1 start). Past exams drop out.
@@ -73,8 +84,16 @@ export function rankNext<T extends Candidate>(cands: T[], today: string, fallbac
       return { ...c, days, score: ((6 - c.confidence) * 10) / (days + 1) };
     })
     .filter((c) => c.days >= 0)
-    .sort((a, b) => b.score - a.score || a.priority - b.priority || (a.lastRevised ?? "").localeCompare(b.lastRevised ?? ""))
+    .sort((a, b) => b.score - a.score || tieBreak(a, b) || a.priority - b.priority)
     .slice(0, n);
+}
+
+export type WeakCandidate = { confidence: number; passesDone: number; examDate: string | null; lastRevised: string | null };
+
+/** "Needs attention" order: lowest confidence, then fewest passes done, then the tie-breakers above, then input (syllabus) order. */
+export function rankWeakest<T extends WeakCandidate>(cands: T[], today: string, fallbackDate: string): T[] {
+  const days = (c: T) => daysLeft(c.examDate ?? fallbackDate, today);
+  return [...cands].sort((a, b) => a.confidence - b.confidence || a.passesDone - b.passesDone || tieBreak({ days: days(a), lastRevised: a.lastRevised }, { days: days(b), lastRevised: b.lastRevised }));
 }
 
 /** Canonical chapter duration calculator used across Study Queue, Daily Targets, and Calendar scheduling. */

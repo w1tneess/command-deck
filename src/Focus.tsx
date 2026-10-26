@@ -159,9 +159,9 @@ export function FocusBar({
         {onOpenCapture && (
           <button
             type="button"
-            aria-label="Quick capture"
+            aria-label="Quick add"
             onClick={onOpenCapture}
-            title="Quick Capture [Ctrl+K]"
+            title="Quick add [Ctrl+K]"
             className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-focus/40 bg-fg text-bg font-mono font-bold text-lg active:scale-95 hover:opacity-90 transition-all shadow-sm"
           >
             +

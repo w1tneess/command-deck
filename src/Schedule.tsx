@@ -189,7 +189,7 @@ export function Schedule({
             <button
               type="button"
               onClick={() => handleShiftTime(15)}
-              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-focus/40 bg-focus/10 hover:bg-focus/20 px-3 text-xs font-mono font-semibold text-focus transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
+              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
               title="Shift schedule 15m later (Study delay)"
             >
               +15m Delay
@@ -197,7 +197,7 @@ export function Schedule({
             <button
               type="button"
               onClick={() => handleShiftTime(30)}
-              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-focus/40 bg-focus/10 hover:bg-focus/20 px-3 text-xs font-mono font-semibold text-focus transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
+              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
               title="Shift schedule 30m later"
             >
               +30m Delay
@@ -404,10 +404,10 @@ export function Schedule({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex min-h-[44px] md:min-h-[38px] items-center gap-1.5 rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs text-muted hover:text-fg transition-all focus-visible:ring-2 focus-visible:ring-focus"
-                    title="Export this block to Google Calendar"
+                    title="Opens Google Calendar with this block filled in; you save it there"
                   >
                     <AppleEmoji emoji="📅" size={13} />
-                    <span className="hidden sm:inline">Add to Cal</span>
+                    <span className="hidden sm:inline">Open in Google Calendar</span>
                   </a>
 
                   {/* Push this block to Google Calendar, or show why it can't be */}
@@ -416,7 +416,7 @@ export function Schedule({
                     onClick={() => (state.googleSync?.connected && !state.googleSync.needsReauth ? void pushToGoogle(block) : setShowGoogleSyncModal(true))}
                     className={`min-h-[44px] md:min-h-[38px] rounded-full border border-line bg-surface hover:bg-surface3 px-3 text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${synced ? "text-good" : "text-muted hover:text-fg"}`}
                   >
-                    {!state.googleSync?.connected ? "Connect Google" : state.googleSync.needsReauth ? "Reconnect Google" : synced ? "Synced ✓ · Update" : "Push to GCal"}
+                    {!state.googleSync?.connected ? "Connect Google" : state.googleSync.needsReauth ? "Reconnect Google" : synced ? "Synced ✓ · Update" : "Sync to Google Calendar"}
                   </button>
 
                   {/* Quick Shift for this block */}

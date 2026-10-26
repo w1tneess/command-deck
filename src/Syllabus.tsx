@@ -2,17 +2,28 @@ import { useId, useRef, useState } from "react";
 import { SCOPES, inScope, type Scope } from "../server/logic.ts";
 import type { Act, Chapter, State, Subject } from "./api.ts";
 import { activeOf, chaptersLabel } from "./model.ts";
+import { setHashParams } from "./nav.ts";
 import { RevisionMatrix } from "./RevisionMatrix.tsx";
-import { Btn, Segmented, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_NAMES, PASS_SHORT, ScopeTag, SubjectIcon, plural, PageHeader } from "./ui.tsx";
+import { Btn, Segmented, Card, ConfDots, GROUPS, H2, ICONS, Icon, PASS_HELP, PASS_NAMES, PASS_SHORT, ScopeTag, SubjectIcon, plural, PageHeader } from "./ui.tsx";
 import { VivaDrawer } from "./VivaDrawer.tsx";
 
 const SCOPE_LABEL: Record<Scope, string> = { unit1: "Unit 1", unit2: "Unit 2", pb1: "PB1", pb2: "PB2", board: "Boards" };
+const SCOPE_FULL: Record<Scope, string> = { unit1: "Unit 1", unit2: "Unit 2", pb1: "Pre-Boards 1", pb2: "Pre-Boards 2", board: "Boards" };
 
-export function Syllabus({ state, act }: { state: State; act: Act }) {
+/** The chips are cumulative (each level includes every earlier one), so say which levels the list covers. */
+const scopeSummary = (level: Scope) =>
+  level === "unit1" ? "Showing Unit 1 chapters only." : level === "board" ? "Showing every chapter, Unit 1 through Boards." : `Showing Unit 1 through ${SCOPE_FULL[level]}, cumulative.`;
+
+/** Screen, subject and scope live in the URL hash (`#syllabus?view=matrix&subject=maths&scope=pb1`), so links, reloads and Back all land on the same view. */
+export function Syllabus({ state, act, params }: { state: State; act: Act; params: URLSearchParams }) {
   const phase = activeOf(state);
-  const [viewMode, setViewMode] = useState<"tree" | "matrix">("tree");
-  const [selected, setSelected] = useState("maths");
-  const [chosen, setChosen] = useState<Scope | null>(null);
+  const viewMode: "tree" | "matrix" = params.get("view") === "matrix" ? "matrix" : "tree";
+  const selected = params.get("subject") ?? "maths";
+  const scopeParam = params.get("scope");
+  const chosen = SCOPES.find((sc) => sc === scopeParam) ?? null;
+  const setViewMode = (v: "tree" | "matrix") => setHashParams("syllabus", { view: v === "matrix" ? "matrix" : null });
+  const setSelected = (id: string) => setHashParams("syllabus", { subject: id === "maths" ? null : id });
+  const setChosen = (sc: Scope) => setHashParams("syllabus", { scope: sc === phase.scope ? null : sc });
   const [viva, setViva] = useState<{ chapter: Chapter; subject: Subject } | null>(null);
   const [importingAll, setImportingAll] = useState(false);
   const busyAll = useRef(false);
@@ -35,7 +46,7 @@ export function Syllabus({ state, act }: { state: State; act: Act }) {
 
   return (
     <>
-      <PageHeader eyebrow="Class 10 CBSE" title="Syllabus" sub={viewMode === "tree" ? `Showing chapters up to ${SCOPE_LABEL[level]}.` : "Every chapter, by confidence and last revision."}>
+      <PageHeader eyebrow="Class 10 CBSE" title="Syllabus" sub={viewMode === "tree" ? scopeSummary(level) : "Every chapter, by confidence and last revision."}>
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
             label="View"
@@ -167,7 +178,10 @@ function SubjectCard({
   const busySub = useRef(false);
   const [query, setQuery] = useState("");
   const searchId = useId();
-  const unchecked = subject.chapters.length > 0 && subject.chapters.some((c) => !c.confirmed);
+  const dismissKey = `unchecked-dismissed:${subject.id}`;
+  const [dismissed, setDismissed] = useState(() => { try { return localStorage.getItem(dismissKey) === "1"; } catch { return false; } });
+  const unchecked = !dismissed && subject.chapters.length > 0 && subject.chapters.some((c) => !c.confirmed);
+  const dismissUnchecked = () => { setDismissed(true); try { localStorage.setItem(dismissKey, "1"); } catch { /* optional */ } };
   const visible = subject.chapters
     .filter((c) => inScope(c.scope, level))
     .filter((c) => !query.trim() || c.name.toLowerCase().includes(query.toLowerCase().trim()));
@@ -178,7 +192,7 @@ function SubjectCard({
   const avgConfidence = totalChapters > 0
     ? (subject.chapters.reduce((sum, c) => sum + c.confidence, 0) / totalChapters).toFixed(1)
     : "—";
-  const masteredCount = subject.chapters.filter((c) => c.passes.every(Boolean) || c.confidence === 5).length;
+  const masteredCount = subject.chapters.filter((c) => c.status === "mastered").length;
 
   const handleImportSub = async () => {
     if (busySub.current) return;
@@ -249,6 +263,10 @@ function SubjectCard({
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface3">
             <div className="h-full rounded-full bg-accent transition-all duration-300" style={{ width: `${passesTotal ? (passesDone / passesTotal) * 100 : 0}%` }} />
           </div>
+          <p className="m-0 mt-2 text-xs text-muted">
+            A revision pass is one full round on a chapter: Concept, then PYQs (past papers), then Sample papers. Mastered means all three are done.
+            Confidence is how sure you feel, from 1 (shaky) to 5 (solid).
+          </p>
         </div>
       )}
 
@@ -273,7 +291,10 @@ function SubjectCard({
       {unchecked && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface3 px-4 py-3 text-fg">
           <span className="text-sm">The {title} list has not been checked against the school PDF yet.</span>
-          <Btn onClick={() => act("PUT", `/api/subjects/${subject.id}/confirmed`, { confirmed: true })}>Mark checked</Btn>
+          <div className="flex gap-2">
+            <Btn onClick={() => act("PUT", `/api/subjects/${subject.id}/confirmed`, { confirmed: true })}>Mark checked</Btn>
+            <Btn kind="ghost" onClick={dismissUnchecked}>Dismiss</Btn>
+          </div>
         </div>
       )}
 
@@ -367,13 +388,14 @@ function SubjectCard({
                       type="button"
                       aria-pressed={!!c.passes[i]}
                       aria-label={`${PASS_SHORT[i]} pass for ${c.name}`}
+                      data-tip={PASS_HELP[i]}
                       onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${i + 1}`, { done: !c.passes[i] })}
                       className={`min-h-[44px] rounded-full border-0 px-3 text-sm font-medium cursor-pointer md:min-h-9 ${c.passes[i] ? "bg-accent/15 text-accent" : "bg-surface3 text-muted hover:text-fg"}`}
                     >
                       {c.passes[i] ? "✓ " : ""}{PASS_SHORT[i]}
                     </button>
                   ))}
-                  <ConfDots value={c.confidence} />
+                  <ConfDots value={c.confidence} onChange={(n) => void act("PATCH", `/api/chapters/${c.id}`, { confidence: n })} />
                   <button
                     type="button"
                     aria-label={`Quiz me on ${c.name}`}
@@ -383,7 +405,8 @@ function SubjectCard({
                     Quiz
                   </button>
                   <button type="button" aria-label={`Edit ${c.name}`} onClick={() => { setEditing(c.id); setDeleting(null); }} className="flex size-11 items-center justify-center rounded-full border-0 bg-transparent text-muted md:size-9 hover:text-fg hover:bg-surface3 cursor-pointer"><Icon d={ICONS.edit} size={16} /></button>
-                  <button type="button" aria-label={`Delete ${c.name}`} onClick={() => setDeleting(c.id)} className="flex size-11 items-center justify-center rounded-full border-0 bg-transparent text-muted md:size-9 hover:text-danger hover:bg-surface3 cursor-pointer"><Icon d={ICONS.trash} size={16} /></button>
+                  <span aria-hidden="true" className="mx-1 h-5 w-px bg-line-strong" />
+                  <button type="button" aria-label={`Delete ${c.name}`} onClick={() => setDeleting(c.id)} className="flex size-11 items-center justify-center rounded-full border-0 bg-transparent text-danger md:size-9 hover:bg-danger/10 cursor-pointer"><Icon d={ICONS.trash} size={16} /></button>
                 </div>
               </div>
               {deleting === c.id && (

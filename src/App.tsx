@@ -13,7 +13,7 @@ import { signOut } from "./session.ts";
 import { Syllabus } from "./Syllabus.tsx";
 import { useTheme } from "./theme.ts";
 import { ThemeToggle } from "./ThemeToggle.tsx";
-import { GROUPS, groupOf, type Page } from "./nav.ts";
+import { GROUPS, groupOf, parseHash, useHash } from "./nav.ts";
 import { Routine } from "./Routine.tsx";
 import { Schedule } from "./Schedule.tsx";
 import { CalendarModal } from "./CalendarModal.tsx";
@@ -23,10 +23,6 @@ import { BrandLogo, ICONS, Icon } from "./ui.tsx";
 import { VivaDrawer } from "./VivaDrawer.tsx";
 import { Week } from "./Week.tsx";
 import { ZenFocusStudio } from "./ZenFocus.tsx";
-
-/** `dock` marks the five tabs that sit in the phone's bottom bar; the rest live behind "More". */
-const ALL_PAGES: Page[] = [...GROUPS.flatMap((g) => g.pages.map((p) => p.id as Page)), "backup"];
-const pageFromHash = (): Page => ALL_PAGES.find((id) => id === location.hash.slice(1)) ?? "today";
 
 function formatISTHeaderDate(now: Date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -107,7 +103,7 @@ export function App() {
 }
 
 function Shell({ state, act, reload, error, setError, saving, online }: { state: State; act: Act; reload: () => Promise<void>; error: string; setError: (e: string) => void; saving: boolean; online: boolean }) {
-  const [page, setPage] = useState<Page>(pageFromHash);
+  const { page, params } = parseHash(useHash());
   const [theme, setTheme] = useTheme();
   const focus = useFocus(state, reload, act);
   const [more, setMore] = useState(false);
@@ -125,7 +121,6 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
   }, []);
 
   useEffect(() => {
-    const onHash = () => { setPage(pageFromHash()); setMore(false); window.scrollTo(0, 0); };
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const inInput = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable);
@@ -163,10 +158,12 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
         if (e.key === "4") location.hash = "#habits";
       }
     };
-    window.addEventListener("hashchange", onHash);
     window.addEventListener("keydown", onKey);
-    return () => { window.removeEventListener("hashchange", onHash); window.removeEventListener("keydown", onKey); };
+    return () => window.removeEventListener("keydown", onKey);
   }, [focus.running, focus.start, focus.stop]);
+
+  // A new page closes the menu and starts at the top; changing a param on the same page (say a scope chip) doesn't scroll.
+  useEffect(() => { setMore(false); window.scrollTo(0, 0); }, [page]);
 
   return (
     <div
@@ -253,7 +250,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
             />
           )}
           {page === "overview" && <Overview state={state} />}
-          {page === "syllabus" && <Syllabus state={state} act={act} />}
+          {page === "syllabus" && <Syllabus state={state} act={act} params={params} />}
           {page === "habits" && <Habits state={state} act={act} />}
           {page === "week" && <Week state={state} act={act} />}
           {page === "deliverables" && (

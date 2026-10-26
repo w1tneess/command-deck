@@ -240,7 +240,7 @@ export function ZenFocusStudio({
                 onClick={() => void handleSaveScratchToCapture()}
                 className="h-7 rounded-md border border-focus/30 bg-focus/10 hover:bg-focus/20 px-2.5 font-sans text-xs font-semibold text-focus transition-all disabled:opacity-40"
               >
-                {savingScratch ? "Saving…" : "→ Push to Quick Capture"}
+                {savingScratch ? "Saving…" : "→ Push to Quick add"}
               </button>
             )}
           </div>

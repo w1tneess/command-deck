@@ -75,7 +75,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
                   <th scope="col" className="pb-2.5 font-medium">Day</th>
                   <th scope="col" className="pb-2.5 font-medium">Study Hours</th>
                   <th scope="col" className="pb-2.5 font-medium">Habits</th>
-                  <th scope="col" className="pb-2.5 text-right font-medium">Sleep</th>
+                  <th scope="col" className="pb-2.5 text-right font-medium">Sleep (score 1–5)</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,7 +95,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
                         {w.habits}/{habitCount}
                       </span>
                     </td>
-                    <td className="rounded-r-xl bg-surface py-3 pr-3 text-right font-mono text-xs text-muted">{w.sleep ?? "–"}</td>
+                    <td className="rounded-r-xl bg-surface py-3 pr-3 text-right font-mono text-xs text-muted">{w.sleep ? `${w.sleep}/5` : "–"}</td>
                   </tr>
                 ))}
               </tbody>

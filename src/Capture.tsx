@@ -101,9 +101,9 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
       >
         <div className="mx-auto -mt-1 mb-1 h-1 w-10 shrink-0 rounded-full bg-surface3 lg:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3 pb-2 border-b border-line">
-          <h2 id="capture-h" className="m-0 text-base font-semibold tracking-tight text-fg">Quick Capture Buffer</h2>
+          <h2 id="capture-h" className="m-0 text-base font-semibold tracking-tight text-fg">Quick add</h2>
           <span className="hidden text-xs text-muted lg:inline"><kbd className="rounded-md border border-line bg-black/40 px-1.5 py-0.5 font-mono text-[11px] text-muted">Ctrl/⌘ K</kbd> to toggle</span>
-          <Btn kind="ghost" aria-label="Close quick capture" onClick={onClose}>✕</Btn>
+          <Btn kind="ghost" aria-label="Close quick add" onClick={onClose}>✕</Btn>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); void save(); }} className="flex flex-col gap-3">
           <label htmlFor={textId} className="sr-only">What is on your mind?</label>

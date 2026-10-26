@@ -1,274 +1,191 @@
-# ⚡ Exam Tracker & Life OS
+# Exam Tracker & Life OS
 
 [![Cloudflare Workers](https://img.shields.io/badge/Edge%20Runtime-Cloudflare%20Workers-orange?logo=cloudflare)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Database-Cloudflare%20D1%20SQLite-F38020?logo=cloudflare)](https://developers.cloudflare.com/d1/)
 [![React 19](https://img.shields.io/badge/Frontend-React%2019-61DAFB?logo=react)](https://react.dev/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Styling-Tailwind%20CSS%20v4-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%205-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Vitest](https://img.shields.io/badge/Tests-129%20Passed-brightgreen?logo=vitest)](https://vitest.dev/)
-[![Code Audit](https://img.shields.io/badge/Audit-0%20Findings-success)](audit/run-audit.ts)
+[![Vitest](https://img.shields.io/badge/Tests-170%20Passed-brightgreen?logo=vitest)](https://vitest.dev/)
 
-A unified **CBSE Class 10 exam preparation dashboard and personal Life OS** engineered for high-performance study execution. Built from the ground up to run on Cloudflare's serverless edge, combining automated algorithmic revision scheduling, cloud-settled Pomodoro focus telemetry, habit streak mechanics, and school deliverable tracking in a private, zero-maintenance architecture.
+A private **CBSE Class 10 exam-prep dashboard and personal Life OS**. It runs entirely on Cloudflare's edge (Worker + D1) and combines a ranked study queue, a cloud-settled Pomodoro timer, three-pass chapter revision, habits, a daily schedule synced with Google Calendar, and school deliverable tracking.
 
-**Live Deployment:** [study.advaitachandra.in](https://study.advaitachandra.in) *(Private · 6-digit PIN required)*
+**Live:** [study.advaitachandra.in](https://study.advaitachandra.in) *(private; PIN or allow-listed Google sign-in)*
 
 ---
 
-## 🏛️ System Architecture
+## Architecture
 
 ```mermaid
 graph TD
-    subgraph Client [Client Surface · iOS / Android / Desktop]
+    subgraph Client [Client · phone / desktop]
         UI[React 19 SPA · Tailwind v4]
-        Dock[Mobile Touch Dock & Quick Capture]
-        Audio[Web Audio Chime Engine]
+        Cmd[Command bar · Quick capture · Zen focus]
     end
 
-    subgraph Edge [Cloudflare Serverless Edge]
-        Worker[Hono v4 Worker Engine]
-        Auth[Fail-Closed Auth & Rate Limiter]
-        Timer[Pure Cloud-Settled Timer Logic]
-        Planner[Algorithmic Study Queue & Energy Heuristics]
+    subgraph Edge [Cloudflare Worker · Hono v4]
+        Auth[Auth · PIN, Google sign-in, lockout]
+        Timer[Cloud-settled timer]
+        Planner[Study queue + energy heuristics]
+        Cal[Schedule, iCal feed, Google Calendar sync]
     end
 
-    subgraph Storage [Serverless Edge Storage]
-        D1[(Cloudflare D1 SQLite Database)]
-    end
+    D1[(Cloudflare D1)]
 
-    UI -->|HTTPS /api/*| Worker
-    Dock -->|Ctrl+K / Mobile FAB| Worker
-    Worker -->|Signed HttpOnly Cookie| Auth
-    Worker -->|State Settlement on Request| Timer
-    Worker -->|Dynamic Score Ranking| Planner
-    Worker -->|Batch Parameterized SQL| D1
-    Timer -->|Auto-Settle Finished Rounds| D1
+    UI -->|HTTPS /api/*| Auth
+    Auth --> Timer & Planner & Cal
+    Timer & Planner & Cal -->|parameterized SQL, atomic batches| D1
 ```
 
----
-
-## 🌟 Core Feature Suite
-
-### 1. 🎯 Mission Control (Today View)
-- **Daily Momentum Telemetry Ribbon**: Real-time 4-card overview displaying Targets completion percentage, Focus minutes logged with live pulse dot, Habit progress with streak counter, and Morning Kickoff/Routine status.
-- **Apple Pro Countdown Widget**: Large tabular countdown to the upcoming exam phase (Pre-Boards 1, Pre-Boards 2, Practicals & Viva, or Board Exams) with interactive phase switcher, specular sheen reflection, and elapsed time meter.
-- **Interactive Daily Targets**: Auto-suggests the 3 highest-priority chapters every morning (capped at 8). Features continuous gradient progress tracking, celebratory completion banner, and **1-click Focus launcher** that pre-configures the timer to that target's subject.
-- **Algorithmic Study Queue**: Ranks every chapter dynamically based on test urgency and student confidence. Includes **1-click `+ Plan today`** promotion into daily targets.
-- **Companion Daily Habits**: Check off daily habits and increment steppers directly on Today without navigating away.
-- **Energy Check-In**: Log energy level (Low, OK, High) once daily; the algorithm dynamically swaps open targets for lighter or more challenging chapters to match cognitive capacity.
-
-### 2. ⏱️ Cloud-Settled Edge Pomodoro Focus Hub
-- **D1 Cloud Settlement**: Timer state lives on the serverless edge in Cloudflare D1. You can start a session on your laptop, close the lid, and check your phone—the server settles completed rounds automatically on the next request.
-- **Standard Protocol**: 25-minute focus intervals, 5-minute short breaks, and a 15-minute long break after every 4th session. Stopping early saves actual minutes studied.
-- **Sensory Feedback**: Ambient luminous glow ring (`[filter:drop-shadow(0_0_8px_rgba(94,92,230,0.5))]`), live pulsing status badge, browser tab title countdown, subtle Web Audio bell chime, and mobile haptic vibration.
-- **Adaptive Layout**: Embedded full card on desktop, floating sticky timer bar above mobile dock.
-
-### 3. 📚 Dynamic Syllabus & Multi-Pass Revision Engine
-- **Scope Hierarchy**: Filter chapters by exam level: `Unit 1`, `Unit 2`, `PB1` (Pre-Boards 1), `PB2` (Pre-Boards 2), and `Boards`. A phase covers its own scope and all levels below it.
-- **3-Pass Mastery**: Tracks **Concept**, **PYQs & Exemplar**, and **Sample Papers** per chapter. A chapter with all 3 passes completed gracefully drops out of the study queue.
-- **Confidence Matrix**: 1-to-5 confidence rating. Shakier chapters in subjects being tested soonest are mathematically prioritized.
-- **Tactile Reordering**: Drag-and-drop or keyboard arrow nudge (Up/Down) to reorder chapter priority.
-- **Syllabus Verification**: "Mark as checked" badge against the official school PDF syllabus.
-- **Exam Dates Manager**: Maintains independent exam dates per subject for each exam phase.
-
-### 4. 🧬 Personal Life OS (Habits, Routines & Quick Capture)
-- **Habits Tracker**: Supports boolean check-offs and numeric daily steppers (e.g. 50 pushups, 20 math problems). Protected by optimistic FIFO promise queues to prevent dropped clicks during rapid tapping.
-- **Streak & 7-Day Sparklines**: Consecutive day streak tracking with radiant activity dots (`shadow-[0_0_8px_rgba(52,211,153,0.35)]`).
-- **Morning Kickoff & Evening Shutdown**: Sleep quality rating (😴 Poor, 🥱 Short, 😐 OK, 🙂 Good, 🌟 Great), wake-up timestamp, and shut-down reflection stamp.
-- **Quick Capture Drawer**: Global `Ctrl + K` (desktop) or floating action button (mobile) to capture urgent notes and to-dos in seconds.
-- **Projects**: Track personal hobbies, creative projects, and fitness targets broken into progressive milestone checklists.
-
-### 5. 📊 Analytics, Heatmaps & Weekly Review
-- **Weekly Study Time & Energy Distribution**: 7-day visual bar charts comparing study minutes alongside logged energy.
-- **Study vs. Habits Correlation**: Side-by-side table tracking study duration, habits completed, and sleep ratings.
-- **12-Week Heatmaps**: GitHub-style 84-day dual heatmaps for both study duration and daily habit consistency.
-- **Weekly Reflection**: Persistent weekly review textarea saved automatically on blur with double-submit locking.
-
-### 6. 🎒 Deliverables & Viva Prep Manager
-- Tracks school assignments and portfolio submissions for the active phase (e.g. Maths Lab activities, Science practical files, English ASL).
-- Multi-step activity steppers, due date countdowns, overdue warnings, and viva-prep flags.
+The Worker serves `/api/*` and the built SPA from `./dist`. All state is in D1; the client refreshes every 20 seconds and when the tab regains focus, so phone and laptop stay in step.
 
 ---
 
-## 🎨 Design System & Aesthetics
+## Features
 
-Crafted according to the **Apple Human Interface Guidelines**, **OLED Pro** dark mode, and modern design engineering standards:
-- **Obsidian Black Canvas (`#000000`)**: Pure OLED black for maximum contrast and battery conservation on mobile displays.
-- **Elevated Apple Dark Sheets**: Multi-tiered depth using `--surface: #121214`, `--surface2: #1c1c1e`, and `--line: #2c2c2e`.
-- **Apple Ceramic Light Theme**: Pure white cards (`#ffffff`) on ceramic canvas (`#f5f5f7`) with graphite ink (`#1d1d1f`).
-- **Apple System Color Tokens**: System Indigo (`#5e5ce6`), Activity Green (`#30d158`), System Orange (`#ff9f0a`).
-- **Apple Segmented Controls**: Interactive pill segments with illuminated active backings and instant tactile response.
-- **Critically Damped Motion**: All transitions follow Apple's physical spring curve `cubic-bezier(0.16, 1, 0.3, 1)`.
-- **Offline Resilience**: Automatic `navigator.onLine` synchronization with non-intrusive status banners and dismissable error alerts.
+The app has four places to go: **Today**, **Study**, **Plan** and **Life**. Plan and Life hold sub-pages, shown as tabs under the header. Old `#hash` links still work.
+
+### Today
+- **Today**: one "Next up" card (a chosen target, else the top of the study queue) with Start focus, Mark done and Quiz me. Below it: today's plan, suggested chapters, what's due soon, and habits you can tick without leaving the page.
+- **Overview**: the bird's-eye view. Tiles for days to the exams, share of the syllabus started, study time over the last 7 days against the 7 before, and the study streak. Also a 14-day study chart, a progress bar per subject, the next exam dates for the active phase, and the five least-confident chapters.
+
+### Study
+- **Syllabus** across 11 subjects, with a scope filter (`Unit 1`, `Unit 2`, `PB1`, `PB2`, `Boards`). A phase covers its own scope and everything below it.
+- **Three revision passes** per chapter: Concept, PYQs & Exemplar, Sample papers. A chapter with all three done drops out of the study queue.
+- **Confidence 1 to 5** per chapter. Shakier chapters in subjects tested soonest rank first.
+- **Revision matrix** to see passes across a subject at a glance.
+- **Quiz me (viva drawer)**: an active-recall drawer for a chapter, opened from Today, Due dates or the command bar.
+- **Exam dates** per subject for each exam phase, and "Mark as checked" against the official school syllabus.
+
+### Plan
+- **Schedule**: a daily timetable of blocks (morning, school, revision, practice, wind-down, custom), with warnings when a block clashes with a calendar event.
+- **Calendar**: a private iCal feed (its own random token, resettable from the calendar dialog) and optional **Google Calendar sync**.
+- **Due dates**: school deliverables with steppers for countable work, overdue warnings and viva-prep flags.
+- **Review**: weekly study and energy chart, study against habits and sleep, 12-week heatmaps and a weekly reflection saved on blur.
+
+### Life
+- **Habits**: tick or counter habits with streaks and a 7-day strip.
+- **Projects**: personal projects with milestone checklists.
+- **Routine**: morning kickoff and evening shutdown, with a sleep rating.
+- **Quick capture**: notes and to-dos from anywhere.
+
+### Everywhere
+- **Pomodoro focus**: 25-minute rounds, 5-minute breaks and a 15-minute long break after every 4th round. State lives in D1, so a round started on one device is settled by the server and visible on the others. Stopping early saves the minutes actually studied.
+- **Zen focus studio**: a full-screen timer with ambient sound.
+- **Command bar** (`Ctrl/Cmd + K`) for quick actions and navigation.
+- **Keyboard shortcuts** (outside text fields): `C` capture, `F` Zen focus, `Space` start or stop focus, `1` to `4` Today / Syllabus / Schedule / Habits.
+- **Light and dark themes**, an offline banner, and a dismissable error bar.
 
 ---
 
-## 🔒 Security & Edge Invariants
+## Security
 
-| Principle | Implementation Detail |
+| Principle | Implementation |
 |---|---|
-| **Fail-Closed Auth** | If `STUDY_PASSCODE` or `SESSION_SECRET` is unset, the Worker immediately halts and rejects all requests with HTTP 500. |
-| **Constant-Time PIN Matching** | Passcodes are verified using `crypto.subtle.timingSafeEqual` (`same()`) to eliminate timing side-channel attacks. |
-| **Sliding Lockout Engine** | 5 consecutive wrong PIN attempts lock the client IP for 15 minutes. 20 consecutive failures across all IPs trigger a global 1-hour lockout. |
-| **Signed HttpOnly Cookies** | HMAC-SHA256 signed session cookies (`SameSite=Strict`, `HttpOnly`, `Secure`). 90 days with "Remember me", 24 hours otherwise. |
-| **D1 SQL Parameterization** | Zero string interpolation in SQL queries. Strict usage of `db.prepare(...).bind(...)` and atomic `db.batch([...])`. |
-| **IST Timezone Invariant** | All calendar day calculations, streak resets, and target generations strictly use Indian Standard Time (`Asia/Kolkata`, UTC+5:30) via `todayIST()`. |
-| **React 19 Form Concurrency** | All form field IDs use `useId()` to prevent DOM collisions. Rapid submissions are guarded by `busy.current` `useRef` locks. |
+| Fail closed | If `STUDY_PASSCODE` or `SESSION_SECRET` is unset, the Worker answers 500 to everything. |
+| Constant-time PIN check | Compared with a timing-safe equality. |
+| Lockout | 5 wrong PINs lock an IP for 15 minutes; 20 across all IPs lock everyone for an hour. The attempt is recorded before the check, in one atomic batch. |
+| Sessions | HMAC-signed `HttpOnly`, `SameSite=Strict`, `Secure` cookie. 90 days with "Remember me", 24 hours otherwise. Cookie writes also check the `Origin`. |
+| Google sign-in | Optional. Only addresses in `ALLOWED_GOOGLE_EMAILS` are admitted, and the OAuth state is bound to the browser. |
+| Recovery token | `APP_TOKEN` works as a bearer token for scripts and recovery. |
+| Backups carry no secrets | Google credentials, the calendar token and the sign-in allow-list are left out of exports and ignored on restore. |
+| SQL | Parameterized (`db.prepare(...).bind(...)`) with atomic `db.batch([...])`. |
+| IST | Day boundaries, streaks and targets use `Asia/Kolkata` through `todayIST()`. |
 
 ---
 
-## 📂 Project Structure
+## Project structure
 
 ```
-d:\Project\exam-tracker\
-├── context/               # 🧠 Universal AI & Developer Context
-│   ├── RULES.md           # Mandatory system invariants (IST, D1, Auth, React 19)
-│   ├── ARCHITECTURE.md    # System architecture, data flow & file roles
-│   ├── VERIFICATION.md    # Build, test, and audit verification checklist
-│   └── DECISIONS.md       # Append-only architectural memory & decision log
-├── server/                # ⚡ Cloudflare Worker Backend (Hono v4)
-│   ├── index.ts           # Worker entry point & fetch router
-│   ├── app.ts             # Hono router, API routes (/api/*), D1 batch queries
-│   ├── auth.ts            # PIN verification, signed cookies, lockout rate limiter
-│   ├── logic.ts           # Pure domain math: todayIST, daysLeft, rankNext
-│   ├── planner.ts         # Study queue ranking & energy check-in heuristics
-│   ├── timer.ts           # Pure Pomodoro state engine (settleTimer, startFocus)
-│   ├── life.ts            # Habits, quick capture, projects, routine handlers
-│   └── testdb.ts          # Test harness with in-memory Miniflare D1
-├── src/                   # 🖥️ Frontend SPA (React 19 + Tailwind v4)
-│   ├── App.tsx            # Main shell, responsive dock, polling & offline sync
-│   ├── Today.tsx          # Telemetry ribbon, countdown, targets, queue, habits widget
-│   ├── Syllabus.tsx       # Subject & chapter tree, revision passes, scope filter
-│   ├── Focus.tsx          # Pomodoro focus card & bar, Web Audio chime engine
-│   ├── Habits.tsx         # Daily habits tracker, sparklines & streak counts
-│   ├── Routine.tsx        # Morning kickoff & evening shutdown
-│   ├── Capture.tsx        # Quick capture drawer (Ctrl + K)
-│   ├── Projects.tsx       # Personal projects & milestone checklist
-│   ├── Week.tsx           # 12-week study & habit heatmaps, weekly reflection
-│   ├── Deliverables.tsx   # School submissions & activity steppers
-│   ├── Backup.tsx         # Version 5 JSON export / atomic restore & theme switcher
-│   ├── api.ts             # Type-safe client fetch wrapper & error handling
-│   ├── ui.tsx             # Shared design system components & Apple SVG icons
-│   └── index.css          # Design tokens, Apple palettes, glassmorphism utilities
-├── migrations/            # 🗄️ D1 SQLite Schema Migrations (0001_init ... 0008_life_os)
-├── audit/                 # 🔍 Automated Code Review & Security Audit Engine
-│   └── run-audit.ts       # Validates secrets, concurrency, schemas, and types
-├── wrangler.jsonc         # Cloudflare Workers & D1 deployment configuration
-└── vite.config.ts         # Vite bundler & Tailwind CSS v4 setup
+exam-tracker/
+├── context/          Rules, architecture, verification checklist, decision log
+├── server/           Cloudflare Worker (Hono v4) and its tests
+│   ├── app.ts        Routes, state assembly, export/import
+│   ├── auth.ts       PIN, Google sign-in, sessions, lockout
+│   ├── logic.ts      Pure domain maths (todayIST, daysLeft, ranking)
+│   ├── planner.ts    Study queue and energy heuristics
+│   ├── timer.ts      Pomodoro state engine
+│   ├── life.ts       Habits, capture, projects, routine
+│   ├── calendar.ts   Schedule blocks, iCal feed, conflicts
+│   ├── google-calendar.ts  Google Calendar sync
+│   ├── curriculum.ts Official chapter lists
+│   └── testdb.ts     Tests run against a real local D1
+├── src/              React 19 SPA
+│   ├── App.tsx, nav.ts       Shell, routing, shortcuts
+│   ├── Today.tsx, Overview.tsx, overviewStats.ts
+│   ├── Syllabus.tsx, RevisionMatrix.tsx, VivaDrawer.tsx
+│   ├── Schedule.tsx, CalendarModal.tsx, GoogleSyncModal.tsx
+│   ├── Deliverables.tsx, Week.tsx
+│   ├── Habits.tsx, Projects.tsx, Routine.tsx, Capture.tsx
+│   ├── Focus.tsx, ZenFocus.tsx, CommandBar.tsx
+│   └── ui.tsx, index.css     Shared components and design tokens
+├── migrations/       D1 schema, 0001_init to 0014_deliverables_real_dates
+├── audit/            Optional static audit (npm run audit)
+└── wrangler.jsonc    Worker, D1 binding and non-secret config
 ```
 
 ---
 
-## 🛠️ Local Development
+## Local development
 
-### Prerequisites
-- Node.js 20+
-- npm 10+
-
-### Step-by-Step Setup
-
-1. **Clone the repository and install dependencies:**
-   ```bash
-   git clone https://github.com/w1tneess/study-dashboard.git
-   cd exam-tracker
-   npm install
-   ```
-
-2. **Configure environment variables:**
-   ```bash
-   cp .dev.vars.example .dev.vars
-   ```
-   *(Ensure `STUDY_PASSCODE`, `SESSION_SECRET`, and `APP_TOKEN` are set in `.dev.vars`)*
-
-3. **Initialize the local D1 SQLite database:**
-   ```bash
-   npm run db:local
-   ```
-   *This applies all migrations in `migrations/*.sql` and seeds the syllabus data.*
-
-4. **Start the local edge development server:**
-   ```bash
-   npm run dev
-   ```
-   *Open [http://localhost:8787](http://localhost:8787) in your browser. This boots the Worker, Vite client assets, and local D1 SQLite.*
-
----
-
-## 🧪 Testing & Verification
-
-The repository enforces a strict verification pipeline before any production deployment:
+Needs Node.js 20+ (CI uses 24).
 
 ```bash
-# 1. Run dual TypeScript compilation (client + server) & Vite bundle check
-npm run build
-
-# 2. Run complete Vitest integration test suite (Miniflare in-memory D1)
-npm test
-
-# 3. Run automated security, concurrency, and architecture audit engine
-npm run audit
+git clone https://github.com/w1tneess/study-dashboard.git
+cd study-dashboard
+npm install
+cp .dev.vars.example .dev.vars   # set STUDY_PASSCODE, SESSION_SECRET, APP_TOKEN
+npm run db:local                 # apply migrations to the local D1
+npm run build                    # the Worker serves ./dist
+npm run dev                      # http://localhost:8787
 ```
 
-- **Integration Tests**: 129 tests across 8 test suites verifying authentication, sliding rate limits, Pomodoro cloud settlement, study queue scoring, habit streaks, atomic backups, and schema integrity.
-- **Audit Engine**: Validates fail-closed secrets, React 19 `useId()` and double-submit guards, D1 query parameterization, and memory log updates.
+`npm run dev:web` runs Vite alone for front-end work. Google sign-in and calendar sync also need `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and the redirect URIs from `.dev.vars.example`; the app works without them.
 
 ---
 
-## 🚀 Cloud Deployment
-
-### 1. Automated CI/CD (Recommended)
-Every push to `main` triggers `.github/workflows/ci.yml`:
-1. Dual TypeScript check and Vite build.
-2. Full test suite execution against local D1.
-3. Automated code audit.
-4. Cloudflare D1 production migrations (`npm run db:remote`).
-5. Cloudflare Workers publication via Wrangler (`npm run deploy`).
-
-*Requires the `CLOUDFLARE_API_TOKEN` GitHub repository secret (Worker Deploy + D1 Edit permissions).*
-
-### 2. Manual CLI Deployment
+## Testing
 
 ```bash
-# Log in to Cloudflare
+npm run build   # type-check client and server, then bundle
+npm test        # 170 tests in 11 files, against a real local D1
+npm run audit   # optional static checks (not run in CI)
+```
+
+Tests cover auth and lockout, the timer, the study queue and phases, habits and streaks, the calendar and Google sync, backups (including the secrets rules), and the Overview numbers.
+
+---
+
+## Deployment
+
+Every push to `main` runs `.github/workflows/ci.yml`: build, test, then, if both pass, apply remote D1 migrations and deploy with Wrangler. Migrations are idempotent, so applied ones are skipped. It needs the `CLOUDFLARE_API_TOKEN` repository secret.
+
+Manual deploy:
+
+```bash
 npx wrangler login
-
-# Apply schema migrations to remote D1
 npm run db:remote
-
-# Configure production secrets
-npx wrangler secret put STUDY_PASSCODE   # Your 6-digit PIN
-npx wrangler secret put SESSION_SECRET   # Random 32+ character signing string
-npx wrangler secret put APP_TOKEN        # Recovery bearer token
-
-# Build and deploy Worker + static assets
+npx wrangler secret put STUDY_PASSCODE
+npx wrangler secret put SESSION_SECRET
+npx wrangler secret put APP_TOKEN
 npm run deploy
 ```
 
 ---
 
-## 💾 Backup & Data Portability
+## Backup
 
-Exam Tracker supports full, atomic JSON export and restoration via the **Backup** screen:
-- **Export (`GET /api/export`)**: Downloads an encrypted, complete snapshot of all subjects, chapters, revision passes, daily targets, check-ins, focus logs, habits, captures, projects, and weekly reviews.
-- **Atomic Import (`POST /api/import`)**: Validates schema integrity and restores the entire database in a single atomic transaction.
-- **Automatic Version Upgrades**: Restoring older backup schemas (v1–v4) seamlessly upgrades legacy data into the current Version 5 Life OS format.
+The **Backup** screen exports and restores everything as JSON (format version 5):
 
----
-
-## 📜 Invariants & Directives
-
-All contributors and AI agents must adhere to the core directives defined in [`context/RULES.md`](context/RULES.md):
-1. **IST Timezone (`Asia/Kolkata`)**: Never compute calendar days using UTC. Always use `todayIST(nowMs)`.
-2. **D1 Parameterization**: Never interpolate raw strings into SQL. Always use `db.prepare(...).bind(...)`.
-3. **Fail-Closed Security**: Reject requests with HTTP 500 if secrets are missing.
-4. **React 19 Standards**: Always use `useId()` for form fields and `useRef` `busy.current` double-submit locks.
-5. **Zero New Runtime Dependencies**: Keep the bundle lean and native.
-6. **Mandatory Memory Logging**: Every task requires an entry appended to [`context/DECISIONS.md`](context/DECISIONS.md).
+- `GET /api/export` downloads subjects, chapters, passes, targets, check-ins, sessions, habits, captures, projects, routines, reviews, the schedule and calendar events. Secrets are never included.
+- `POST /api/import` validates the file and restores it in one atomic write. A bad file changes nothing.
+- Older files (v1 to v4) are upgraded on restore.
 
 ---
 
-## 👤 Author & Maintainer
+## Contributor rules
 
-**Advaita Chandra**  
-- Website: [advaitachandra.in](https://advaitachandra.in)  
-- Application: [study.advaitachandra.in](https://study.advaitachandra.in)  
-- License: Private / All Rights Reserved
+Defined in [`context/RULES.md`](context/RULES.md): IST for every calendar day, parameterized SQL only, fail closed on missing secrets, `useId()` for form fields and `busy.current` guards against double submits, no new runtime dependencies, and a note in [`context/DECISIONS.md`](context/DECISIONS.md) for each change.
+
+---
+
+**Advaita Chandra** · [advaitachandra.in](https://advaitachandra.in) · Private, all rights reserved.

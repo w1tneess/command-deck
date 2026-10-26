@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useState } from "react";
 import { BrandLogo } from "./ui.tsx";
 
 function GoogleIcon({ className = "size-4" }: { className?: string }) {
@@ -12,152 +12,44 @@ function GoogleIcon({ className = "size-4" }: { className?: string }) {
   );
 }
 
-type Step = "signin" | "email" | "code";
-type Reply = { error?: string; attemptsLeft?: number; retryAfter?: number };
-
-const post = async (url: string, body: unknown) => {
-  const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-  return { res, data: (await res.json().catch(() => ({}))) as Reply };
-};
-
-const field = "h-11 w-full rounded-xl border border-line-strong bg-surface px-3.5 text-base text-fg placeholder:text-muted";
-
-/** Sign in with Google, or with an email address and a password that was set by confirming a one-time code. */
-export function SignIn({ onDone }: { onDone: () => void }) {
-  const id = useId();
-  const [step, setStep] = useState<Step>("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
-  const [remember, setRemember] = useState(true);
-  const [msg, setMsg] = useState("");
-  const [info, setInfo] = useState("");
-  const [busy, setBusy] = useState(false);
-  const busyRef = useRef(false);
-  const [lockedUntil, setLockedUntil] = useState(0);
-  const [, tick] = useState(0);
-  const locked = lockedUntil > Date.now();
-  const wait = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
-
+/** The only way in is a Google account on the owner's allow-list; the server checks it, this just starts the flow. */
+export function SignIn() {
   const [urlError, setUrlError] = useState(() => {
-    const err = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("error");
+    const err = new URLSearchParams(window.location.search).get("error");
     if (!err) return "";
     if (err === "unauthorized" || err === "access_denied") return "That Google account isn't on the allowed list.";
-    if (err === "state_mismatch" || err === "oauth_token_failed") return "Google sign-in failed. Try again, or use your email and password.";
+    if (err === "state_mismatch" || err === "oauth_token_failed") return "Google sign-in failed. Please try again.";
     return `Sign-in error: ${err}`;
   });
-  const clearUrlError = () => {
+  const dismiss = () => {
     setUrlError("");
     const url = new URL(window.location.href);
     url.searchParams.delete("error");
     window.history.replaceState({}, "", url.pathname + url.hash);
   };
 
-  // Re-render each second while locked so the countdown (and the unlock) updates.
-  useEffect(() => {
-    if (!locked) return;
-    const t = setInterval(() => tick((n) => n + 1), 1000);
-    return () => clearInterval(t);
-  }, [locked]);
-
-  const go = (next: Step) => { setStep(next); setMsg(""); setInfo(""); setPassword(""); setCode(""); };
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (busyRef.current || locked) return;
-    busyRef.current = true;
-    setBusy(true);
-    setMsg("");
-    try {
-      const { res, data } = step === "signin" ? await post("/api/auth/email/login", { email, password, remember })
-        : step === "email" ? await post("/api/auth/email/request", { email })
-        : await post("/api/auth/email/set-password", { email, code, password, remember });
-      if (res.ok && step === "email") { setStep("code"); setInfo(`If ${email.trim()} is allowed, a 6-digit code is on its way. It works once and expires in 10 minutes.`); return; }
-      if (res.ok) { if (urlError) clearUrlError(); return onDone(); }
-      navigator.vibrate?.(80);
-      setPassword("");
-      if (res.status === 429) setLockedUntil(Date.now() + (data.retryAfter ?? 900) * 1000);
-      else if (typeof data.attemptsLeft === "number") setMsg(`${data.error} ${data.attemptsLeft} ${data.attemptsLeft === 1 ? "try" : "tries"} left.`);
-      else setMsg(data.error ?? "Couldn't sign in. Please try again.");
-    } catch {
-      setMsg("Can't reach the server. Check your connection.");
-    } finally {
-      busyRef.current = false;
-      setBusy(false);
-    }
-  };
-
-  const rememberBox = (
-    <label className="flex min-h-9 items-center gap-2.5 text-sm text-muted cursor-pointer hover:text-fg">
-      <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-4 cursor-pointer rounded-md" />
-      <span>Remember this device (90 days)</span>
-    </label>
-  );
-
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 py-8 text-center">
       <div className="flex w-full flex-col items-center rounded-3xl border border-line bg-bg/90 p-7 shadow-2xl backdrop-blur-2xl sm:p-9">
         <BrandLogo size={48} className="mb-3" />
         <h1 className="m-0 text-xl font-bold tracking-tight text-fg">Command Deck</h1>
-        <p className="mt-1 mb-5 text-sm text-muted">Class 10 CBSE study dashboard</p>
+        <p className="mt-1 mb-6 text-sm text-muted">Class 10 CBSE study dashboard</p>
 
         {urlError && (
           <div role="alert" className="mb-5 flex w-full items-start gap-2.5 rounded-2xl border border-danger/30 bg-danger/10 p-3 text-left text-sm text-danger animate-fade-in">
             <p className="m-0 flex-1">{urlError}</p>
-            <button type="button" onClick={clearUrlError} aria-label="Dismiss" className="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-danger">✕</button>
+            <button type="button" onClick={dismiss} aria-label="Dismiss" className="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-danger">✕</button>
           </div>
         )}
 
         <a
           href="/api/auth/google"
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-line bg-surface3 px-4 py-3 text-sm font-semibold text-fg shadow-xs transition-all hover:border-line-strong active:scale-[0.98]"
+          className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-line bg-surface3 px-4 py-3 text-base font-semibold text-fg shadow-xs transition-all hover:border-line-strong active:scale-[0.98]"
         >
-          <GoogleIcon className="size-4 shrink-0" />
+          <GoogleIcon className="size-5 shrink-0" />
           <span>Sign in with Google</span>
         </a>
-
-        <div className="relative my-5 flex w-full items-center justify-center">
-          <div className="w-full border-t border-line" />
-          <span className="absolute bg-bg px-3 text-xs font-medium text-muted">or use your email</span>
-        </div>
-
-        <form onSubmit={(e) => void submit(e)} className="flex w-full flex-col gap-3 text-left">
-          {step === "code" && info && <p role="status" className="m-0 text-sm text-muted">{info}</p>}
-
-          <label htmlFor={`${id}-email`} className="text-sm font-medium text-fg">Email</label>
-          <input id={`${id}-email`} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} readOnly={step === "code"} className={field} />
-
-          {step === "code" && (
-            <>
-              <label htmlFor={`${id}-code`} className="text-sm font-medium text-fg">6-digit code from the email</label>
-              <input id={`${id}-code`} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} className={`${field} tracking-[0.3em]`} />
-            </>
-          )}
-
-          {step !== "email" && (
-            <>
-              <label htmlFor={`${id}-pw`} className="text-sm font-medium text-fg">{step === "code" ? "New password (at least 12 characters)" : "Password"}</label>
-              <input id={`${id}-pw`} type="password" autoComplete={step === "code" ? "new-password" : "current-password"} required minLength={step === "code" ? 12 : undefined} maxLength={200} value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
-              {rememberBox}
-            </>
-          )}
-
-          <p role="alert" className="m-0 min-h-5 text-sm font-medium text-danger">
-            {locked ? `Too many tries. Try again in ${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}.` : msg}
-          </p>
-
-          <button type="submit" disabled={busy || locked} className="min-h-11 cursor-pointer rounded-xl border-0 bg-fg px-4 text-base font-semibold text-bg disabled:opacity-40">
-            {step === "signin" ? "Sign in" : step === "email" ? "Email me a code" : "Set password and sign in"}
-          </button>
-        </form>
-
-        <div className="mt-4 flex flex-col items-center gap-1 text-sm">
-          {step === "signin" ? (
-            <button type="button" onClick={() => go("email")} className="cursor-pointer border-0 bg-transparent p-1 text-muted underline hover:text-fg">First time here, or forgot your password?</button>
-          ) : (
-            <button type="button" onClick={() => go("signin")} className="cursor-pointer border-0 bg-transparent p-1 text-muted underline hover:text-fg">Back to sign in</button>
-          )}
-        </div>
+        <p className="mt-4 mb-0 text-sm text-muted">Private. Only the owner's Google account can sign in.</p>
       </div>
     </main>
   );

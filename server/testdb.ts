@@ -3,12 +3,10 @@ import { serializeSigned } from "hono/utils/cookie";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createApp } from "./app.ts";
-import type { Mail } from "./auth.ts";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const MIGRATIONS = resolve(ROOT, "migrations");
 export const EMAIL = "advaita974@gmail.com";
-export const PASSWORD = "correct-horse-battery";
 
 type Opts = {
   /** SESSION_SECRET; null leaves it unset. */
@@ -21,7 +19,7 @@ type Opts = {
   googleRedirectUri?: string | null;
   /** Google OAuth Redirect URI for Calendar */
   googleCalendarRedirectUri?: string | null;
-  /** Allowed emails whitelist (Google and email sign-in) */
+  /** Allowed Google emails whitelist */
   allowedGoogleEmails?: string | null;
   /** "session" (default) signs every call in with a valid cookie; "none" sends nothing so tests can sign in themselves. */
   auth?: "session" | "none";
@@ -38,9 +36,7 @@ export async function setup(opts: Opts = {}) {
     await db.batch(stmts.map((s) => db.prepare(s)));
   }
   let clock = opts.now ?? Date.parse("2026-10-22T06:00:00Z");
-  /** Every email the app tried to send, newest last. */
-  const mails: Mail[] = [];
-  const app = createApp({ now: () => clock, fetchFn: opts.fetchFn, sendMail: async (_env, mail) => { mails.push(mail); } });
+  const app = createApp({ now: () => clock, fetchFn: opts.fetchFn });
   const secret = opts.secret === undefined ? "test-secret" : opts.secret ?? undefined;
   const env = {
     DB: db,
@@ -61,20 +57,8 @@ export async function setup(opts: Opts = {}) {
     const headers: Record<string, string> = { ...(signedIn ? { cookie: signedIn } : {}), ...(o.payload ? { "content-type": "application/json" } : {}), ...o.headers };
     return app.request(o.url, { method: o.method ?? "GET", headers, body: o.payload ? JSON.stringify(o.payload) : undefined }, env);
   };
-  /** Signs in through the real email flow (first time: code, then password; after that: password) and returns the session cookie. */
-  const signIn = async (remember = true, ip = "1.1.1.1") => {
-    const headers = { "cf-connecting-ip": ip };
-    const known = await db.prepare("SELECT 1 AS x FROM credentials WHERE email = ?").bind(EMAIL).first();
-    let res: Response;
-    if (known) {
-      res = await inject({ method: "POST", url: "/api/auth/email/login", payload: { email: EMAIL, password: PASSWORD, remember }, headers });
-    } else {
-      await inject({ method: "POST", url: "/api/auth/email/request", payload: { email: EMAIL }, headers });
-      const code = mails.at(-1)!.text.match(/\b(\d{6})\b/)![1];
-      res = await inject({ method: "POST", url: "/api/auth/email/set-password", payload: { email: EMAIL, code, password: PASSWORD, remember }, headers });
-    }
-    if (res.status !== 200) throw new Error(`test sign-in failed: ${res.status} ${await res.text()}`);
-    return res.headers.get("set-cookie")!.split(";")[0];
-  };
-  return { db, inject, mails, signIn, dispose: () => proxy.dispose(), setNow: (ms: number) => { clock = ms; }, now: () => clock };
+  /** A session cookie signed the way the app signs it. Version 1 is what a fresh database starts at. */
+  const mintCookie = async (ttlSeconds = 90 * 86_400, version = 1) =>
+    (await serializeSigned("session", `${Math.floor(clock / 1000) + ttlSeconds}.${version}`, secret ?? "test-secret")).split(";")[0];
+  return { db, inject, mintCookie, dispose: () => proxy.dispose(), setNow: (ms: number) => { clock = ms; }, now: () => clock };
 }

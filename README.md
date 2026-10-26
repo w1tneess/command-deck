@@ -5,11 +5,11 @@
 [![React 19](https://img.shields.io/badge/Frontend-React%2019-61DAFB?logo=react)](https://react.dev/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Styling-Tailwind%20CSS%20v4-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%205-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Vitest](https://img.shields.io/badge/Tests-184%20Passed-brightgreen?logo=vitest)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-160%20Passed-brightgreen?logo=vitest)](https://vitest.dev/)
 
 A private **CBSE Class 10 exam-prep dashboard and personal life tracker**. It runs entirely on Cloudflare's edge (Worker + D1) and combines a ranked study queue, a cloud-settled Pomodoro timer, three-pass chapter revision, habits, a daily schedule synced with Google Calendar, and school deliverable tracking.
 
-**Live:** [deck.advaitachandra.in](https://deck.advaitachandra.in) *(private; allow-listed Google or verified email sign-in)*
+**Live:** [deck.advaitachandra.in](https://deck.advaitachandra.in) *(private; allow-listed Google account only)*
 
 ---
 
@@ -23,7 +23,7 @@ graph TD
     end
 
     subgraph Edge [Cloudflare Worker · Hono v4]
-        Auth[Auth · Google, email + password, lockout]
+        Auth[Auth · Google sign-in, sessions]
         Timer[Cloud-settled timer]
         Planner[Study queue + energy heuristics]
         Cal[Schedule, iCal feed, Google Calendar sync]
@@ -82,13 +82,10 @@ The app has four places to go: **Today**, **Study**, **Plan** and **Life**. Plan
 | Principle | Implementation |
 |---|---|
 | Fail closed | If `SESSION_SECRET` is unset, the Worker answers 500 to everything. |
-| Two ways in | Google, or email and password. Both admit only addresses in `ALLOWED_GOOGLE_EMAILS`. No PIN and no standing API key. |
-| Verified email | Setting or resetting a password needs a 6-digit code emailed to the address: valid 10 minutes, works once, dies after 5 wrong guesses, one email a minute per address. Only a keyed hash of the code is stored. |
-| Passwords | At least 12 characters, stored as salted PBKDF2-SHA256 (100,000 rounds, the Worker maximum) and never in backups. Unknown addresses cost the same time as wrong passwords. |
-| Lockout | 5 tries lock an IP for 15 minutes; 20 across all IPs lock everyone for an hour. The attempt is recorded before the check, in one atomic batch. |
+| One way in | Google sign-in, and only for addresses in `ALLOWED_GOOGLE_EMAILS`. No PIN, no passwords and no standing API key, so there is nothing to guess. |
 | Sessions | HMAC-signed `HttpOnly`, `SameSite=Strict`, `Secure` cookie. 90 days with "Remember me", 24 hours otherwise. Cookie writes also check the `Origin`. |
 | Google sign-in | The OAuth state is bound to the browser, and Google must report the email as verified. |
-| No bypass | There is no master key. If both sign-ins break, fix the cause (Google keys, or the email sending domain) from your own computer with wrangler; your data stays in D1. |
+| No bypass | There is no master key. If Google sign-in breaks, fix the cause (the OAuth keys or redirect URIs) from your own computer with wrangler; your data stays in D1. |
 | Backups carry no secrets | Google credentials, the calendar token and the sign-in allow-list are left out of exports and ignored on restore. |
 | SQL | Parameterized (`db.prepare(...).bind(...)`) with atomic `db.batch([...])`. |
 | IST | Day boundaries, streaks and targets use `Asia/Kolkata` through `todayIST()`. |
@@ -102,7 +99,7 @@ exam-tracker/
 ├── context/          Rules, architecture, verification checklist, decision log
 ├── server/           Cloudflare Worker (Hono v4) and its tests
 │   ├── app.ts        Routes, state assembly, export/import
-│   ├── auth.ts       Google and email sign-in, sessions, lockout
+│   ├── auth.ts       Google sign-in and sessions
 │   ├── logic.ts      Pure domain maths (todayIST, daysLeft, ranking)
 │   ├── planner.ts    Study queue and energy heuristics
 │   ├── timer.ts      Pomodoro state engine
@@ -135,13 +132,13 @@ Needs Node.js 20+ (CI uses 24).
 git clone https://github.com/w1tneess/study-dashboard.git
 cd study-dashboard
 npm install
-cp .dev.vars.example .dev.vars   # set SESSION_SECRET (and the Google keys if you use Google sign-in)
+cp .dev.vars.example .dev.vars   # set SESSION_SECRET and the Google keys
 npm run db:local                 # apply migrations to the local D1
 npm run build                    # the Worker serves ./dist
 npm run dev                      # http://localhost:8787
 ```
 
-Sign-in codes are emailed through Cloudflare Email Service (the `EMAIL` binding, sent from `MAIL_FROM`); the sending domain must be onboarded with `wrangler email sending enable`. `npm run dev:web` runs Vite alone for front-end work. Google sign-in and calendar sync also need `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and the redirect URIs from `.dev.vars.example`; the app works without them.
+`npm run dev:web` runs Vite alone for front-end work. Signing in needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and the redirect URIs from `.dev.vars.example`, and your address in `ALLOWED_GOOGLE_EMAILS`.
 
 ---
 
@@ -149,7 +146,7 @@ Sign-in codes are emailed through Cloudflare Email Service (the `EMAIL` binding,
 
 ```bash
 npm run build   # type-check client and server, then bundle
-npm test        # 184 tests in 11 files, against a real local D1
+npm test        # 160 tests in 11 files, against a real local D1
 npm run audit   # optional static checks (not run in CI)
 ```
 

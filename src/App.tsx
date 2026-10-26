@@ -101,7 +101,7 @@ export function App() {
     }
   }, [load]);
 
-  if (needsLogin) return <SignIn onDone={load} />;
+  if (needsLogin) return <SignIn />;
   if (!state) return <main className="grid min-h-dvh place-items-center px-6 text-center text-muted bg-bg text-muted">{error || "Loading…"}</main>;
   return <Shell state={state} act={act} reload={load} error={error} setError={setError} saving={saving > 0} online={online} />;
 }

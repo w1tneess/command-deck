@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
-import { registerAuth, type Env, type SendMail, hasValidSession, isLocalDev, same } from "./auth.ts";
+import { registerAuth, type Env, hasValidSession, isLocalDev, same } from "./auth.ts";
 import { SCOPES, STATUSES, activePhase, computeChapterDuration, daysLeft, inScope, startedPct, studyDaysLeft, todayIST, type Scope, type Status } from "./logic.ts";
 import { lifeState, registerLife } from "./life.ts";
 import { ENERGIES, studyQueue, type Energy } from "./planner.ts";
@@ -174,7 +174,7 @@ async function settleNow(db: D1Database, nowMs: number): Promise<Timer> {
 
 const timerView = (t: Timer, nowMs: number) => ({ ...t, endsAt: t.startedAt === null ? null : t.startedAt + t.durationS * 1000, serverNow: nowMs });
 
-export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch; sendMail?: SendMail } = {}) {
+export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } = {}) {
   const app = new Hono<Env>();
   const now = () => opts.now?.() ?? Date.now();
   const today = () => todayIST(now());
@@ -186,7 +186,7 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch; se
     return c.json({ error: "Unexpected server error." }, 500);
   });
 
-  registerAuth(app, now, fetchFn, opts.sendMail);
+  registerAuth(app, now, fetchFn);
   registerLife(app, today, () => new Date(now()).toISOString());
 
   app.get("/api/state", async (c) => {

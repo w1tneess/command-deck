@@ -16,12 +16,9 @@
   ],
   "vars": {
     "ALLOWED_GOOGLE_EMAILS": "advaita974@gmail.com",
-    "MAIL_FROM": "login@advaitachandra.in",
     "GOOGLE_REDIRECT_URI": "https://deck.advaitachandra.in/api/auth/google/callback",
     "GOOGLE_CALENDAR_REDIRECT_URI": "https://deck.advaitachandra.in/api/google/callback"
   },
-  // One-time sign-in codes are emailed through Cloudflare Email Service (the domain must be onboarded to Email Sending).
-  "send_email": [{ "name": "EMAIL" }],
   "d1_databases": [
     {
       "binding": "DB",

@@ -8,8 +8,8 @@ beforeEach(async () => {
 });
 afterEach(() => t.dispose());
 
-/** Signs in through the real email flow and wraps the cookie in a Response, so tests can keep using cookieOf(). */
-const login = async () => new Response(null, { headers: { "set-cookie": await t.signIn() } });
+/** A valid session cookie wrapped in a Response, so tests can keep using cookieOf(). */
+const login = async () => new Response(null, { headers: { "set-cookie": await t.mintCookie() } });
 const cookieOf = (res: Response) => (res.headers.get("set-cookie") ?? "").split(";")[0];
 
 describe("Calendar Feed API (/api/calendar/feed.ics)", () => {

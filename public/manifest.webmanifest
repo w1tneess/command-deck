@@ -1,6 +1,6 @@
 {
-  "name": "Study",
-  "short_name": "Study",
+  "name": "Command Deck",
+  "short_name": "Command Deck",
   "description": "Track exams, syllabus progress and study time.",
   "start_url": "/",
   "display": "standalone",

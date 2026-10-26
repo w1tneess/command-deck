@@ -3,7 +3,7 @@ import type { Scope } from "../server/logic.ts";
 
 export { AppleEmoji, AppleText, AppleEmojiPicker, getAppleEmojiUrl } from "./emoji.tsx";
 
-/** Minimalist SVG Brandmark for Study OS */
+/** Minimalist SVG Brandmark for Command Deck */
 export function BrandLogo({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
     <div

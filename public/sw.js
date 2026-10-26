@@ -1,6 +1,6 @@
 // Offline shell: static files are cached as they are used, and the last good /api/state is
 // served when the server can't be reached. Writes are never queued; they fail with a clear message.
-const CACHE = "exam-tracker-v1";
+const CACHE = "command-deck-v1";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) =>

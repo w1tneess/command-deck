@@ -1,5 +1,5 @@
 /**
- * Pure Calendar & iCal (RFC 5545) Engine for Life & Study OS.
+ * Pure Calendar & iCal (RFC 5545) Engine for Command Deck.
  * Strictly adheres to Indian Standard Time (IST, UTC+5:30) via Asia/Kolkata.
  */
 
@@ -151,10 +151,10 @@ export function generateIcsFeed(data: CalendarFeedData): string {
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Advaita Chandra//Life and Study OS//EN",
+    "PRODID:-//Advaita Chandra//Command Deck//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:Life & Study OS (CBSE Class 10)",
+    "X-WR-CALNAME:Command Deck (CBSE Class 10)",
     "X-WR-CALDESC:Real-time CBSE Class 10 preparation timetable, daily routine time-blocking, and school deliverables.",
     "X-WR-TIMEZONE:Asia/Kolkata",
     "REFRESH-INTERVAL;VALUE=DURATION:PT1H",

@@ -107,21 +107,21 @@ export function CalendarModal({
             <AppleEmoji emoji="📝" size={18} />
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-fg">CBSE Timetable</span>
-              <span className="text-[11px] text-muted">Exam slots (10:30–13:30)</span>
+              <span className="text-xs text-muted">Exam slots (10:30–13:30)</span>
             </div>
           </div>
           <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface p-3">
             <AppleEmoji emoji="🌅" size={18} />
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-fg">Routine Blocks</span>
-              <span className="text-[11px] text-muted">Morning, School, Review</span>
+              <span className="text-xs text-muted">Morning, School, Review</span>
             </div>
           </div>
           <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface p-3">
             <AppleEmoji emoji="📋" size={18} />
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-fg">Deliverables</span>
-              <span className="text-[11px] text-muted">Lab manuals & due dates</span>
+              <span className="text-xs text-muted">Lab manuals & due dates</span>
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function CalendarModal({
               <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
             </svg>
             <span>Subscribe in Google Calendar</span>
-            <span className="text-[11px] opacity-75 font-mono">(1-Click Add)</span>
+            <span className="text-xs opacity-75 font-mono">(1-Click Add)</span>
           </a>
 
           <div className="flex items-center gap-2">
@@ -172,12 +172,12 @@ export function CalendarModal({
         <div className="flex flex-col gap-1.5 rounded-xl border border-line bg-surface p-3">
           <div className="flex items-center justify-between text-xs font-mono text-muted">
             <span>YOUR PRIVATE SUBSCRIPTION URL</span>
-            <span className="text-accent text-[11px] font-sans">● Protected & Signed</span>
+            <span className="text-accent text-xs font-sans">● Protected & Signed</span>
           </div>
           <div className="rounded-lg bg-black/40 border border-line p-2 font-mono text-xs text-fg/80 break-all select-all">
             {httpFeedUrl}
           </div>
-          <div className="flex items-center justify-between text-[11px] text-muted pt-1 font-sans">
+          <div className="flex items-center justify-between text-xs text-muted pt-1 font-sans">
             <span>Enforces Asia/Kolkata (IST, UTC+5:30) timezone automatically.</span>
             <button
               type="button"

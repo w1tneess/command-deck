@@ -45,7 +45,7 @@ export function RevisionMatrix({
       {/* Matrix Controls & Telemetry Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface/80 p-4 lg:p-5 backdrop-blur-md shadow-sm">
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 font-mono text-[11px] font-semibold   text-muted">
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold   text-muted">
             <span className="inline-flex size-2 rounded-full bg-accent" />
             <span>Syllabus Radar</span>
             <span className="text-muted">/</span>
@@ -112,7 +112,7 @@ export function RevisionMatrix({
                   </div>
                 </div>
                 {examDate && (
-                  <span className="font-mono text-[11px] rounded-full border border-line bg-surface2 px-2.5 py-0.5 text-fg/80">
+                  <span className="font-mono text-xs rounded-full border border-line bg-surface2 px-2.5 py-0.5 text-fg/80">
                     Exam: {examDate}
                   </span>
                 )}
@@ -156,7 +156,7 @@ export function RevisionMatrix({
                             type="button"
                             aria-label={`Open Viva and Active Recall for ${c.name}`}
                             onClick={() => onOpenViva(c, subject)}
-                            className="shrink-0 flex items-center gap-1 rounded-lg border border-warn/30 bg-warn/15 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-warn hover:bg-warn/15 transition-all  "
+                            className="shrink-0 flex items-center gap-1 rounded-lg border border-warn/30 bg-warn/15 px-2.5 py-0.5 font-mono text-xs font-semibold text-warn hover:bg-warn/15 transition-all  "
                           >
                             <AppleEmoji emoji="⚡" size={11} />
                             <span>Viva</span>
@@ -174,7 +174,7 @@ export function RevisionMatrix({
                                   type="button"
                                   title={`Toggle ${short} pass`}
                                   onClick={() => act("PUT", `/api/chapters/${c.id}/passes/${pIdx + 1}`, { done: !done })}
-                                  className={`flex size-6 items-center justify-center rounded-md text-[11px] font-mono transition-all ${
+                                  className={`flex size-6 items-center justify-center rounded-md text-xs font-mono transition-all ${
                                     done
                                       ? "bg-accent text-bg font-bold"
                                       : "bg-surface border border-line text-muted hover:border-line-strong hover:text-fg"

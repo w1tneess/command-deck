@@ -21,7 +21,7 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
       <div>
         <a href="#today" className="flex items-center gap-3">
           <BrandLogo size={32} />
-          <h1 className="m-0 font-serif text-2xl font-bold tracking-tight text-fg">Command Deck</h1>
+          <span className="font-serif text-2xl font-bold tracking-tight text-fg">Command Deck</span>
         </a>
 
         <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
@@ -42,7 +42,7 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
       </div>
 
       <div className="flex flex-col gap-4">
-        <div>
+        {progress > 0 && <div>
           <div className="flex items-baseline justify-between text-sm">
             <span className="text-muted">Syllabus covered</span>
             <span className="font-semibold text-fg">{progress}%</span>
@@ -50,7 +50,7 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface3">
             <div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
-        </div>
+        </div>}
         <a href="#backup" className={link(page === "backup")}>
           <Icon d={ICONS.backup} size={18} stroke={page === "backup" ? 2.2 : 1.75} />
           <span>Settings</span>

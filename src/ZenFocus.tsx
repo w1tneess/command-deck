@@ -232,7 +232,7 @@ export function ZenFocusStudio({
             className="w-full resize-none rounded-lg border border-line bg-bg p-3 font-mono text-xs text-fg placeholder:text-muted focus-visible:ring-2 focus-visible:ring-focus transition-all focus:outline-none"
           />
           <div className="flex items-center justify-between pt-1">
-            <span className="font-mono text-[11px] text-muted">Auto-saved locally</span>
+            <span className="font-mono text-xs text-muted">Auto-saved locally</span>
             {act && (
               <button
                 type="button"

@@ -32,7 +32,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
+    <div className="flex w-full flex-col gap-4 md:gap-6">
       <PageHeader title="Review" sub="The last seven days, and a note for the week." />
       {/* cards below sit directly in the column */}
       <div className="flex flex-col gap-4 md:gap-6">
@@ -54,7 +54,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
                     style={{ height: Math.max(6, Math.round((w.min / 180) * 150)) }}
                   />
                   <span className="font-mono text-xs   text-fg/80">{weekday(w.day)}</span>
-                  <span className={`rounded-full border px-2 py-0.5 font-mono text-[11px]   ${energyStyle(w.energy)}`}>
+                  <span className={`rounded-full border px-2 py-0.5 font-mono text-xs   ${energyStyle(w.energy)}`}>
                     {w.energy ? ENERGY[w.energy] : "–"}
                   </span>
                 </div>
@@ -71,7 +71,7 @@ export function Week({ state, act }: { state: State; act: Act }) {
             <table className="mt-3.5 w-full border-separate border-spacing-y-2 text-left text-sm">
               <caption className="sr-only">Study time, habits done and sleep rating for each of the last 7 days</caption>
               <thead>
-                <tr className="font-mono text-[11px] text-muted">
+                <tr className="font-mono text-xs text-muted">
                   <th scope="col" className="pb-2.5 font-medium">Day</th>
                   <th scope="col" className="pb-2.5 font-medium">Study Hours</th>
                   <th scope="col" className="pb-2.5 font-medium">Habits</th>
@@ -148,7 +148,7 @@ function Reflection({ state, act }: { state: State; act: Act }) {
         onChange={(e) => setNote(e.target.value)}
         onBlur={() => void save()}
         placeholder="Document key insights, obstacles encountered, and strategic adjustments for next week..."
-        className="w-full resize-y rounded-xl border border-line bg-surface px-4 py-3 text-sm text-fg placeholder:text-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus transition-colors"
+        className="w-full resize-y rounded-xl border border-line bg-surface px-4 py-3 text-sm text-fg placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus transition-colors"
       />
     </Card>
   );
@@ -168,14 +168,14 @@ function Heatmap({ id, title, today, values, levelOf, text }: HeatProps) {
     <Card labelledBy={id}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <H2 id={id}>{title}</H2>
-        <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted  ">
+        <div className="flex items-center gap-1.5 text-xs font-mono text-muted  ">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((l) => <span key={l} className="size-3.5 rounded-[3px] border border-line" style={{ background: `var(--heat-${l})` }} />)}
           <span>More</span>
         </div>
       </div>
       <div className="mt-4 flex gap-2.5 overflow-x-auto pb-1">
-        <div className="grid grid-rows-[repeat(7,28px)] items-center gap-1 font-mono text-[11px]  text-muted" aria-hidden="true">
+        <div className="grid grid-rows-[repeat(7,28px)] items-center gap-1 font-mono text-xs  text-muted" aria-hidden="true">
           <span>Mon</span><span /><span>Wed</span><span /><span>Fri</span><span /><span>Sun</span>
         </div>
         <div role="img" aria-label={`${title}, darker is more`} className="grid grid-flow-col grid-rows-[repeat(7,28px)] auto-cols-[28px] gap-1">

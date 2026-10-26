@@ -363,7 +363,7 @@ function SubjectCard({
           }
           return (
             <li key={c.id} data-chapter-id={c.id} className={`rounded-2xl bg-surface2 px-3 ${drag?.over === c.id && drag.id !== c.id ? "ring-1 ring-accent" : ""} ${drag?.id === c.id ? "opacity-50" : ""} transition-colors`}>
-              <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 py-3 sm:grid-cols-[32px_minmax(0,1fr)_auto]">
+              <div className="grid grid-cols-[32px_minmax(0,1fr)] pointer-coarse:grid-cols-[44px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 py-3 sm:grid-cols-[32px_minmax(0,1fr)_auto] pointer-coarse:sm:grid-cols-[44px_minmax(0,1fr)_auto]">
                 <button
                   type="button"
                   aria-label={`Reorder ${c.name}. Drag, or use the up and down arrow keys.`}
@@ -372,7 +372,7 @@ function SubjectCard({
                   onPointerUp={endDrag}
                   onPointerCancel={endDrag}
                   onKeyDown={(e) => nudge(c.id, e)}
-                  className="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border-0 bg-transparent text-muted hover:text-fg hover:bg-surface3"
+                  className="flex size-8 pointer-coarse:size-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border-0 bg-transparent text-muted hover:text-fg hover:bg-surface3"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" /><circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" /><circle cx="9" cy="18" r="1.8" /><circle cx="15" cy="18" r="1.8" /></svg>
                 </button>
@@ -467,7 +467,7 @@ function ChapterForm({ initial, saveLabel, onSave, onCancel }: { subject: Subjec
           <span id={`${id}-conf`} className="font-mono text-xs   text-muted">Confidence</span>
           <div role="group" aria-labelledby={`${id}-conf`} className="flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" aria-pressed={v.confidence === n} aria-label={`Confidence ${n} of 5`} onClick={() => setV({ ...v, confidence: n })} className={`size-9 rounded-xl border font-mono text-xs font-semibold transition-all ${v.confidence === n ? "border-accent/30 bg-accent/15 text-accent" : "border-line bg-surface text-muted hover:border-line-strong"}`}>{n}</button>
+              <button key={n} type="button" aria-pressed={v.confidence === n} aria-label={`Confidence ${n} of 5`} onClick={() => setV({ ...v, confidence: n })} className={`size-9 rounded-xl border font-mono text-[13px] font-semibold transition-all ${v.confidence === n ? "border-accent/30 bg-accent/15 text-accent" : "border-line bg-surface text-muted hover:border-line-strong"}`}>{n}</button>
             ))}
           </div>
         </div>
@@ -497,8 +497,8 @@ function PhaseDates({ state, act }: { state: State; act: Act }) {
               <input type="date" aria-label={`${p.name} starts`} value={p.startsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { startsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none transition-colors" />
               <span className="font-mono text-xs text-muted">to</span>
               <input type="date" aria-label={`${p.name} ends`} value={p.endsOn} onChange={(e) => e.target.value && act("PUT", `/api/phases/${p.id}`, { endsOn: e.target.value })} className="h-8 rounded-xl border border-line bg-surface px-3 font-mono text-xs text-fg focus-visible:ring-2 focus-visible:ring-focus focus:outline-none transition-colors" />
-              <label className="flex min-h-[44px] md:min-h-[38px] items-center gap-2 text-xs font-medium text-fg/80">
-                <input type="checkbox" checked={p.confirmed} onChange={(e) => act("PUT", `/api/phases/${p.id}`, { confirmed: e.target.checked })} className="size-5 rounded-md accent-accent focus-visible:ring-2 focus-visible:ring-focus" />
+              <label className="flex min-h-[44px] md:min-h-[38px] items-center gap-2 text-[13px] font-medium text-fg/80">
+                <input type="checkbox" checked={p.confirmed} onChange={(e) => act("PUT", `/api/phases/${p.id}`, { confirmed: e.target.checked })} className="size-6 rounded-md accent-accent focus-visible:ring-2 focus-visible:ring-focus" />
                 Confirmed
               </label>
             </span>

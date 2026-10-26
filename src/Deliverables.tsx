@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Act, Chapter, Deliverable, DeliverableStatus, State, Subject } from "./api.ts";
 import { activeOf } from "./model.ts";
-import { AppleEmoji, AppleText, Btn, Card, H2, daysBetween, fmtShort, plural, PageHeader } from "./ui.tsx";
+import { AppleText, Btn, Card, H2, ICONS, Icon, daysBetween, fmtShort, plural, PageHeader } from "./ui.tsx";
 import { getDeliverableGCalUrl, getVivaPrepGCalUrl } from "./calendar-utils.ts";
 import { CalendarModal } from "./CalendarModal.tsx";
 
@@ -49,7 +49,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
       <div className="flex items-center justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2.5">
           <span className="flex size-6 items-center justify-center rounded-lg bg-warn/15 text-warn">
-            <AppleEmoji emoji="⚡" size={14} />
+            <Icon d={ICONS.flash} size={14} />
           </span>
           <div>
             <h2 id="viva-watchdog-h" className="font-sans font-semibold text-base text-fg">
@@ -101,7 +101,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <span className="font-mono text-[11px] text-muted  ">
+                <span className="font-mono text-xs text-muted  ">
                   {t.subjectId.toUpperCase()} VIVA
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -111,19 +111,19 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     rel="noopener noreferrer"
                     aria-label={`Add ${t.title} Viva Prep to Google Calendar`}
                     title="Add Viva Prep Session to Google Calendar"
-                    className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 font-mono text-xs text-muted hover:text-fg transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-focus"
+                    className="min-h-[44px] md:min-h-[38px] rounded-full border border-line bg-surface hover:bg-surface3 px-3 font-mono text-[13px] text-muted hover:text-fg transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-focus"
                   >
-                    <AppleEmoji emoji="📅" size={12} />
-                    <span className="text-[11px]">Add Cal</span>
+                    <Icon d={ICONS.today} size={12} />
+                    <span>Open in Google Calendar</span>
                   </a>
                   {match && onOpenViva && (
                     <button
                       type="button"
                       aria-label={`Launch Practical Viva for ${t.title}`}
                       onClick={() => onOpenViva(match.chapter, match.subject)}
-                      className="min-h-[44px] md:min-h-[38px] rounded-lg border border-warn/30 bg-warn/15 hover:bg-warn/15 px-3 font-mono text-xs font-semibold text-warn transition-all active:scale-95 flex items-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
+                      className="min-h-[44px] md:min-h-[38px] rounded-full border border-warn/30 bg-warn/15 hover:bg-warn/15 px-3 font-mono text-[13px] font-semibold text-warn transition-all active:scale-95 flex items-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
                     >
-                      <AppleEmoji emoji="⚡" size={12} />
+                      <Icon d={ICONS.flash} size={12} />
                       <span>Launch Viva</span>
                     </button>
                   )}
@@ -150,7 +150,7 @@ export function DeliverablesPage({
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 md:max-w-3xl">
+    <div className="flex w-full flex-col gap-6">
       <PageHeader title="Due dates" sub="Lab manuals, projects and practicals for Class X.">
         <button
           type="button"
@@ -209,7 +209,7 @@ export function Deliverables({
       </div>
       {overdue.length > 0 ? (
         <div role="alert" className="mt-4 mb-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-xs sm:text-sm text-danger flex items-center gap-2">
-          <AppleEmoji emoji="⚠️" size={15} />
+          <Icon d={ICONS.alert} size={15} />
           <span>{plural(overdue.length, "deliverable")} overdue: {overdue.map((d) => d.name).join(", ")}.</span>
         </div>
       ) : !anyDue ? (
@@ -342,7 +342,7 @@ function Item({ d, today, act, google }: { d: Deliverable; today: string; act: A
               "Overdue"
             ) : isUrgent ? (
               <span className="inline-flex items-center gap-1">
-                <AppleEmoji emoji="⚡" size={10} />
+                <Icon d={ICONS.flash} size={10} />
                 <span>Urgent (&lt;72h)</span>
               </span>
             ) : d.status === "done" ? (
@@ -415,7 +415,7 @@ function Item({ d, today, act, google }: { d: Deliverable; today: string; act: A
           type="button"
           aria-pressed={d.vivaPrep}
           onClick={() => patch({ vivaPrep: !d.vivaPrep })}
-          className={`min-h-[44px] md:min-h-[38px] rounded-lg border px-3 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-focus ${
+          className={`min-h-[44px] md:min-h-[38px] rounded-full border px-3 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-focus ${
             d.vivaPrep ? "border-transparent bg-fg text-bg font-semibold" : "border-line bg-transparent text-muted hover:text-fg"
           }`}
         >
@@ -426,7 +426,7 @@ function Item({ d, today, act, google }: { d: Deliverable; today: string; act: A
             type="button"
             onClick={() => void pushToGoogle()}
             aria-label={d.gcalEventId ? `Update the Google Calendar event for ${d.name}` : `Push ${d.name} to Google Calendar`}
-            className={`min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-transparent px-3 text-sm hover:bg-surface3 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${d.gcalEventId ? "text-good" : "text-muted hover:text-fg"}`}
+            className={`min-h-[44px] md:min-h-[38px] rounded-full border border-line bg-transparent px-3 text-sm hover:bg-surface3 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${d.gcalEventId ? "text-good" : "text-muted hover:text-fg"}`}
           >
             {d.gcalEventId ? "Synced ✓ · Update" : "Sync to Google Calendar"}
           </button>
@@ -441,7 +441,7 @@ function Item({ d, today, act, google }: { d: Deliverable; today: string; act: A
           rel="noopener noreferrer"
           title="Add Deliverable to Google Calendar"
           aria-label={`Add ${d.name} to Google Calendar`}
-          className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-transparent px-3 text-sm text-muted hover:text-fg hover:bg-surface3 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-focus"
+          className="min-h-[44px] md:min-h-[38px] rounded-full border border-line bg-transparent px-3 text-sm text-muted hover:text-fg hover:bg-surface3 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-focus"
         >
           <span>📅</span>
           <span>Cal</span>

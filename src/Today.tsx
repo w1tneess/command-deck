@@ -70,7 +70,7 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
   const nextNote = nextChapter ? reasonFor(nextChapter.chapter) : "";
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-8 md:max-w-3xl">
+    <div className="flex w-full flex-col gap-8">
       <header>
         <h1 className="m-0 font-serif text-3xl font-bold tracking-tight text-fg sm:text-4xl">{greeting}, Advaita</h1>
         <p className="m-0 mt-1 text-base text-muted">
@@ -221,6 +221,7 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
                       key={h.id}
                       type="button"
                       aria-pressed={done}
+                      aria-label={label}
                       onClick={() => void toggleHabit(h.id, h.today, h.goal)}
                       className={`min-h-[44px] rounded-full border px-3 text-sm font-medium cursor-pointer md:min-h-[36px] focus-visible:ring-2 focus-visible:ring-focus ${done ? "border-transparent bg-accent/15 text-accent" : "border-line-strong bg-transparent text-muted hover:bg-surface3 hover:text-fg"}`}
                     >

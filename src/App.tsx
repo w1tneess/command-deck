@@ -105,14 +105,18 @@ export function App() {
 function Shell({ state, act, reload, error, setError, saving, online }: { state: State; act: Act; reload: () => Promise<void>; error: string; setError: (e: string) => void; saving: boolean; online: boolean }) {
   const { page, params } = parseHash(useHash());
   const [theme, setTheme] = useTheme();
-  const focus = useFocus(state, reload, act);
+  const group = groupOf(page);
+  // One title per screen: the group name when it has a single page ("Study"), else the page name ("Overview"); the timer prefixes it while running.
+  const screen = group ? (group.pages.length === 1 ? group.label : group.pages.find((p) => p.id === page)?.label ?? group.label) : "Settings";
+  const focus = useFocus(state, reload, act, `${screen} · Command Deck`);
   const [more, setMore] = useState(false);
   const [capture, setCapture] = useState(false);
   const [commandBar, setCommandBar] = useState(false);
   const [viva, setViva] = useState<{ chapter: Chapter; subject: Subject } | null>(null);
   const [zenMode, setZenMode] = useState(false);
   const [calendarModal, setCalendarModal] = useState(false);
-  const group = groupOf(page);
+  // Two named content widths: narrow for single-column pages (Plan, Life, Settings), wide for dashboards (Today, Study).
+  const widthCls = group?.id === "plan" || group?.id === "life" || page === "backup" ? "max-w-3xl" : "max-w-[1180px]";
 
   const [istDateTime, setIstDateTime] = useState(() => formatISTHeaderDate());
   useEffect(() => {
@@ -170,6 +174,13 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
       className="bg-bg min-h-screen font-sans text-fg flex flex-col lg:flex-row relative"
       aria-busy={saving}
     >
+      <a
+        href="#main"
+        onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-full focus:bg-fg focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-bg"
+      >
+        Skip to content
+      </a>
       {saving && (
         <div aria-hidden="true" className="fixed inset-x-0 top-0 z-50 h-[3px] overflow-hidden bg-black/20">
           <div className="h-full w-1/3 animate-[slide_1s_cubic-bezier(0.16,1,0.3,1)_infinite] bg-accent" />
@@ -207,7 +218,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
         </header>
 
         {/* Page Content */}
-        <main className={`mx-auto w-full max-w-[1180px] flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 ${focus.running ? "pb-60" : "pb-44"} lg:pb-8`}>
+        <main id="main" tabIndex={-1} className={`outline-none mx-auto w-full ${widthCls} flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 ${focus.running ? "pb-60" : "pb-44"} lg:pb-8`}>
           {group && group.pages.length > 1 && (
             <nav aria-label={group.label} className="scrollbar-none -mb-2 flex max-w-full gap-2 overflow-x-auto">
               {group.pages.map((p) => (

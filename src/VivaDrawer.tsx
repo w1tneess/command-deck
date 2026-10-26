@@ -340,7 +340,7 @@ export function VivaDrawer({
                 <span className="font-sans text-xs font-semibold   text-muted">
                   {subject.name} · Active Recall
                 </span>
-                <span className="text-muted font-mono text-[11px]">/</span>
+                <span className="text-muted font-mono text-xs">/</span>
                 <span className="font-sans text-xs  text-muted">Class 10 CBSE</span>
               </div>
               <h2 id="viva-title" className="m-0 text-base sm:text-lg font-bold text-zinc-900 tracking-tight">
@@ -415,11 +415,11 @@ export function VivaDrawer({
               >
                 <div>
                   <div className="flex items-center gap-2 mb-2.5">
-                    <span className="font-mono text-[11px] font-semibold   text-muted">
+                    <span className="font-mono text-xs font-semibold   text-muted">
                       Prompt Spec
                     </span>
                     <span className="text-fg/80">·</span>
-                    <span className="font-mono text-[11px] text-muted">Click or Space to flip</span>
+                    <span className="font-mono text-xs text-muted">Click or Space to flip</span>
                   </div>
                   <p className="m-0 text-base sm:text-[17px] font-semibold leading-relaxed text-zinc-900">
                     {currentCard.question}
@@ -454,7 +454,7 @@ export function VivaDrawer({
                     <span className="group-hover:text-zinc-900 transition-colors font-medium">
                       Click to reveal examiner answer
                     </span>
-                    <span className="text-muted   text-[11px] font-mono">Flip Card ↵</span>
+                    <span className="text-muted   text-xs font-mono">Flip Card ↵</span>
                   </div>
                 )}
               </div>
@@ -513,7 +513,7 @@ export function VivaDrawer({
                     className="flex flex-col items-center justify-center rounded-2xl border border-rose-200 bg-rose-50/70 p-2.5 hover:bg-rose-100 transition-all cursor-pointer active:scale-95"
                   >
                     <span className="font-sans text-xs font-bold text-rose-800 ">[1] Needs Work</span>
-                    <span className="font-mono text-[11px] text-rose-600   mt-0.5">Conf 1 · Review</span>
+                    <span className="font-mono text-xs text-rose-600   mt-0.5">Conf 1 · Review</span>
                   </button>
 
                   <button
@@ -524,7 +524,7 @@ export function VivaDrawer({
                     className="flex flex-col items-center justify-center rounded-2xl border border-amber-200 bg-amber-50/70 p-2.5 hover:bg-amber-100 transition-all cursor-pointer active:scale-95"
                   >
                     <span className="font-sans text-xs font-bold text-amber-800 ">[3] Almost Ready</span>
-                    <span className="font-mono text-[11px] text-amber-600   mt-0.5">Conf 3 · Solid</span>
+                    <span className="font-mono text-xs text-amber-600   mt-0.5">Conf 3 · Solid</span>
                   </button>
 
                   <button
@@ -535,7 +535,7 @@ export function VivaDrawer({
                     className="flex flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50/70 p-2.5 hover:bg-emerald-100 transition-all cursor-pointer active:scale-95"
                   >
                     <span className="font-sans text-xs font-bold text-emerald-800 ">[5] Board Ready</span>
-                    <span className="font-mono text-[11px] text-emerald-600   mt-0.5">Conf 5 · Mastered</span>
+                    <span className="font-mono text-xs text-emerald-600   mt-0.5">Conf 5 · Mastered</span>
                   </button>
                 </div>
               </div>

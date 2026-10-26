@@ -23,15 +23,16 @@
   --ink: var(--text);
   --muted: light-dark(#566475, #9aa7b6);
   --blue: light-dark(#2d5bd0, #8ab0ff);
-  --good: light-dark(#2e7d5b, #5fbf92);
+  --good: light-dark(#1b6444, #5fbf92);
   --good-ink: #ffffff;
-  --warn: light-dark(#a35f00, #f2b84b);
+  --warn: light-dark(#7d4700, #f2b84b);
   --warn-ink: light-dark(#ffffff, #18181b);
-  --danger: light-dark(#c8423b, #ff7a70);
-  --accent: light-dark(#2e7d5b, #5fbf92);
-  --accent-hover: light-dark(#1f5c42, #86d4af);
+  --danger: light-dark(#a82a24, #ff8a80);
+  --on-solid: light-dark(#ffffff, #1a0504);
+  --accent: light-dark(#1b6444, #5fbf92);
+  --accent-hover: light-dark(#134a32, #86d4af);
   --accent-text: light-dark(#ffffff, #06150d);
-  --focus: light-dark(#2d5bd0, #8ab0ff);
+  --focus: light-dark(#2450b8, #8ab0ff);
   --heat-0: light-dark(#eceff3, #1c232e);
   --heat-1: light-dark(#cfe6da, #1f3a31);
   --heat-2: light-dark(#9fcdb6, #276048);
@@ -206,7 +207,8 @@
   --good: #5fbf92;
   --warn: #f2b84b;
   --warn-ink: #18181b;
-  --danger: #ff7a70;
+  --danger: #ff8a80;
+  --on-solid: #1a0504;
   --accent: #5fbf92;
   --accent-hover: #86d4af;
   --accent-text: #06150d;
@@ -387,7 +389,7 @@
   --color-accent-text: var(--accent-text);
   --color-ink: var(--ink);
   --color-hl: var(--hl);
-  --color-on-solid: #ffffff;
+  --color-on-solid: var(--on-solid);
   --color-heat-0: var(--heat-0);
   --color-heat-1: var(--heat-1);
   --color-heat-2: var(--heat-2);
@@ -491,6 +493,7 @@ button, a, input, select, summary {
 input[type="date"] { min-height: 40px; }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

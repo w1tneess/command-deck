@@ -3,7 +3,7 @@ import type { Act, ScheduleBlock, State } from "./api.ts";
 import { CalendarModal } from "./CalendarModal.tsx";
 import { GoogleSyncModal } from "./GoogleSyncModal.tsx";
 import { conflictFixes, getScheduleBlockGCalUrl } from "./calendar-utils.ts";
-import { AppleEmoji, AppleText, Card, H2, PageHeader } from "./ui.tsx";
+import { AppleText, Btn, Card, H2, ICONS, Icon, PageHeader, Pill } from "./ui.tsx";
 
 function getIstTimeMinutes(): { currentMinutes: number; timeStr: string } {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -24,13 +24,13 @@ function timeStrToMinutes(str: string): number {
   return parseInt(h, 10) * 60 + parseInt(m, 10);
 }
 
-const CATEGORY_STYLES: Record<string, { border: string; bg: string; text: string; badge: string; emoji: string }> = {
-  morning: { border: "border-line", bg: "bg-surface3", text: "text-warn", badge: "bg-surface3 text-warn", emoji: "🌅" },
-  school: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", emoji: "🏫" },
-  revision: { border: "border-line", bg: "bg-surface3", text: "text-accent", badge: "bg-surface3 text-accent", emoji: "⚡" },
-  practice: { border: "border-line", bg: "bg-surface3", text: "text-good", badge: "bg-surface3 text-good", emoji: "🧠" },
-  winddown: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", emoji: "🌙" },
-  custom: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", emoji: "🎯" },
+const CATEGORY_STYLES: Record<string, { border: string; bg: string; text: string; badge: string; icon: string }> = {
+  morning: { border: "border-line", bg: "bg-surface3", text: "text-warn", badge: "bg-surface3 text-warn", icon: ICONS.sun },
+  school: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", icon: ICONS.syllabus },
+  revision: { border: "border-line", bg: "bg-surface3", text: "text-accent", badge: "bg-surface3 text-accent", icon: ICONS.flash },
+  practice: { border: "border-line", bg: "bg-surface3", text: "text-good", badge: "bg-surface3 text-good", icon: ICONS.target },
+  winddown: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", icon: ICONS.moon },
+  custom: { border: "border-line", bg: "bg-surface3", text: "text-muted", badge: "bg-surface3 text-muted", icon: ICONS.target },
 };
 
 export function Schedule({
@@ -123,99 +123,57 @@ export function Schedule({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
+    <div className="flex w-full flex-col gap-4 md:gap-6">
       <PageHeader title="Schedule" sub="Time blocks for today. Shift them when plans slip." />
       {/* Hero Header & Google Calendar Integration Banner */}
       <Card labelledBy={`${uid}-hero-h`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex size-11 items-center justify-center rounded-xl bg-surface3 text-fg">
-              <AppleEmoji emoji="⏱️" size={24} />
+              <Icon d={ICONS.clock} size={22} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <H2 id={`${uid}-hero-h`}>Today's blocks</H2>
-                <span className="rounded-full bg-accent/15 border border-accent/30 px-2 py-0.5 text-[11px] font-mono text-accent font-bold">
-                  IST LIVE
-                </span>
+                <Pill accent>IST live</Pill>
               </div>
-              <p className="m-0 text-xs text-muted mt-0.5">
-                Current IST: <strong className="text-fg font-mono">{currentTime.timeStr}</strong> · Real-time schedule tracks with Google Calendar feed sync
+              <p className="m-0 text-sm text-muted mt-0.5">
+                Current IST: <strong className="text-fg">{currentTime.timeStr}</strong> · Real-time schedule tracks with Google Calendar feed sync
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => setShowGoogleSyncModal(true)}
-              className={`flex min-h-[44px] md:min-h-[38px] items-center justify-center gap-2 rounded-xl px-4 font-sans font-semibold text-sm active:scale-95 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus ${
-                state.googleSync?.connected
-                  ? "bg-accent hover:bg-accent-hover text-accent-text"
-                  : "bg-fg hover:opacity-90 text-bg"
-              }`}
-            >
-              <AppleEmoji emoji={state.googleSync?.connected ? "🔄" : "🔗"} size={15} />
+            <Btn kind={state.googleSync?.connected ? "secondary" : "primary"} onClick={() => setShowGoogleSyncModal(true)}>
+              <Icon d={state.googleSync?.connected ? ICONS.refresh : ICONS.link} size={16} />
               <span>{state.googleSync?.connected ? "Google Live Sync" : "Connect Google Calendar"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowCalendarModal(true)}
-              className="flex min-h-[44px] md:min-h-[38px] items-center justify-center gap-2 rounded-xl border border-line bg-surface2 hover:bg-surface3 text-fg font-sans font-semibold text-sm px-4 active:scale-95 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus"
-            >
-              <AppleEmoji emoji="📅" size={15} />
+              {state.googleSync?.connected && <span aria-hidden="true" className="size-2 rounded-full bg-accent" />}
+            </Btn>
+            <Btn kind="secondary" onClick={() => setShowCalendarModal(true)}>
+              <Icon d={ICONS.today} size={16} />
               <span>iCal Feed</span>
-            </button>
+            </Btn>
           </div>
         </div>
 
         {/* Quick-Tap Time Shifting Toolbar (For real-world study delays) */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface2 p-4 text-sm ring-1 ring-line">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="font-semibold text-fg text-sm">Real-World Study Delay?</span>
-            <span className="text-sm text-muted hidden sm:inline">Tap to shift all tracks forward</span>
+            <span className="font-semibold text-fg text-sm">Running late?</span>
+            <span className="text-sm text-muted hidden sm:inline">Shift every block below</span>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => handleShiftTime(-15)}
-              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-              title="Shift schedule 15m earlier"
-            >
-              -15m
-            </button>
-            <button
-              type="button"
-              onClick={() => handleShiftTime(15)}
-              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-              title="Shift schedule 15m later (Study delay)"
-            >
-              +15m Delay
-            </button>
-            <button
-              type="button"
-              onClick={() => handleShiftTime(30)}
-              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-              title="Shift schedule 30m later"
-            >
-              +30m Delay
-            </button>
-            <button
-              type="button"
-              onClick={handleResetSchedule}
-              className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-sans text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-              title="Reset to default CBSE schedule"
-            >
-              ↺ Reset
-            </button>
+            <Btn onClick={() => handleShiftTime(-15)} title="Shift schedule 15m earlier">−15m</Btn>
+            <Btn onClick={() => handleShiftTime(15)} title="Shift schedule 15m later">+15m</Btn>
+            <Btn onClick={() => handleShiftTime(30)} title="Shift schedule 30m later">+30m</Btn>
+            <Btn kind="ghost" onClick={handleResetSchedule} title="Reset to default CBSE schedule">Reset</Btn>
           </div>
         </div>
 
         {shiftFeedback && (
-          <div className="mt-2 text-xs font-sans text-accent bg-accent/15 border border-accent/30 px-3 py-1.5 rounded-lg animate-fade-in flex items-center gap-2">
-            <span>✓</span>
+          <div role="status" className="mt-2 text-sm text-accent bg-accent/15 border border-accent/30 px-3 py-1.5 rounded-lg animate-fade-in flex items-center gap-2">
+            <Icon d={ICONS.check} size={14} stroke={2.4} />
             <span>{shiftFeedback}</span>
           </div>
         )}
@@ -225,7 +183,7 @@ export function Schedule({
       {state.scheduleConflicts && state.scheduleConflicts.length > 0 && (
         <div role="alert" className="rounded-2xl bg-warn/10 ring-1 ring-warn/30 p-4 text-warn flex flex-col gap-3 animate-fade-in">
           <div className="flex items-start gap-3">
-            <AppleEmoji emoji="⚠️" size={20} />
+            <Icon d={ICONS.alert} size={20} />
             <div className="font-semibold text-sm text-warn">
               {state.scheduleConflicts.length} Schedule Conflict{state.scheduleConflicts.length > 1 ? "s" : ""} with Google Calendar
             </div>
@@ -241,23 +199,14 @@ export function Schedule({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {fix.moveBy !== null && (
-                      <button
-                        type="button"
-                        onClick={() => handleShiftTime(fix.moveBy!, c.blockId)}
-                        title="Delays this block and every block after it by the same amount"
-                        className="min-h-[44px] md:min-h-[38px] rounded-xl bg-fg hover:opacity-90 text-bg font-sans font-semibold text-sm px-4 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-                      >
+                      <Btn kind="primary" onClick={() => handleShiftTime(fix.moveBy!, c.blockId)} title="Delays this block and every block after it by the same amount">
                         Move block after {c.eventSummary} (+{fix.moveBy}m)
-                      </button>
+                      </Btn>
                     )}
                     {fix.shorten && (
-                      <button
-                        type="button"
-                        onClick={() => void trimBlock(c.blockId, fix.shorten!)}
-                        className="min-h-[44px] md:min-h-[38px] rounded-xl border border-line-strong bg-surface2 hover:bg-surface3 text-fg font-sans font-semibold text-sm px-4 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-                      >
+                      <Btn kind="outline" onClick={() => void trimBlock(c.blockId, fix.shorten!)}>
                         Shorten block to {fix.shorten.startTime ? `${fix.shorten.startTime}–${c.blockEnd}` : `${c.blockStart}–${fix.shorten.endTime}`}
-                      </button>
+                      </Btn>
                     )}
                     {fix.moveBy === null && !fix.shorten && (
                       <span className="text-sm text-muted">Too large to fix with one tap. Edit this block's times or move the event.</span>
@@ -275,18 +224,12 @@ export function Schedule({
         <div className="flex flex-col gap-3 rounded-2xl bg-surface2 p-4 ring-1 ring-line">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AppleEmoji emoji="📅" size={16} />
+              <Icon d={ICONS.today} size={16} />
               <span className="font-sans text-sm font-semibold text-fg">
                 Google Calendar Events Today ({state.externalEvents.length})
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowGoogleSyncModal(true)}
-              className="inline-flex min-h-[44px] md:min-h-[38px] items-center rounded-lg text-xs text-muted hover:text-fg font-mono cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-            >
-              Sync Details →
-            </button>
+<Btn kind="ghost" onClick={() => setShowGoogleSyncModal(true)}>Sync details</Btn>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
@@ -302,7 +245,7 @@ export function Schedule({
                   <div className="font-mono text-xs text-muted mt-0.5">
                     {ev.startsAt.slice(11, 16)} – {ev.endsAt.slice(11, 16)} IST
                     {ev.isStudyBlock && (
-                      <span className="ml-1.5 rounded px-1 py-0.2 bg-surface3 text-muted text-[11px] font-bold">
+                      <span className="ml-1.5 rounded px-1 py-0.2 bg-surface3 text-muted text-xs font-bold">
                         Study Block
                       </span>
                     )}
@@ -333,7 +276,7 @@ export function Schedule({
           </div>
           <a
             href="#today"
-            className="inline-flex min-h-[44px] md:min-h-[38px] items-center rounded-xl bg-accent hover:bg-accent-hover text-accent-text font-sans font-semibold text-sm px-4 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus"
+            className="inline-flex min-h-[44px] md:min-h-[38px] items-center rounded-full bg-accent hover:bg-accent-hover text-accent-text font-sans font-semibold text-sm px-4 transition-all cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-focus"
           >
             Focus Bar →
           </a>
@@ -364,7 +307,7 @@ export function Schedule({
               }`}
             >
               {isCurrent && (
-                <div className="mb-3 flex w-fit items-center gap-1.5 rounded-full border border-accent/30 bg-accent/15 px-2.5 py-0.5 text-[11px] font-sans font-bold text-accent  ">
+                <div className="mb-3 flex w-fit items-center gap-1.5 rounded-full border border-accent/30 bg-accent/15 px-2.5 py-0.5 text-xs font-sans font-bold text-accent  ">
                   <span className="size-2 rounded-full bg-accent animate-pulse" />
                   <span>Now Active</span>
                 </div>
@@ -375,7 +318,7 @@ export function Schedule({
                   <div
                     className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${style.bg} ${style.border} border`}
                   >
-                    <AppleEmoji emoji={style.emoji} size={22} />
+                    <Icon d={style.icon} size={20} />
                   </div>
 
                   <div className="flex flex-col min-w-0">
@@ -383,7 +326,7 @@ export function Schedule({
                       <h3 className="m-0 font-sans text-sm font-semibold text-fg truncate">
                         <AppleText text={block.title} size={15} />
                       </h3>
-                      <span className={`rounded-md px-1.5 py-0.5 font-mono text-[11px]  font-semibold ${style.badge}`}>
+                      <span className={`rounded-md px-1.5 py-0.5 font-mono text-xs  font-semibold ${style.badge}`}>
                         {block.category}
                       </span>
                     </div>
@@ -397,47 +340,33 @@ export function Schedule({
                 </div>
 
                 {/* Block Action Buttons */}
-                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
-                  {/* 1-Click Export to Google Calendar */}
+                <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0">
+                  {/* Opens Google Calendar's "new event" page prefilled; nothing is saved until you save it there */}
                   <a
                     href={gcalUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex min-h-[44px] md:min-h-[38px] items-center gap-1.5 rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs text-muted hover:text-fg transition-all focus-visible:ring-2 focus-visible:ring-focus"
+                    aria-label={`Open ${block.title} in Google Calendar`}
+                    className="min-h-[44px] md:min-h-[38px] shrink-0 rounded-full px-4 text-sm font-medium inline-flex items-center justify-center gap-1.5 border border-line bg-surface2 hover:bg-surface3 text-fg focus-visible:ring-2 focus-visible:ring-focus"
                     title="Opens Google Calendar with this block filled in; you save it there"
                   >
-                    <AppleEmoji emoji="📅" size={13} />
+                    <Icon d={ICONS.today} size={14} />
                     <span className="hidden sm:inline">Open in Google Calendar</span>
                   </a>
 
-                  {/* Push this block to Google Calendar, or show why it can't be */}
-                  <button
-                    type="button"
+                  {/* Creates or updates the event through the connected Google account */}
+                  <Btn
+                    className={synced ? "text-good" : ""}
                     onClick={() => (state.googleSync?.connected && !state.googleSync.needsReauth ? void pushToGoogle(block) : setShowGoogleSyncModal(true))}
-                    className={`min-h-[44px] md:min-h-[38px] rounded-full border border-line bg-surface hover:bg-surface3 px-3 text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus ${synced ? "text-good" : "text-muted hover:text-fg"}`}
+                    title="Creates or updates this block's event in your connected Google Calendar"
                   >
                     {!state.googleSync?.connected ? "Connect Google" : state.googleSync.needsReauth ? "Reconnect Google" : synced ? "Synced ✓ · Update" : "Sync to Google Calendar"}
-                  </button>
+                  </Btn>
 
-                  {/* Quick Shift for this block */}
-                  <button
-                    type="button"
-                    onClick={() => handleShiftTime(15, block.id)}
-                    className="min-h-[44px] md:min-h-[38px] rounded-lg border border-line bg-surface hover:bg-surface3 px-3 text-xs font-mono text-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
-                    title="Delay this block and following blocks by 15m"
-                  >
-                    +15m
-                  </button>
+                  <Btn onClick={() => handleShiftTime(15, block.id)} title="Delay this block and following blocks by 15m">+15m</Btn>
 
-                  {/* Start Focus Button if Active */}
                   {isCurrent && state.timer.mode === "idle" && (
-                    <button
-                      type="button"
-                      onClick={() => onStartFocus?.()}
-                      className="min-h-[44px] md:min-h-[38px] rounded-lg bg-accent hover:bg-accent-hover text-accent-text font-sans font-semibold text-xs px-3 transition-all cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-focus"
-                    >
-                      Start Focus
-                    </button>
+                    <Btn kind="primary" onClick={() => onStartFocus?.()}>Start Focus</Btn>
                   )}
                 </div>
               </div>

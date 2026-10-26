@@ -156,7 +156,7 @@ export function Evening({ state, act }: { state: State; act: Act }) {
 
 export function Routine({ state, act }: { state: State; act: Act }) {
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
+    <div className="flex w-full flex-col gap-4 md:gap-6">
       <PageHeader title="Routine" sub="Start the day, then close it." />
       <Morning state={state} act={act} />
       <Evening key={state.routine.day} state={state} act={act} />

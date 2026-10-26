@@ -279,7 +279,7 @@ export function CommandBar({
               ✕
             </button>
           )}
-          <kbd className="hidden sm:inline-block rounded-md border border-line bg-surface2 px-1.5 py-0.5 font-mono text-[11px] text-muted">
+          <kbd className="hidden sm:inline-block rounded-md border border-line bg-surface2 px-1.5 py-0.5 font-mono text-xs text-muted">
             Esc
           </kbd>
         </div>
@@ -334,7 +334,7 @@ export function CommandBar({
                             </>
                           )}
                           {item.badge && !isChapter && (
-                            <span className="rounded px-1.5 py-0.2 font-mono text-[11px]   text-focus border border-focus/20 bg-focus/10">
+                            <span className="rounded px-1.5 py-0.2 font-mono text-xs   text-focus border border-focus/20 bg-focus/10">
                               {item.badge}
                             </span>
                           )}
@@ -345,7 +345,7 @@ export function CommandBar({
                         {isChapter && (
                           <div className="flex items-center gap-2 text-xs text-muted mt-0.5">
                             <ConfDots value={item.chapter!.confidence} />
-                            <span className="font-mono text-[11px]">
+                            <span className="font-mono text-xs">
                               {item.chapter!.passes.filter(Boolean).length}/3 passes
                             </span>
                           </div>
@@ -394,7 +394,7 @@ export function CommandBar({
                         </button>
                       </div>
                     ) : (
-                      <kbd className="hidden sm:inline-block rounded px-1.5 py-0.5 font-mono text-[11px] text-muted group-hover:text-fg/80">
+                      <kbd className="hidden sm:inline-block rounded px-1.5 py-0.5 font-mono text-xs text-muted group-hover:text-fg/80">
                         ↵
                       </kbd>
                     )}
@@ -409,16 +409,16 @@ export function CommandBar({
         <div className="flex items-center justify-between border-t border-line bg-bg px-4 py-2 text-xs text-muted">
           <div className="flex items-center gap-3">
             <span>
-              <kbd className="rounded border border-line bg-surface2 px-1 py-0.2 font-mono text-[11px] text-muted">↑↓</kbd> navigate
+              <kbd className="rounded border border-line bg-surface2 px-1 py-0.2 font-mono text-xs text-muted">↑↓</kbd> navigate
             </span>
             <span>
-              <kbd className="rounded border border-line bg-surface2 px-1 py-0.2 font-mono text-[11px] text-muted">↵</kbd> select
+              <kbd className="rounded border border-line bg-surface2 px-1 py-0.2 font-mono text-xs text-muted">↵</kbd> select
             </span>
             <span>
-              <kbd className="rounded border border-line bg-surface2 px-1 py-0.2 font-mono text-[11px] text-muted">Esc</kbd> close
+              <kbd className="rounded border border-line bg-surface2 px-1 py-0.2 font-mono text-xs text-muted">Esc</kbd> close
             </span>
           </div>
-          <span className="font-mono text-[11px] text-muted">
+          <span className="font-mono text-xs text-muted">
             {allChapters.length} Chapters Indexed
           </span>
         </div>

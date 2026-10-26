@@ -22,7 +22,7 @@ export function Habits({ state, act }: { state: State; act: Act }) {
   const topStreak = state.habits.reduce((max, h) => Math.max(max, h.streak), 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
+    <div className="flex w-full flex-col gap-4 md:gap-6">
       <PageHeader title="Habits" sub="Tick them off each day. Streaks count in IST.">
 
         <div className="flex items-center gap-4">
@@ -311,12 +311,12 @@ function Row({ habit: h, days, act }: { habit: Habit; days: string[]; act: Act }
           </div>
           <div className="mt-1 flex items-center gap-2">
             {h.streak > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-warn/30 bg-warn/15 px-2 py-0.5 text-[11px] font-semibold text-warn tracking-wide">
+              <span className="inline-flex items-center gap-1 rounded-full border border-warn/30 bg-warn/15 px-2 py-0.5 text-xs font-semibold text-warn tracking-wide">
                 <AppleEmoji emoji="🔥" size={12} />
                 <span>{h.streak}d streak</span>
               </span>
             ) : (
-              <span className="text-[11px] text-muted">Start streak today</span>
+              <span className="text-xs text-muted">Start streak today</span>
             )}
           </div>
         </div>
@@ -337,7 +337,7 @@ function Row({ habit: h, days, act }: { habit: Habit; days: string[]; act: Act }
                   : "bg-surface2 border-line"
               } ${i === 6 ? "ring-1 ring-fg/60" : ""}`}
             />
-            <span className="text-[11px] text-muted">{LETTER(days[i])}</span>
+            <span className="text-xs text-muted">{LETTER(days[i])}</span>
           </span>
         ))}
       </div>
@@ -411,7 +411,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
             <button
               type="button"
               onClick={() => setShowPicker((p) => !p)}
-              className="min-h-[44px] md:min-h-[38px] rounded-lg text-xs text-accent hover:text-accent-hover flex items-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
+              className="min-h-[44px] md:min-h-[38px] rounded-lg text-[13px] text-accent hover:text-accent-hover flex items-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
             >
               <AppleEmoji emoji="✨" size={12} />
               <span>{showPicker ? "Close Picker" : "Apple Emoji"}</span>
@@ -488,7 +488,7 @@ function HabitForm({ initial, saveLabel, onSave, onCancel }: { initial: Values; 
         <button
           type="button"
           onClick={() => setShowPicker((p) => !p)}
-          className="min-h-[44px] md:min-h-[38px] shrink-0 rounded-lg text-xs text-accent hover:text-accent-hover ml-1.5 underline cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
+          className="min-h-[44px] md:min-h-[38px] shrink-0 rounded-lg text-[13px] text-accent hover:text-accent-hover ml-1.5 underline cursor-pointer focus-visible:ring-2 focus-visible:ring-focus"
         >
           {showPicker ? "Hide" : "+ More Emojis"}
         </button>

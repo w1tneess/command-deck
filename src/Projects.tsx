@@ -7,7 +7,7 @@ const CARD = "min-w-0 rounded-2xl bg-surface2 p-4 ring-1 ring-line text-fg";
 export function Projects({ state, act }: { state: State; act: Act }) {
   const [adding, setAdding] = useState(false);
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 md:max-w-3xl md:gap-6">
+    <div className="flex w-full flex-col gap-4 md:gap-6">
       <PageHeader title="Projects" sub="Goals beyond the syllabus, in small steps.">
         <Btn kind="primary" aria-expanded={adding} onClick={() => setAdding((a) => !a)}>{adding ? "Close" : "+ Add Project"}</Btn>
       </PageHeader>

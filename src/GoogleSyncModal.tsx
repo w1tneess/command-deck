@@ -182,12 +182,12 @@ export function GoogleSyncModal({
               <div className="flex items-center gap-2">
                 <H2 id={`${uid}-title`}>Google Calendar Two-Way Live Sync</H2>
                 {sync?.connected ? (
-                  <span className="flex items-center gap-1 rounded-full bg-accent/15 border border-accent/30 px-2 py-0.5 text-[11px] font-mono text-accent font-bold">
+                  <span className="flex items-center gap-1 rounded-full bg-accent/15 border border-accent/30 px-2 py-0.5 text-xs font-mono text-accent font-bold">
                     <span className="size-1.5 rounded-full bg-accent animate-pulse" />
                     LIVE
                   </span>
                 ) : (
-                  <span className="rounded-full bg-warn/15 border border-warn/30 px-2 py-0.5 text-[11px] font-mono text-warn font-bold">
+                  <span className="rounded-full bg-warn/15 border border-warn/30 px-2 py-0.5 text-xs font-mono text-warn font-bold">
                     STANDBY
                   </span>
                 )}
@@ -391,7 +391,7 @@ export function GoogleSyncModal({
                           <div className="font-mono text-xs text-muted mt-0.5">
                             {formatIsoTime(ev.startsAt)} – {formatIsoTime(ev.endsAt)}
                             {ev.isStudyBlock && (
-                              <span className="ml-2 rounded px-1 py-0.2 bg-focus/20 text-focus text-[11px]">
+                              <span className="ml-2 rounded px-1 py-0.2 bg-focus/20 text-focus text-xs">
                                 Study Block
                               </span>
                             )}

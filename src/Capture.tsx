@@ -102,7 +102,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
         <div className="mx-auto -mt-1 mb-1 h-1 w-10 shrink-0 rounded-full bg-surface3 lg:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3 pb-2 border-b border-line">
           <h2 id="capture-h" className="m-0 text-base font-semibold tracking-tight text-fg">Quick add</h2>
-          <span className="hidden text-xs text-muted lg:inline"><kbd className="rounded-md border border-line bg-black/40 px-1.5 py-0.5 font-mono text-[11px] text-muted">Ctrl/⌘ K</kbd> to toggle</span>
+          <span className="hidden text-xs text-muted lg:inline"><kbd className="rounded-md border border-line bg-black/40 px-1.5 py-0.5 font-mono text-xs text-muted">Ctrl/⌘ K</kbd> to toggle</span>
           <Btn kind="ghost" aria-label="Close quick add" onClick={onClose}>✕</Btn>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); void save(); }} className="flex flex-col gap-3">
@@ -133,7 +133,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                     setKind(k);
                     setText((cur) => (cur.includes(tag) ? cur : cur ? `${cur} ${tag}` : `${tag} `));
                   }}
-                  className={`min-h-[44px] md:min-h-[38px] rounded-[3px] border px-2 font-mono text-[11px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
+                  className={`min-h-[44px] md:min-h-[38px] rounded-[3px] border px-2 font-mono text-[13px] font-bold   transition-all active:scale-95 hover:brightness-125 ${color}`}
                 >
                   {tag}
                 </button>
@@ -147,7 +147,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                   type="button"
                   aria-pressed={kind === k}
                   onClick={() => setKind(k)}
-                  className={`min-h-[44px] md:min-h-[38px] rounded-lg border px-2.5 text-xs font-medium transition-all ${
+                  className={`min-h-[44px] md:min-h-[38px] rounded-lg border px-2.5 text-[13px] font-medium transition-all ${
                     kind === k
                       ? "border-focus/40 bg-focus/20 text-focus font-semibold shadow-xs"
                       : "border-line bg-surface2 text-muted hover:text-fg"
@@ -167,7 +167,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
             <li key={c.id} className="flex flex-col gap-2 rounded-xl border border-line bg-surface2 p-3 transition-all hover:bg-surface2">
               <div className="flex items-start gap-3">
                 {c.kind === "todo" ? (
-                  <button type="button" role="switch" aria-checked={c.done} aria-label={`${c.text}: ${doneText(c.done)}`} onClick={() => act("PATCH", `/api/captures/${c.id}`, { done: !c.done })} className="flex size-6 shrink-0 items-center justify-center border-0 bg-transparent active:scale-95 transition-transform"><Check on={c.done} /></button>
+                  <button type="button" role="switch" aria-checked={c.done} aria-label={`${c.text}: ${doneText(c.done)}`} onClick={() => act("PATCH", `/api/captures/${c.id}`, { done: !c.done })} className="flex size-6 pointer-coarse:size-11 shrink-0 items-center justify-center border-0 bg-transparent active:scale-95 transition-transform"><Check on={c.done} /></button>
                 ) : (
                   <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center text-focus text-sm">•</span>
                 )}
@@ -177,30 +177,30 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                   </div>
                   <div className="text-xs text-muted mt-1">{when(c.createdAt)}</div>
                 </div>
-                <button type="button" aria-label={`Delete ${c.text}`} onClick={() => act("DELETE", `/api/captures/${c.id}`)} className="flex size-6 items-center justify-center rounded-lg border-0 bg-transparent text-xs text-muted hover:text-danger transition-all">✕</button>
+                <button type="button" aria-label={`Delete ${c.text}`} onClick={() => act("DELETE", `/api/captures/${c.id}`)} className="flex size-6 items-center justify-center rounded-lg border-0 bg-transparent text-[13px] text-muted hover:text-danger transition-all">✕</button>
               </div>
 
               {!c.done && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-line">
-                  <span className="font-mono text-[11px]   text-muted">Triage:</span>
+                  <span className="font-mono text-xs   text-muted">Triage:</span>
                   <button
                     type="button"
                     onClick={() => void convertToTask(c)}
-                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-2 font-mono text-[11px] text-focus hover:bg-focus/20 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-2 font-mono text-[13px] text-focus hover:bg-focus/20 transition-all"
                   >
                     → Today's Task
                   </button>
                   <button
                     type="button"
                     onClick={() => void convertToDeliverable(c)}
-                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-2 font-mono text-[11px] text-focus hover:bg-focus/20 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-focus/30 bg-focus/10 px-2 font-mono text-[13px] text-focus hover:bg-focus/20 transition-all"
                   >
                     → School Deliverable
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveDoubtId(activeDoubtId === c.id ? null : c.id)}
-                    className="min-h-[44px] md:min-h-[38px] rounded border border-warn/30 bg-warn/15 px-2 font-mono text-[11px] text-warn hover:bg-warn/15 transition-all"
+                    className="min-h-[44px] md:min-h-[38px] rounded border border-warn/30 bg-warn/15 px-2 font-mono text-[13px] text-warn hover:bg-warn/15 transition-all"
                   >
                     → Link Doubt
                   </button>
@@ -220,7 +220,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                       await act("PATCH", `/api/captures/${c.id}`, { done: true });
                       setActiveDoubtId(null);
                     }}
-                    className="min-h-[44px] md:min-h-[38px] text-xs bg-surface border border-warn/30 text-warn rounded px-2 font-mono flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                    className="min-h-[44px] md:min-h-[38px] text-[13px] bg-surface border border-warn/30 text-warn rounded px-2 font-mono flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                   >
                     <option value="" disabled>Select chapter to link doubt...</option>
                     {state.subjects.map((s) => (
@@ -231,7 +231,7 @@ export function CaptureDrawer({ state, act, onClose }: { state: State; act: Act;
                       </optgroup>
                     ))}
                   </select>
-                  <button type="button" onClick={() => setActiveDoubtId(null)} className="text-xs text-muted hover:text-fg px-1">✕</button>
+                  <button type="button" onClick={() => setActiveDoubtId(null)} className="text-[13px] text-muted hover:text-fg px-1">✕</button>
                 </div>
               )}
             </li>

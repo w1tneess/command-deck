@@ -19,7 +19,7 @@ function Tile({ label, value, note, tone }: { label: string; value: string; note
   return (
     <div className="animate-fade-in rounded-3xl border border-line bg-surface p-5">
       <div className="text-sm text-muted">{label}</div>
-      <div className={`mt-1 font-serif text-3xl font-bold tracking-tight ${tone === "good" ? "text-good" : tone === "warn" ? "text-warn" : "text-fg"}`}>{value}</div>
+      <div className={`mt-1 font-serif text-3xl font-bold tracking-tight ${value === "–" ? "text-muted" : tone === "good" ? "text-good" : tone === "warn" ? "text-warn" : "text-fg"}`}>{value}</div>
       <div className="mt-1 text-sm text-muted">{note}</div>
     </div>
   );
@@ -41,11 +41,11 @@ export function Overview({ state }: { state: State }) {
     <>
       <PageHeader title="Overview" sub={`${phase.name}: ${whenOf(phase)}`} />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Tile label="To the exams" value={phase.daysLeft > 0 ? plural(phase.daysLeft, "day") : "Now"} note={`${plural(phase.studyDaysLeft, "study day")} left`} tone={phase.daysLeft > 0 && phase.daysLeft <= 14 ? "warn" : undefined} />
-        <Tile label="Syllabus started" value={`${s.coveragePct}%`} note={`${s.started} of ${s.chapters} chapters`} />
-        <Tile label="Last 7 days" value={hm(s.thisWeek)} note={s.lastWeek === 0 && delta === 0 ? "Nothing logged yet" : `${delta >= 0 ? "+" : "−"}${hm(Math.abs(delta))} vs the week before`} tone={delta > 0 ? "good" : undefined} />
-        <Tile label="Study streak" value={plural(s.streak, "day")} note={`Best habit streak ${plural(s.bestHabitStreak, "day")}`} tone={s.streak >= 3 ? "good" : undefined} />
+        <Tile label="Syllabus started" value={s.started ? `${s.coveragePct}%` : "–"} note={s.started ? `${s.started} of ${s.chapters} chapters` : "Tick a revision pass in Study to begin"} />
+        <Tile label="Last 7 days" value={s.thisWeek || s.lastWeek ? hm(s.thisWeek) : "–"} note={s.lastWeek === 0 && delta === 0 ? "Nothing logged yet" : `${delta >= 0 ? "+" : "−"}${hm(Math.abs(delta))} vs the week before`} tone={delta > 0 ? "good" : undefined} />
+        <Tile label="Study streak" value={s.streak ? plural(s.streak, "day") : "–"} note={s.streak ? `Best habit streak ${plural(s.bestHabitStreak, "day")}` : "Study today to start one"} tone={s.streak >= 3 ? "good" : undefined} />
       </div>
 
       <div className="flex flex-wrap items-start gap-4 lg:gap-6">
@@ -134,7 +134,7 @@ export function Overview({ state }: { state: State }) {
                 ))}
               </ul>
             )}
-            <a href="#syllabus" className="mt-3 inline-block text-sm font-medium text-muted hover:text-fg">Open Syllabus</a>
+            <a href="#syllabus" className="mt-3 inline-flex min-h-[44px] md:min-h-6 items-center text-sm font-medium text-muted hover:text-fg">Open Syllabus</a>
           </Card>
 
           <Card labelledBy="glance-h">

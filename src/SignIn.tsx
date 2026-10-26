@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useState } from "react";
 import { BrandLogo } from "./ui.tsx";
 
@@ -14,6 +15,7 @@ function GoogleIcon({ className = "size-4" }: { className?: string }) {
 
 /** The only way in is a Google account on the owner's allow-list; the server checks it, this just starts the flow. */
 export function SignIn() {
+  useEffect(() => { document.title = "Sign in · Command Deck"; }, []);
   const [urlError, setUrlError] = useState(() => {
     const err = new URLSearchParams(window.location.search).get("error");
     if (!err) return "";

@@ -10,7 +10,7 @@ const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${St
  * The timer lives in the cloud, so it can be started on one device and stopped on another. This hook is the
  * only place that ticks, chimes and sets the tab title; the card and the phone bar just draw what it returns.
  */
-export function useFocus(state: State, reload: () => Promise<void>, act: Act) {
+export function useFocus(state: State, reload: () => Promise<void>, act: Act, pageTitle: string) {
   const timer = state.timer;
   const [subject, setSubject] = useState(() => { try { return localStorage.getItem("focus-subject") ?? "maths"; } catch { return "maths"; } });
   const [note, setNote] = useState("");
@@ -43,8 +43,8 @@ export function useFocus(state: State, reload: () => Promise<void>, act: Act) {
 
   const label = { idle: "Ready", focus: "Focus", break: "Break", long_break: "Long break" }[timer.mode];
   useEffect(() => {
-    document.title = running ? `${mmss(remaining)} ${label} · Study` : "Study";
-  }, [running, remaining, label]);
+    document.title = running ? `${mmss(remaining)} ${label} · ${pageTitle}` : pageTitle;
+  }, [running, remaining, label, pageTitle]);
 
   useEffect(() => {
     const unlock = () => unlockAudio();
@@ -148,7 +148,7 @@ export function FocusBar({
             )}
             <button
               type="button"
-              className="min-h-[44px] px-3.5 rounded-lg border border-transparent bg-fg text-bg font-sans text-xs font-semibold tracking-wide active:scale-95 transition-all shadow-xs"
+              className="min-h-[44px] px-3.5 rounded-lg border border-transparent bg-fg text-bg font-sans text-[13px] font-semibold tracking-wide active:scale-95 transition-all shadow-xs"
               onClick={f.stop}
             >
               {f.timer.mode === "focus" ? "Stop" : "Skip"}

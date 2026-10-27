@@ -185,7 +185,7 @@ describe("Google OAuth restricted login", () => {
         return new Response(JSON.stringify({ access_token: "mock-access-token" }), { status: 200, headers: { "Content-Type": "application/json" } });
       }
       if (urlStr.includes("googleapis.com/oauth2/v3/userinfo")) {
-        return new Response(JSON.stringify({ email: "stranger@gmail.com", email_verified: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ email: "<b>stranger</b>@gmail.com", email_verified: true }), { status: 200, headers: { "Content-Type": "application/json" } });
       }
       return new Response("Not found", { status: 404 });
     };
@@ -210,6 +210,8 @@ describe("Google OAuth restricted login", () => {
       const html = await res.text();
       expect(html).toContain("<h3>Access Denied</h3>");
       expect(html).toContain("<p>This account is not authorized to access Command Deck.</p>");
+      expect(html).not.toContain("<b>stranger");
+      expect(html).toContain("&#60;b&#62;stranger&#60;/b&#62;@gmail.com");
       const cookies = res.headers.getSetCookie?.() ?? [res.headers.get("set-cookie") ?? ""];
       expect(cookies.some((c) => c.startsWith("session="))).toBe(false);
     } finally {

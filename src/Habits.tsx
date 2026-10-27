@@ -13,7 +13,8 @@ export function Habits({ state, act }: { state: State; act: Act }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(state.today, i - 6));
 
   // Habit consistency calculation over the last 30 days
-  const last30Days = state.habitDays.slice(-30);
+  const since30 = addDays(state.today, -29);
+  const last30Days = state.habitDays.filter((d) => d.day >= since30);
   const totalHabits30 = state.habits.length * 30;
   const doneHabits30 = last30Days.reduce((acc, d) => acc + d.done, 0);
   const consistencyPct = totalHabits30 > 0 ? Math.round((doneHabits30 / totalHabits30) * 100) : 0;

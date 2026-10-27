@@ -63,6 +63,14 @@ const TABLES: Record<string, string[]> = {
   schedule_blocks: ["id", "title", "category", "start_time", "end_time", "color", "pos"],
   external_events: ["id", "summary", "description", "starts_at", "ends_at", "is_study_block", "updated_at"],
 };
+/** Columns added by later migrations. A backup written before them lacks them, so they are optional on restore and take this value. */
+const OPTIONAL_COLS: Record<string, Record<string, string | null>> = {
+  progress: { notes: "" },
+  sessions: { note: null },
+  daily_targets: { duration: "45m", subject_id: null },
+  deliverables: { gcal_event_id: null },
+  schedule_blocks: { gcal_event_id: null, gcal_event_day: null },
+};
 /** google_sync is deliberately absent from TABLES: its OAuth tokens must never be written to (or planted from) a backup file. */
 /**
  * Settings that never travel in a backup file: Google credentials, the sign-in allowlist, the calendar feed token and
@@ -1200,6 +1208,9 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
         for (const col of cols) {
           if (!(col in row) || !(row[col] === null || ["string", "number"].includes(typeof row[col]))) return fail(`Backup has a bad "${col}" value in ${table}.`);
         }
+        for (const col of Object.keys(OPTIONAL_COLS[table] ?? {})) {
+          if (col in row && !(row[col] === null || ["string", "number"].includes(typeof row[col]))) return fail(`Backup has a bad "${col}" value in ${table}.`);
+        }
       }
     }
     if (b.progress.some((p: Row) => !STATUSES.includes(p.status) || !Number.isInteger(p.confidence) || p.confidence < 1 || p.confidence > 5)) {
@@ -1208,9 +1219,11 @@ export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } =
     if (b.chapters.some((ch: Row) => !validScope(ch.scope)) || b.phases.some((p: Row) => !validScope(p.scope))) return fail("Backup has an invalid scope.");
     if (b.deliverables.some((d: Row) => !DELIVERABLE_STATUSES.includes(d.status))) return fail("Backup has an invalid deliverable status.");
     const deletes = tables.map(([t]) => t).reverse().map((t) => db.prepare(`DELETE FROM ${t}${only(t)}`));
-    const inserts = tables.flatMap(([t, cols]) => {
+    const inserts = tables.flatMap(([t, required]) => {
+      const optional = OPTIONAL_COLS[t] ?? {};
+      const cols = [...required, ...Object.keys(optional)];
       const sql = `INSERT INTO ${t} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`;
-      return (b[t] as Row[]).filter((row) => t !== "settings" || !SECRET_SETTINGS.includes(row.key)).map((row) => db.prepare(sql).bind(...cols.map((col) => row[col])));
+      return (b[t] as Row[]).filter((row) => t !== "settings" || !SECRET_SETTINGS.includes(row.key)).map((row) => db.prepare(sql).bind(...cols.map((col) => (col in optional && !(col in row) ? optional[col] : row[col]))));
     });
     try {
       await db.batch([...deletes, ...inserts]);

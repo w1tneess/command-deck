@@ -57,7 +57,7 @@ export function Today({ state, act, focus, onOpenViva }: TodayProps) {
   );
   const toggleTarget = (id: number, done: boolean) => guarded(() => act("PATCH", `/api/targets/${id}`, { done: !done }));
   const removeTarget = (id: number) => guarded(() => act("DELETE", `/api/targets/${id}`));
-  const toggleHabit = (id: number, today: number, goal: number) => guarded(() => act("POST", "/api/habit-entry", { habitId: id, day: state.today, value: today >= goal ? 0 : goal }));
+  const toggleHabit = (id: number, today: number, goal: number) => guarded(() => act("PUT", `/api/habits/${id}/log`, { value: today >= goal ? 0 : goal }));
 
   // --- what's due: overdue first, then soonest; finished ones stay out
   const due = state.deliverables

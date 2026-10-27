@@ -24,22 +24,23 @@ function getContext(): AudioContext {
 /** Stop any currently running ambient track cleanly with a quick fade out */
 export function stopAmbientSound(): void {
   if (activeGainNode && audioCtx) {
+    // Take the nodes now: a new sound may be assigned to the module variables before the timeout fires.
+    const oldSource = activeSourceNode;
+    const oldGain = activeGainNode;
+    activeSourceNode = null;
+    activeGainNode = null;
     try {
       const now = audioCtx.currentTime;
-      activeGainNode.gain.cancelScheduledValues(now);
-      activeGainNode.gain.setValueAtTime(activeGainNode.gain.value, now);
-      activeGainNode.gain.linearRampToValueAtTime(0.0001, now + 0.15);
+      oldGain.gain.cancelScheduledValues(now);
+      oldGain.gain.setValueAtTime(oldGain.gain.value, now);
+      oldGain.gain.linearRampToValueAtTime(0.0001, now + 0.15);
       setTimeout(() => {
         try {
-          if (activeSourceNode) {
-            (activeSourceNode as AudioBufferSourceNode).stop?.();
-            activeSourceNode.disconnect();
-            activeSourceNode = null;
+          if (oldSource) {
+            (oldSource as AudioBufferSourceNode).stop?.();
+            oldSource.disconnect();
           }
-          if (activeGainNode) {
-            activeGainNode.disconnect();
-            activeGainNode = null;
-          }
+          oldGain.disconnect();
         } catch {
           /* ignore cleanup errors */
         }

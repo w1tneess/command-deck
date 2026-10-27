@@ -141,8 +141,9 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
         setCommandBar((c) => !c);
       }
 
-      // Desktop command center shortcuts (active outside input fields)
-      if (!inInput) {
+      // Desktop command center shortcuts (active outside input fields and while a modal is open)
+      const modalOpen = commandBar || capture || calendarModal || !!viva;
+      if (!inInput && !modalOpen) {
         if (e.key.toLowerCase() === "c") {
           e.preventDefault();
           setCapture((c) => !c);
@@ -151,7 +152,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
           e.preventDefault();
           setZenMode((z) => !z);
         }
-        if (e.code === "Space") {
+        if (e.code === "Space" && !zenMode && !target?.closest("button, a, [role='button'], [role='switch'], summary")) {
           e.preventDefault();
           if (focus.running) void focus.stop();
           else void focus.start();
@@ -164,7 +165,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [focus.running, focus.start, focus.stop]);
+  }, [focus.running, focus.start, focus.stop, zenMode, commandBar, capture, calendarModal, viva]);
 
   // A new page closes the menu and starts at the top; changing a param on the same page (say a scope chip) doesn't scroll.
   useEffect(() => { setMore(false); window.scrollTo(0, 0); }, [page]);

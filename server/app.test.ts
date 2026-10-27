@@ -168,4 +168,24 @@ describe("backup secrets", () => {
     expect((await send("POST", "/api/import", backup)).status).toBe(200);
     expect((await state()).activePhaseId).toBe("boards");
   });
+  it("a restore keeps chapter notes and Google event links, and still takes an older file without them", async () => {
+    await send("PATCH", "/api/chapters/maths-3", { confidence: 4 });
+    await t.db.prepare("UPDATE progress SET notes = 'doubt: sine rule' WHERE chapter_id = 'maths-3'").run();
+    await t.db.prepare("UPDATE deliverables SET gcal_event_id = 'ev-1' WHERE id = (SELECT MIN(id) FROM deliverables)").run();
+    const backup = (await (await t.inject("/api/export")).json()) as any;
+    const notes = () => t.db.prepare("SELECT notes FROM progress WHERE chapter_id = 'maths-3'").first<{ notes: string }>();
+    const linked = () => t.db.prepare("SELECT COUNT(*) AS n FROM deliverables WHERE gcal_event_id = 'ev-1'").first<{ n: number }>();
+
+    await t.db.prepare("UPDATE progress SET notes = ''").run();
+    await t.db.prepare("UPDATE deliverables SET gcal_event_id = NULL").run();
+    expect((await send("POST", "/api/import", backup)).status).toBe(200);
+    expect((await notes())?.notes).toBe("doubt: sine rule");
+    expect((await linked())?.n).toBe(1);
+
+    for (const r of backup.progress) delete r.notes;
+    for (const r of backup.deliverables) delete r.gcal_event_id;
+    expect((await send("POST", "/api/import", backup)).status).toBe(200);
+    expect((await notes())?.notes).toBe("");
+    expect((await linked())?.n).toBe(0);
+  });
 });

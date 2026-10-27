@@ -500,3 +500,48 @@ describe("Pushed events stay linked", () => {
     }
   });
 });
+
+describe("Pull and delete", () => {
+  const nowMs = Date.parse("2026-10-24T06:00:00Z");
+  const seedSync = () => t.db.prepare("INSERT INTO google_sync (id, refresh_token, access_token, expires_at, calendar_id) VALUES (1, 'ref', 'tok', 9999999999999, 'primary')").run();
+  const cache = (id: string, startsAt: string) =>
+    t.db.prepare("INSERT INTO external_events (id, summary, starts_at, ends_at, updated_at) VALUES (?, ?, ?, ?, ?)").bind(id, id, startsAt, startsAt, startsAt).run();
+  const ids = async () => (await t.db.prepare("SELECT id FROM external_events ORDER BY id").all<{ id: string }>()).results.map((r) => r.id);
+  const event = (id: string) => ({ id, summary: id, start: { dateTime: "2026-10-26T04:00:00Z" }, end: { dateTime: "2026-10-26T05:00:00Z" } });
+  const reply = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+
+  it("follows nextPageToken and drops cached events in the window that Google no longer returns", async () => {
+    await seedSync();
+    await cache("gone", "2026-10-25T10:00:00+05:30");
+    await cache("ancient", "2026-01-01T10:00:00+05:30"); // outside the window: left alone
+    const mockFetch = async (input: RequestInfo | URL) =>
+      new URL(String(input)).searchParams.get("pageToken") === "p2" ? reply({ items: [event("b")] }) : reply({ items: [event("a")], nextPageToken: "p2" });
+    const res = await pullGoogleEvents(t.db, {}, nowMs, mockFetch as any);
+    expect(res).toMatchObject({ syncedCount: 2, deletedCount: 1 });
+    expect(await ids()).toEqual(["a", "ancient", "b"]);
+  });
+
+  it("keeps cached events when the page cap cuts the list short", async () => {
+    await seedSync();
+    await cache("maybe-later", "2026-10-25T10:00:00+05:30");
+    let calls = 0;
+    const mockFetch = async () => reply({ items: [event(`p${calls++}`)], nextPageToken: "more" });
+    await pullGoogleEvents(t.db, {}, nowMs, mockFetch as any);
+    expect(calls).toBe(10);
+    expect(await ids()).toContain("maybe-later");
+  });
+
+  it("DELETE /api/google/events/:id reports a Google failure and keeps the cached event", async () => {
+    await seedSync();
+    await cache("ev1", "2026-10-25T10:00:00+05:30");
+    const cookie = cookieOf(await login());
+    vi.stubGlobal("fetch", async () => new Response("boom", { status: 500 }));
+    try {
+      const res = await t.inject({ method: "DELETE", url: "/api/google/events/ev1", headers: { cookie } });
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(await ids()).toEqual(["ev1"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});

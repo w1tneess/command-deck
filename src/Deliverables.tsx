@@ -9,12 +9,12 @@ const STATE_LABEL: Record<DeliverableStatus, string> = { not_started: "Not start
 const NEXT: Record<DeliverableStatus, DeliverableStatus> = { not_started: "in_progress", in_progress: "done", done: "not_started" };
 
 const PRACTICAL_VIVA_TARGETS = [
-  { chapterSearch: "chemical reactions", subjectId: "science", title: "Chemistry: Types of Reactions & pH of Samples", lab: "Experiment 1 & 2" },
-  { chapterSearch: "acids, bases", subjectId: "science", title: "Chemistry: Properties of Acids & Bases (Litmus & Zn)", lab: "Experiment 3 & 4" },
-  { chapterSearch: "metals", subjectId: "science", title: "Chemistry: Reactivity Series of Metals", lab: "Experiment 5" },
-  { chapterSearch: "life processes", subjectId: "science", title: "Biology: Stomata Mount & Respiration CO2", lab: "Experiment 6 & 7" },
-  { chapterSearch: "light", subjectId: "science", title: "Physics: Refraction through Glass Slab & Prism, Lens Image", lab: "Experiment 8 & 9" },
-  { chapterSearch: "electricity", subjectId: "science", title: "Physics: Verification of Ohm's Law & Series/Parallel Resistors", lab: "Experiment 10 & 11" },
+  { chapterSearch: "chemical reactions", subjectId: "chemistry", title: "Chemistry: Types of Reactions & pH of Samples", lab: "Experiment 1 & 2" },
+  { chapterSearch: "acids, bases", subjectId: "chemistry", title: "Chemistry: Properties of Acids & Bases (Litmus & Zn)", lab: "Experiment 3 & 4" },
+  { chapterSearch: "metals", subjectId: "chemistry", title: "Chemistry: Reactivity Series of Metals", lab: "Experiment 5" },
+  { chapterSearch: "life processes", subjectId: "biology", title: "Biology: Stomata Mount & Respiration CO2", lab: "Experiment 6 & 7" },
+  { chapterSearch: "light", subjectId: "physics", title: "Physics: Refraction through Glass Slab & Prism, Lens Image", lab: "Experiment 8 & 9" },
+  { chapterSearch: "electricity", subjectId: "physics", title: "Physics: Verification of Ohm's Law & Series/Parallel Resistors", lab: "Experiment 10 & 11" },
   { chapterSearch: "electronic spreadsheet", subjectId: "it", title: "IT: Electronic Spreadsheet Macros & Data Analysis", lab: "IT Practical File" },
   { chapterSearch: "database", subjectId: "it", title: "IT: Database Management System & SQL Queries", lab: "IT SQL Assignment" },
 ];

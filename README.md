@@ -83,7 +83,7 @@ The app has four places to go: **Today**, **Study**, **Plan** and **Life**. Plan
 |---|---|
 | Fail closed | If `SESSION_SECRET` is unset, the Worker answers 500 to everything. |
 | One way in | Google sign-in, and only for addresses in `ALLOWED_GOOGLE_EMAILS`. No PIN, no passwords and no standing API key, so there is nothing to guess. |
-| Sessions | HMAC-signed `HttpOnly`, `SameSite=Strict`, `Secure` cookie. 90 days with "Remember me", 24 hours otherwise. Cookie writes also check the `Origin`. |
+| Sessions | HMAC-signed `HttpOnly`, `SameSite=Strict`, `Secure` cookie. 90 days. Cookie writes also check the `Origin`. |
 | Google sign-in | The OAuth state is bound to the browser, and Google must report the email as verified. |
 | No bypass | There is no master key. If Google sign-in breaks, fix the cause (the OAuth keys or redirect URIs) from your own computer with wrangler; your data stays in D1. |
 | Backups carry no secrets | Google credentials, the calendar token and the sign-in allow-list are left out of exports and ignored on restore. |
@@ -117,7 +117,7 @@ command-deck/
 │   ├── Habits.tsx, Projects.tsx, Routine.tsx, Capture.tsx
 │   ├── Focus.tsx, ZenFocus.tsx, CommandBar.tsx
 │   └── ui.tsx, index.css     Shared components and design tokens
-├── migrations/       D1 schema, 0001_init to 0014_deliverables_real_dates
+├── migrations/       D1 schema, 0001_init to 0016_gcal_event_ids
 ├── audit/            Optional static audit (npm run audit)
 └── wrangler.jsonc    Worker, D1 binding and non-secret config
 ```
@@ -129,8 +129,8 @@ command-deck/
 Needs Node.js 20+ (CI uses 24).
 
 ```bash
-git clone https://github.com/w1tneess/study-dashboard.git
-cd study-dashboard
+git clone https://github.com/w1tneess/command-deck.git
+cd command-deck
 npm install
 cp .dev.vars.example .dev.vars   # set SESSION_SECRET and the Google keys
 npm run db:local                 # apply migrations to the local D1
@@ -181,7 +181,7 @@ The **Backup** screen exports and restores everything as JSON (format version 5)
 
 ## Contributor rules
 
-Defined in [`context/RULES.md`](context/RULES.md): IST for every calendar day, parameterized SQL only, fail closed on missing secrets, `useId()` for form fields and `busy.current` guards against double submits, no new runtime dependencies, and a note in [`context/DECISIONS.md`](context/DECISIONS.md) for each change.
+IST for every calendar day, parameterized SQL only, fail closed on missing secrets, `useId()` for form fields and `busy.current` guards against double submits, no new runtime dependencies.
 
 ---
 

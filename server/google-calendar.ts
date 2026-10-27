@@ -258,6 +258,9 @@ export async function getValidAccessToken(
   return { accessToken: refreshed.accessToken, calendarId: sync.calendar_id || "primary" };
 }
 
+/** Upper bound on pages read per pull (250 events each), so a runaway calendar can't loop forever. */
+const MAX_PULL_PAGES = 10;
+
 /** Pulls events from Google Calendar API v3 into D1 external_events */
 export async function pullGoogleEvents(
   db: D1Database,
@@ -281,29 +284,32 @@ export async function pullGoogleEvents(
   url.searchParams.set("timeMax", timeMax);
   url.searchParams.set("maxResults", "250");
 
-  const res = await fetchFn(url.toString(), {
-    headers: { Authorization: `Bearer ${auth.accessToken}` },
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Google Calendar API error (${res.status}): ${errText}`);
-  }
-
-  const data = await res.json() as {
-    items?: Array<{
-      id: string;
-      status?: string;
-      summary?: string;
-      description?: string;
-      start?: { dateTime?: string; date?: string };
-      end?: { dateTime?: string; date?: string };
-      updated?: string;
-    }>;
-    nextSyncToken?: string;
+  type GoogleItem = {
+    id: string;
+    status?: string;
+    summary?: string;
+    description?: string;
+    start?: { dateTime?: string; date?: string };
+    end?: { dateTime?: string; date?: string };
+    updated?: string;
   };
-
-  const items = data.items || [];
+  const items: GoogleItem[] = [];
+  let nextSyncToken: string | undefined;
+  let complete = false;
+  for (let page = 0; page < MAX_PULL_PAGES; page++) {
+    const res = await fetchFn(url.toString(), {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Google Calendar API error (${res.status}): ${errText}`);
+    }
+    const data = await res.json() as { items?: GoogleItem[]; nextPageToken?: string; nextSyncToken?: string };
+    items.push(...(data.items || []));
+    nextSyncToken = data.nextSyncToken;
+    if (!data.nextPageToken) { complete = true; break; }
+    url.searchParams.set("pageToken", data.nextPageToken);
+  }
   let syncedCount = 0;
   let deletedCount = 0;
   const nowIso = toIstIso(nowMs);
@@ -343,10 +349,22 @@ export async function pullGoogleEvents(
     syncedCount++;
   }
 
+  // singleEvents=true never returns deleted events, so drop cached ones in the window that Google no longer has.
+  // Skipped when the page cap cut the list short, since a missing event could then just be on a later page.
+  if (complete) {
+    const seen = new Set(items.map((i) => i.id));
+    const cached = await db.prepare("SELECT id FROM external_events WHERE starts_at >= ? AND starts_at <= ?").bind(timeMin, timeMax).all<{ id: string }>();
+    for (const row of cached.results) {
+      if (seen.has(row.id)) continue;
+      stmts.push(db.prepare("DELETE FROM external_events WHERE id = ?").bind(row.id));
+      deletedCount++;
+    }
+  }
+
   // Update last_synced_at and sync_token
   stmts.push(
     db.prepare("UPDATE google_sync SET last_synced_at = ?, sync_token = ? WHERE id = 1")
-      .bind(nowIso, data.nextSyncToken || null)
+      .bind(nowIso, nextSyncToken || null)
   );
 
   if (stmts.length > 0) {
@@ -429,16 +447,7 @@ export async function deleteGoogleCalendarEvent(
   nowMs: number = Date.now(),
   fetchFn: typeof fetch = fetch
 ): Promise<{ ok: boolean }> {
-  const auth = await getValidAccessToken(db, env, nowMs, fetchFn);
-  if (!auth) throw new Error("Google Calendar is not connected.");
-
-  const url = `${GOOGLE_CALENDAR_API_BASE}/calendars/${encodeURIComponent(auth.calendarId)}/events/${encodeURIComponent(eventId)}`;
-  await fetchFn(url, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${auth.accessToken}` },
-  }).catch(() => null);
-
-  await db.prepare("DELETE FROM external_events WHERE id = ?").bind(eventId).run();
+  await removeCalendarEvent(db, env, eventId, nowMs, fetchFn);
   return { ok: true };
 }
 

@@ -286,7 +286,7 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
 
     // CRITICAL RESTRICTION CHECK
     if (!(await allowedEmails(c.env)).includes(email.toLowerCase())) {
-      console.warn(`Unauthorized login attempt by non-whitelisted account: ${email}`);
+      console.warn("Unauthorized login attempt by a non-whitelisted account");
       return c.html(
         `<!DOCTYPE html>
 <html lang="en">
@@ -308,7 +308,7 @@ export function registerAuth(app: Hono<Env>, now: () => number, fetchFn: typeof 
   <div class="card">
     <h3>Access Denied</h3>
     <p>This account is not authorized to access Command Deck.</p>
-    <div><span class="email-chip">${email}</span></div>
+    <div><span class="email-chip">${email.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`)}</span></div>
     <a href="/?error=unauthorized">Return to Login</a>
   </div>
 </body>

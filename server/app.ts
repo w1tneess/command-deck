@@ -187,8 +187,21 @@ async function settleNow(db: D1Database, nowMs: number): Promise<Timer> {
 
 const timerView = (t: Timer, nowMs: number) => ({ ...t, endsAt: t.startedAt === null ? null : t.startedAt + t.durationS * 1000, serverNow: nowMs });
 
+/** Sent on every API response. The static pages get the same set from public/_headers. */
+const SECURITY_HEADERS: Record<string, string> = {
+  "Strict-Transport-Security": "max-age=31536000",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+};
+
 export function createApp(opts: { now?: () => number; fetchFn?: typeof fetch } = {}) {
   const app = new Hono<Env>();
+  app.use("*", async (c, next) => {
+    await next();
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) c.header(name, value);
+  });
   const now = () => opts.now?.() ?? Date.now();
   const today = () => todayIST(now());
   const fetchFn = opts.fetchFn ?? fetch;

@@ -189,3 +189,13 @@ describe("backup secrets", () => {
     expect((await linked())?.n).toBe(0);
   });
 });
+
+describe("security headers", () => {
+  it("are sent on API responses, including a rejected one", async () => {
+    const res = await t.inject("/api/state");
+    for (const h of ["strict-transport-security", "x-content-type-options", "x-frame-options", "referrer-policy", "permissions-policy"]) {
+      expect(res.headers.get(h), h).toBeTruthy();
+    }
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
+  });
+});

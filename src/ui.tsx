@@ -85,12 +85,13 @@ export const H2 = ({ id, children, big = false }: { id?: string; children: React
   <h2 id={id} className={`m-0 font-serif font-semibold tracking-tight text-fg ${big ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"}`}>{children}</h2>
 );
 
-type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "secondary" | "ghost" | "outline" };
+type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "secondary" | "ghost" | "outline" | "danger" };
 const BTN = {
   primary: "bg-fg text-bg font-semibold hover:opacity-90 active:scale-[0.98] border border-transparent",
   secondary: "bg-surface2 hover:bg-surface3 text-fg border border-line active:bg-surface3",
   outline: "bg-transparent hover:bg-surface2 text-fg border border-line-strong active:bg-surface3",
   ghost: "bg-transparent hover:bg-surface2 text-muted hover:text-fg border-0",
+  danger: "bg-danger text-on-solid font-semibold hover:opacity-90 border-0",
 };
 
 /** Modern ergonomic button with clean styling and tactile feedback. */

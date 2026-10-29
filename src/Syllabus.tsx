@@ -414,7 +414,7 @@ function SubjectCard({
                   <span className="text-sm font-medium text-danger">Delete &ldquo;{c.name}&rdquo;? Its targets and revision records go too.</span>
                   <div className="flex gap-2">
                     <Btn kind="outline" onClick={() => setDeleting(null)}>Cancel</Btn>
-                    <Btn className="border-0 bg-danger text-on-solid" onClick={async () => { if (await act("DELETE", `/api/chapters/${c.id}`)) setDeleting(null); }}>Delete</Btn>
+                    <Btn kind="danger" onClick={async () => { if (await act("DELETE", `/api/chapters/${c.id}`)) setDeleting(null); }}>Delete</Btn>
                   </div>
                 </div>
               )}

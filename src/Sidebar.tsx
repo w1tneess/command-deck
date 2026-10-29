@@ -42,7 +42,7 @@ export function Sidebar({ page, state, onOpenCapture }: SidebarProps) {
       </div>
 
       <div className="flex flex-col gap-4">
-        {progress > 0 && <div>
+        {passesDone > 0 && <div>
           <div className="flex items-baseline justify-between text-sm">
             <span className="text-muted">Syllabus covered</span>
             <span className="font-semibold text-fg">{progress}%</span>

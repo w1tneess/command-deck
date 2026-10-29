@@ -367,7 +367,7 @@ function Row({ habit: h, days, act }: { habit: Habit; days: string[]; act: Act }
           <span className="text-xs text-danger">Delete "{h.name}"? Streak and history will be permanently removed.</span>
           <div className="flex gap-2">
             <Btn kind="outline" onClick={() => setRemoving(false)}>Cancel</Btn>
-            <Btn className="border-0 bg-danger font-semibold text-on-solid hover:opacity-90" onClick={async () => { if (await act("DELETE", `/api/habits/${h.id}`)) setRemoving(false); }}>Delete habit</Btn>
+            <Btn kind="danger" onClick={async () => { if (await act("DELETE", `/api/habits/${h.id}`)) setRemoving(false); }}>Delete habit</Btn>
           </div>
         </div>
       )}

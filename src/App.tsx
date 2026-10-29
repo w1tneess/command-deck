@@ -116,7 +116,7 @@ function Shell({ state, act, reload, error, setError, saving, online }: { state:
   const [zenMode, setZenMode] = useState(false);
   const [calendarModal, setCalendarModal] = useState(false);
   // Two named content widths: narrow for single-column pages (Plan, Life, Settings), wide for dashboards (Today, Study).
-  const widthCls = group?.id === "plan" || group?.id === "life" || page === "backup" ? "max-w-3xl" : "max-w-[1180px]";
+  const widthCls = group?.id === "plan" || group?.id === "life" || page === "backup" ? "max-w-[calc(48rem+2rem)] sm:max-w-[calc(48rem+3rem)] lg:max-w-[calc(48rem+4rem)]" : "max-w-[1180px]"; // narrow cap adds main's p-4/sm:p-6/lg:p-8 so content keeps 48rem
 
   const [istDateTime, setIstDateTime] = useState(() => formatISTHeaderDate());
   useEffect(() => {

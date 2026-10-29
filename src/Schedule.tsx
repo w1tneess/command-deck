@@ -171,12 +171,15 @@ export function Schedule({
           </div>
         </div>
 
-        {shiftFeedback && (
-          <div role="status" className="mt-2 text-sm text-accent bg-accent/15 border border-accent/30 px-3 py-1.5 rounded-lg animate-fade-in flex items-center gap-2">
-            <Icon d={ICONS.check} size={14} stroke={2.4} />
-            <span>{shiftFeedback}</span>
-          </div>
-        )}
+        {/* The live region stays mounted so screen readers announce text swapped into it. */}
+        <div role="status">
+          {shiftFeedback && (
+            <div className="mt-2 text-sm text-accent bg-accent/15 border border-accent/30 px-3 py-1.5 rounded-lg animate-fade-in flex items-center gap-2">
+              <Icon d={ICONS.check} size={14} stroke={2.4} />
+              <span>{shiftFeedback}</span>
+            </div>
+          )}
+        </div>
       </Card>
 
       {/* Overlap Conflict Alert Banner: every clash, each with its own fixes */}

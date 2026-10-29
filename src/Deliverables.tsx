@@ -109,7 +109,7 @@ export function PracticalVivaWatchdog({ state, onOpenViva }: { state: State; onO
                     href={getVivaPrepGCalUrl(t.title, t.lab, state.today)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`Add ${t.title} Viva Prep to Google Calendar`}
+                    aria-label={`Open ${t.title} viva prep in Google Calendar`}
                     title="Add Viva Prep Session to Google Calendar"
                     className="min-h-[44px] md:min-h-[38px] rounded-full border border-line bg-surface hover:bg-surface3 px-3 font-mono text-[13px] text-muted hover:text-fg transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-focus"
                   >
@@ -458,7 +458,7 @@ function Item({ d, today, act, google }: { d: Deliverable; today: string; act: A
             <Btn kind="outline" onClick={() => setRemoving(false)}>
               Cancel
             </Btn>
-            <Btn className="border-0 bg-danger font-semibold text-on-solid hover:opacity-90" onClick={() => act("DELETE", `/api/deliverables/${d.id}`)}>
+            <Btn kind="danger" onClick={() => act("DELETE", `/api/deliverables/${d.id}`)}>
               Remove
             </Btn>
           </div>

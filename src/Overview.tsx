@@ -45,7 +45,7 @@ export function Overview({ state }: { state: State }) {
         <Tile label="To the exams" value={phase.daysLeft > 0 ? plural(phase.daysLeft, "day") : "Now"} note={`${plural(phase.studyDaysLeft, "study day")} left`} tone={phase.daysLeft > 0 && phase.daysLeft <= 14 ? "warn" : undefined} />
         <Tile label="Syllabus started" value={s.started ? `${s.coveragePct}%` : "–"} note={s.started ? `${s.started} of ${s.chapters} chapters` : "Tick a revision pass in Study to begin"} />
         <Tile label="Last 7 days" value={s.thisWeek || s.lastWeek ? hm(s.thisWeek) : "–"} note={s.lastWeek === 0 && delta === 0 ? "Nothing logged yet" : `${delta >= 0 ? "+" : "−"}${hm(Math.abs(delta))} vs the week before`} tone={delta > 0 ? "good" : undefined} />
-        <Tile label="Study streak" value={s.streak ? plural(s.streak, "day") : "–"} note={s.streak ? `Best habit streak ${plural(s.bestHabitStreak, "day")}` : "Study today to start one"} tone={s.streak >= 3 ? "good" : undefined} />
+        <Tile label="Study streak" value={s.streak ? plural(s.streak, "day") : "–"} note={s.bestHabitStreak ? `Best habit streak ${plural(s.bestHabitStreak, "day")}` : s.streak ? "Keep it going" : "Study today to start one"} tone={s.streak >= 3 ? "good" : undefined} />
       </div>
 
       <div className="flex flex-wrap items-start gap-4 lg:gap-6">

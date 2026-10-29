@@ -76,7 +76,7 @@ function ProjectCard({ project: p, act }: { project: Project; act: Act }) {
           <span className="text-xs text-danger">Delete "{p.name}"? All {plural(p.milestones.length, "milestone")} will be permanently removed.</span>
           <div className="flex gap-2">
             <Btn kind="outline" onClick={() => setRemoving(false)}>Cancel</Btn>
-            <Btn className="border-0 bg-danger font-semibold text-on-solid hover:opacity-90" onClick={async () => { if (await act("DELETE", `/api/projects/${p.id}`)) setRemoving(false); }}>Delete project</Btn>
+            <Btn kind="danger" onClick={async () => { if (await act("DELETE", `/api/projects/${p.id}`)) setRemoving(false); }}>Delete project</Btn>
           </div>
         </div>
       )}
